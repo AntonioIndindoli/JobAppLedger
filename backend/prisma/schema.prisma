@@ -1,13 +1,265 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  RECRUITER_SCREEN
+  TECHNICAL_INTERVIEW
+  FINAL_INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+enum WorkplaceType {
+  ONSITE
+  HYBRID
+  REMOTE
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  TEMPORARY
+  INTERNSHIP
+  FREELANCE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ContactRelationship {
+  RECRUITER
+  REFERRAL
+  HIRING_MANAGER
+  EMPLOYEE
+  OTHER
+}
+
+enum InterviewType {
+  RECRUITER_SCREEN
+  TECHNICAL
+  MANAGER
+  PANEL
+  FINAL
+  TAKE_HOME
+  OTHER
+}
+
+enum InterviewOutcome {
+  SCHEDULED
+  COMPLETED
+  PASSED
+  FAILED
+  CANCELED
+}
+
+enum TaskType {
+  FOLLOW_UP
+  PREP
+  THANK_YOU
+  REMINDER
+  OTHER
+}
+
+enum ActivityType {
+  APPLICATION_CREATED
+  STATUS_CHANGED
+  APPLICATION_UPDATED
+  INTERVIEW_ADDED
+  INTERVIEW_UPDATED
+  TASK_ADDED
+  TASK_COMPLETED
+  NOTE_ADDED
+  IMPORT_CONVERTED
+}
+
+model User {
+  id             String          @id @default(cuid())
+  name           String?
+  email          String          @unique
+  applications   Application[]
+  companies      Company[]
+  contacts       Contact[]
+  interviews     Interview[]
+  tasks          Task[]
+  resumeVersions ResumeVersion[]
+  importDrafts   ImportDraft[]
+  activityLogs   ActivityLog[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Company {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  website      String?
+  industry     String?
+  size         String?
+  logoUrl      String?
+  notes        String?
+  applications Application[]
+  contacts     Contact[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([userId, name])
+}
+
+model Application {
+  id              String            @id @default(cuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId       String?
+  company         Company?          @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  title           String
+  status          ApplicationStatus @default(SAVED)
+  source          String?
+  sourceUrl       String?
+  location        String?
+  workplaceType   WorkplaceType?
+  employmentType  EmploymentType?
+  salaryMin       Int?
+  salaryMax       Int?
+  currency        String?
+  description     String?
+  priority        Priority          @default(MEDIUM)
+  dateSaved       DateTime          @default(now())
+  dateApplied     DateTime?
+  resumeVersionId String?
+  resumeVersion   ResumeVersion?    @relation(fields: [resumeVersionId], references: [id], onDelete: SetNull)
+  notes           String?
+  contacts        Contact[]
+  interviews      Interview[]
+  tasks           Task[]
+  activityLogs    ActivityLog[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@unique([userId, sourceUrl])
+  @@index([userId, status])
+  @@index([companyId])
+}
+
+model Contact {
+  id            String              @id @default(cuid())
+  userId        String
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId     String?
+  company       Company?            @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  applicationId String?
+  application   Application?        @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  name          String
+  role          String?
+  email         String?
+  linkedinUrl   String?
+  relationship  ContactRelationship @default(OTHER)
+  notes         String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([userId, name])
+  @@index([companyId])
+  @@index([applicationId])
+}
+
+model Interview {
+  id              String           @id @default(cuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId   String
+  application     Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  type            InterviewType
+  scheduledAt     DateTime
+  durationMinutes Int?
+  location        String?
+  meetingUrl      String?
+  interviewerName String?
+  notes           String?
+  outcome         InterviewOutcome @default(SCHEDULED)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([applicationId, scheduledAt])
+}
+
+model Task {
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  title         String
+  description   String?
+  dueDate       DateTime?
+  completedAt   DateTime?
+  type          TaskType     @default(OTHER)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([userId, dueDate])
+  @@index([applicationId])
+}
+
+model ResumeVersion {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  targetRole   String?
+  fileUrl      String?
+  notes        String?
+  applications Application[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([userId, name])
+}
+
+model ImportDraft {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceUrl         String?
+  sourceDomain      String?
+  pageTitle         String?
+  rawText           String?
+  parsedTitle       String?
+  parsedCompany     String?
+  parsedLocation    String?
+  parsedSalaryMin   Int?
+  parsedSalaryMax   Int?
+  parsedDescription String?
+  confidence        Float?
+  createdAt         DateTime  @default(now())
+  convertedAt       DateTime?
+
+  @@index([userId, createdAt])
+}
+
+model ActivityLog {
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId String
+  application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  type          ActivityType
+  message       String
+  metadata      Json?
+  createdAt     DateTime     @default(now())
+
+  @@index([applicationId, createdAt])
+  @@index([userId, createdAt])
 }
