@@ -104,7 +104,7 @@ The product is designed as a modern SaaS-style dashboard for candidates who appl
 * **UI Components:** shadcn/ui
 * **Database:** PostgreSQL
 * **ORM:** Prisma
-* **Authentication:** Clerk or Auth.js
+* **Authentication:** Auth.js
 * **Charts:** Recharts
 * **Drag and Drop:** dnd-kit
 * **Deployment:** Vercel
