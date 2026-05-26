@@ -12,9 +12,6 @@ function getCookie(req, name) {
   return undefined;
 }
 
-function normalizeEmail(value = "") {
-  return value.trim().toLowerCase();
-}
 
 function getCookieOptions(expiresAt) {
   return {
@@ -37,28 +34,14 @@ function sendSessionResponse(res, result) {
 }
 
 export async function signupController(req, res) {
-  const { name, email, password } = req.body ?? {};
-
-  if (!email || !password) {
-    return res.status(400).json({ message: "Email and password are required." });
-  }
-
-  if (String(password).length < 8) {
-    return res.status(400).json({ message: "Password must be at least 8 characters." });
-  }
-
-  const result = await signup({ name, email: normalizeEmail(email), password: String(password) });
+  const { name, email, password } = req.body;
+  const result = await signup({ name, email, password });
   return sendSessionResponse(res, result);
 }
 
 export async function loginController(req, res) {
-  const { email, password } = req.body ?? {};
-
-  if (!email || !password) {
-    return res.status(400).json({ message: "Email and password are required." });
-  }
-
-  const result = await login({ email: normalizeEmail(email), password: String(password) });
+  const { email, password } = req.body;
+  const result = await login({ email, password });
   return sendSessionResponse(res, result);
 }
 

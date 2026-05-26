@@ -744,3 +744,18 @@ This project is available under the MIT License.
 ## Author
 
 Built by Antonio Indindoli.
+
+## Backend Auth Dev Setup
+
+1. Copy `backend/.env.example` to `backend/.env` and set secure JWT secrets.
+2. Install backend deps: `cd backend && npm install`.
+3. Generate Prisma client: `npm run prisma:generate`.
+4. Run migrations: `npx prisma migrate dev`.
+5. Seed dev auth user (optional): `npm run db:seed`.
+6. Start API: `npm run dev`.
+
+### Useful Backend Scripts
+
+- `npm test` – runs auth validation and error middleware tests.
+- `npm run db:seed` – upserts a demo user for local auth testing.
+- `npm run db:dev:reset` – resets DB and reseeds dev data.

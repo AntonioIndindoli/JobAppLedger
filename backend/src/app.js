@@ -3,6 +3,7 @@ import cors from "cors";
 import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import { env } from "./config/env.js";
+import { errorHandler, notFoundHandler } from "./middleware/error.middleware.js";
 
 export function createApp() {
   const app = express();
@@ -12,6 +13,9 @@ export function createApp() {
 
   app.use("/health", healthRoutes);
   app.use("/auth", authRoutes);
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   return app;
 }

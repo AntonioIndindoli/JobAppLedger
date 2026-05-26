@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "npm run prisma:generate && nodemon src/server.js",
     "start": "npm run prisma:generate && node src/server.js",
-    "prisma:generate": "prisma generate"
+    "prisma:generate": "prisma generate",
+    "test": "node --test src/__tests__/*.test.js",
+    "db:seed": "node prisma/seed.js",
+    "db:dev:reset": "npx prisma migrate reset --force && npm run db:seed"
   },
   "keywords": [],
   "author": "",
