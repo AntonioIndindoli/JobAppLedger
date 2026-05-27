@@ -1,4 +1,12 @@
-import { createApplication, deleteApplication, getApplication, listApplications, updateApplication } from "../services/applications.services.js";
+import {
+  createApplication,
+  deleteApplication,
+  getApplication,
+  getApplicationHistory,
+  listApplications,
+  transitionApplicationStatus,
+  updateApplication,
+} from "../services/applications.services.js";
 
 export async function listApplicationsController(req, res) {
   const data = await listApplications(req.auth.sub, req.query);
@@ -9,6 +17,12 @@ export async function getApplicationController(req, res) {
   const data = await getApplication(req.auth.sub, req.params.id);
   if (!data) return res.status(404).json({ message: "Application not found." });
   return res.status(200).json({ application: data });
+}
+
+export async function getApplicationHistoryController(req, res) {
+  const data = await getApplicationHistory(req.auth.sub, req.params.id);
+  if (!data) return res.status(404).json({ message: "Application not found." });
+  return res.status(200).json({ history: data });
 }
 
 export async function createApplicationController(req, res) {
@@ -25,6 +39,12 @@ export async function updateApplicationController(req, res) {
   if (result.duplicateCandidates) {
     return res.status(409).json({ message: "Possible duplicate detected.", duplicates: result.duplicateCandidates });
   }
+  return res.status(200).json(result);
+}
+
+export async function transitionApplicationStatusController(req, res) {
+  const result = await transitionApplicationStatus(req.auth.sub, req.params.id, req.validatedStatusTransition.status);
+  if (!result) return res.status(404).json({ message: "Application not found." });
   return res.status(200).json(result);
 }
 

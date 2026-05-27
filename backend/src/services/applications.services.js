@@ -22,6 +22,12 @@ async function findOrCreateCompany(userId, companyName) {
   });
 }
 
+async function logActivity(prisma, userId, applicationId, type, message, metadata = null) {
+  await prisma.activityLog.create({
+    data: { userId, applicationId, type, message, metadata },
+  });
+}
+
 function buildFilters(query) {
   const where = {};
   if (query.status) where.status = query.status;
@@ -55,6 +61,13 @@ export async function getApplication(userId, id) {
   const prisma = await getPrismaAsync();
   const item = await prisma.application.findFirst({ where: { id, userId }, include: { company: { select: { name: true } } } });
   return item ? withCompany(item) : null;
+}
+
+export async function getApplicationHistory(userId, id) {
+  const prisma = await getPrismaAsync();
+  const app = await prisma.application.findFirst({ where: { id, userId }, select: { id: true } });
+  if (!app) return null;
+  return prisma.activityLog.findMany({ where: { userId, applicationId: id }, orderBy: { createdAt: "desc" } });
 }
 
 async function detectDuplicates(prisma, userId, payload, excludeId) {
@@ -100,12 +113,17 @@ export async function createApplication(userId, payload) {
     include: { company: { select: { name: true } } },
   });
 
+  await logActivity(prisma, userId, application.id, "APPLICATION_CREATED", `Application created for ${application.title}`, {
+    title: application.title,
+    status: application.status,
+  });
+
   return { application: withCompany(application) };
 }
 
 export async function updateApplication(userId, id, payload) {
   const prisma = await getPrismaAsync();
-  const existing = await prisma.application.findFirst({ where: { id, userId } });
+  const existing = await prisma.application.findFirst({ where: { id, userId }, include: { company: { select: { name: true } } } });
   if (!existing) return null;
 
   const duplicates = await detectDuplicates(prisma, userId, payload, id);
@@ -125,6 +143,34 @@ export async function updateApplication(userId, id, payload) {
       dateApplied: payload.dateApplied,
     },
     include: { company: { select: { name: true } } },
+  });
+
+  await logActivity(prisma, userId, id, "APPLICATION_UPDATED", `Application updated: ${updated.title}`, {
+    previous: { title: existing.title, status: existing.status, companyName: existing.company?.name ?? null },
+    next: { title: updated.title, status: updated.status, companyName: updated.company?.name ?? null },
+  });
+
+  if (existing.status !== updated.status) {
+    await logActivity(prisma, userId, id, "STATUS_CHANGED", `Status changed from ${existing.status} to ${updated.status}`, {
+      from: existing.status,
+      to: updated.status,
+    });
+  }
+
+  return { application: withCompany(updated) };
+}
+
+export async function transitionApplicationStatus(userId, id, status) {
+  const prisma = await getPrismaAsync();
+  const existing = await prisma.application.findFirst({ where: { id, userId }, include: { company: { select: { name: true } } } });
+  if (!existing) return null;
+
+  if (existing.status === status) return { application: withCompany(existing) };
+
+  const updated = await prisma.application.update({ where: { id }, data: { status }, include: { company: { select: { name: true } } } });
+  await logActivity(prisma, userId, id, "STATUS_CHANGED", `Status changed from ${existing.status} to ${status}`, {
+    from: existing.status,
+    to: status,
   });
 
   return { application: withCompany(updated) };
