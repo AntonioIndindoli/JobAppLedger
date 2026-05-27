@@ -46,3 +46,12 @@ export function validateApplicationPayload(req, res, next) {
     return res.status(400).json({ message: error.message });
   }
 }
+
+export function validateStatusTransition(req, res, next) {
+  const status = req.body?.status;
+  if (!status || !APP_STATUSES.has(status)) {
+    return res.status(400).json({ message: "status is invalid." });
+  }
+  req.validatedStatusTransition = { status };
+  return next();
+}
