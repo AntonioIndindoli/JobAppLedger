@@ -552,7 +552,7 @@ npm install
 Create a `.env` file:
 
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/JobAppLedger"
+DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/jobappledger"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
 # Auth provider values depend on whether Clerk or Auth.js is used.
@@ -591,7 +591,7 @@ npm run dev
 The app should now be available at:
 
 ```text
-http://localhost:3000
+http://localhost:4000
 ```
 
 ---
