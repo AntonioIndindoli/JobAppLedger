@@ -391,28 +391,28 @@ button {
     text-decoration: underline;
 }
 
-.empty-pipeline {
+.empty-tracker {
     position: absolute;
     left: 50%;
     top: 52%;
-    transform: translate(-50%, -18%);
+    transform: translate(-50%, 0%);
     text-align: center;
     pointer-events: none;
 }
 
-.empty-pipeline div,
+.empty-tracker div,
 .empty-illustration {
     font-size: 40px;
     filter: drop-shadow(0 5px 8px rgba(11, 107, 255, .18));
 }
 
-.empty-pipeline h3,
+.empty-tracker h3,
 .empty-card h3 {
     margin: 7px 0 5px;
     font-size: 15px;
 }
 
-.empty-pipeline .secondary {
+.empty-tracker .secondary {
     pointer-events: auto;
 }
 
