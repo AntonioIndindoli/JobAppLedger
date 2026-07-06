@@ -498,7 +498,7 @@ export default function MainPage() {
                 </section>
                 <section className="pipeline-stats-container">
                     <div className="pipeline-graph">
-                        TODO: add Sankey flow chart. it sits to the left of the stats cards and shows the flow of applications through the pipeline.
+                        TODO: add Sankey flow chart. this will be the "pipeline" section that sits to the left of the stats cards and shows the flow of applications through the pipeline.
                     </div>
                     <section className="stat-grid">
                         <div className="stat-card">
