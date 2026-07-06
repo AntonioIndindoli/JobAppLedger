@@ -27,7 +27,7 @@ The product is designed as a modern SaaS-style dashboard for candidates who appl
 * Detect duplicate applications by URL, company, and role
 * View all applications in a searchable table
 
-### Kanban Pipeline
+### Kanban Tracker
 
 * Drag applications between hiring stages
 * Persist status updates in the database

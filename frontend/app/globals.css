@@ -154,8 +154,8 @@ button {
 
 .hero,
 .stat-grid,
-.panel,
 .mini-grid,
+.tracker-panel,
 .analytics-grid {
     margin-left: 38px;
     margin-right: 42px;
@@ -296,7 +296,7 @@ button {
     box-shadow: 0 10px 26px rgba(31, 60, 100, .035);
 }
 
-.pipeline-panel {
+.tracker-panel {
     position: relative;
     padding: 16px;
 }
@@ -395,7 +395,7 @@ button {
     position: absolute;
     left: 50%;
     top: 52%;
-    transform: translate(-50%, 0%);
+    transform: translate(-50%, 30%);
     text-align: center;
     pointer-events: none;
 }
@@ -816,6 +816,7 @@ button {
     .stat-grid,
     .panel,
     .mini-grid,
+    .tracker-panel,
     .analytics-grid {
         margin-left: 14px;
         margin-right: 14px;
