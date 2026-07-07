@@ -337,20 +337,54 @@ export default function MainPage() {
         startDate: "",
         endDate: "",
     });
+    const [appliedTrackerFilters, setAppliedTrackerFilters] =
+        useState(filters);
     const [historyByApp, setHistoryByApp] = useState<
         Record<string, ActivityLog[]>
     >({});
     const [openTimelineId, setOpenTimelineId] = useState<string | null>(null);
+
+    const trackerApplications = useMemo(() => {
+        const companyFilter = appliedTrackerFilters.company.trim().toLowerCase();
+        const startTime = appliedTrackerFilters.startDate
+            ? new Date(`${appliedTrackerFilters.startDate}T00:00:00`).getTime()
+            : null;
+        const endTime = appliedTrackerFilters.endDate
+            ? new Date(`${appliedTrackerFilters.endDate}T23:59:59`).getTime()
+            : null;
+
+        return applications.filter((app) => {
+            if (appliedTrackerFilters.status && app.status !== appliedTrackerFilters.status)
+                return false;
+            if (
+                appliedTrackerFilters.source &&
+                app.source?.toLowerCase() !== appliedTrackerFilters.source.toLowerCase()
+            )
+                return false;
+            if (
+                companyFilter &&
+                !(app.companyName ?? "").toLowerCase().includes(companyFilter)
+            )
+                return false;
+
+            const applicationDate = app.dateApplied ?? app.createdAt;
+            const applicationTime = new Date(applicationDate).getTime();
+            if (startTime !== null && applicationTime < startTime) return false;
+            if (endTime !== null && applicationTime > endTime) return false;
+
+            return true;
+        });
+    }, [applications, appliedTrackerFilters]);
 
     const grouped = useMemo(
         () =>
             Object.fromEntries(
                 STATUSES.map((status) => [
                     status,
-                    applications.filter((a) => a.status === status),
+                    trackerApplications.filter((a) => a.status === status),
                 ]),
             ),
-        [applications],
+        [trackerApplications],
     );
     const firstName = useMemo(() => {
         const name = (userEmail || email).split("@")[0]?.split(/[._-]/)[0];
@@ -496,10 +530,7 @@ export default function MainPage() {
 
     async function loadApplications(activeToken = token) {
         if (!activeToken) return;
-        const params = new URLSearchParams(
-            Object.entries(filters).filter(([, v]) => v),
-        );
-        const res = await fetch(`${API_BASE_URL}/applications?${params}`, {
+        const res = await fetch(`${API_BASE_URL}/applications`, {
             headers: { Authorization: `Bearer ${activeToken}` },
         });
         const data = await res.json();
@@ -817,7 +848,9 @@ export default function MainPage() {
                                 setFilters({ ...filters, endDate: e.target.value })
                             }
                         />
-                        <button onClick={() => loadApplications()}>Apply filters</button>
+                        <button onClick={() => setAppliedTrackerFilters(filters)}>
+                            Apply filters
+                        </button>
                     </div>
                     <div className="kanban">
                         {DASHBOARD_STATUSES.map((status) => (
@@ -874,10 +907,18 @@ export default function MainPage() {
                             </section>
                         ))}
                     </div>
-                    {applications.length === 0 && (
+                    {trackerApplications.length === 0 && (
                         <div className="empty-tracker">
-                            <h3>Your pipeline is empty</h3>
-                            <p>Import jobs or add applications to start tracking.</p>
+                            <h3>
+                                {applications.length === 0
+                                    ? "Your pipeline is empty"
+                                    : "No applications match these filters"}
+                            </h3>
+                            <p>
+                                {applications.length === 0
+                                    ? "Import jobs or add applications to start tracking."
+                                    : "Adjust the Application Tracker filters to see more applications."}
+                            </p>
                             <button className="secondary" onClick={openCreateApplication}>
                                 ＋ Add Application
                             </button>
