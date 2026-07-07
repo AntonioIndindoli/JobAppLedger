@@ -16,9 +16,7 @@ const USER_EMAIL_KEY = "jobappledger_user_email";
 const STATUSES = [
     "SAVED",
     "APPLIED",
-    "RECRUITER_SCREEN",
-    "TECHNICAL_INTERVIEW",
-    "FINAL_INTERVIEW",
+    "INTERVIEWING",
     "OFFER",
     "REJECTED",
     "WITHDRAWN",
@@ -27,18 +25,14 @@ type ApplicationStatus = (typeof STATUSES)[number];
 const DASHBOARD_STATUSES = [
     "SAVED",
     "APPLIED",
-    "RECRUITER_SCREEN",
-    "TECHNICAL_INTERVIEW",
-    "FINAL_INTERVIEW",
+    "INTERVIEWING",
     "OFFER",
     "REJECTED",
 ] as const;
 const STATUS_LABELS: Record<ApplicationStatus, string> = {
     SAVED: "Saved",
     APPLIED: "Applied",
-    RECRUITER_SCREEN: "Recruiter Screen",
-    TECHNICAL_INTERVIEW: "Technical Interview",
-    FINAL_INTERVIEW: "Final Interview",
+    INTERVIEWING: "Interviewing",
     OFFER: "Offer",
     REJECTED: "Rejected",
     WITHDRAWN: "Withdrawn",
@@ -89,6 +83,7 @@ type PipelineNodeDatum = {
     id: string;
     label: string;
     color: string;
+    fixedValue?: number;
 };
 type PipelineLinkDatum = {
     color: string;
@@ -108,7 +103,7 @@ const emptyForm = {
 };
 
 const PIPELINE_WIDTH = 820;
-const PIPELINE_HEIGHT = 310;
+const PIPELINE_HEIGHT = 150;
 
 function isApplicationStatus(status: string): status is ApplicationStatus {
     return (STATUSES as readonly string[]).includes(status);
@@ -128,42 +123,30 @@ function countApplicationsByStatus(applications: Application[]) {
 
 function buildPipelineSankey(applications: Application[]) {
     const counts = countApplicationsByStatus(applications);
-    const total = STATUSES.reduce((sum, status) => sum + counts[status], 0);
+    const total =
+        counts.APPLIED +
+        counts.INTERVIEWING +
+        counts.OFFER +
+        counts.REJECTED +
+        counts.WITHDRAWN;
     if (!total) return { counts, total, graph: null, offerRate: 0, exitCount: 0 };
 
     const exitCount = counts.REJECTED + counts.WITHDRAWN;
-    const reachedApplied =
-        counts.APPLIED +
-        counts.RECRUITER_SCREEN +
-        counts.TECHNICAL_INTERVIEW +
-        counts.FINAL_INTERVIEW +
-        counts.OFFER +
-        exitCount;
-    const reachedRecruiter =
-        counts.RECRUITER_SCREEN +
-        counts.TECHNICAL_INTERVIEW +
-        counts.FINAL_INTERVIEW +
-        counts.OFFER;
-    const reachedTechnical =
-        counts.TECHNICAL_INTERVIEW + counts.FINAL_INTERVIEW + counts.OFFER;
-    const reachedFinal = counts.FINAL_INTERVIEW + counts.OFFER;
+    const reachedInterviewing = counts.INTERVIEWING + counts.OFFER;
 
     const nodeCatalog: PipelineNodeDatum[] = [
-        { id: "tracked", label: "Tracked", color: "#111827" },
-        { id: "saved", label: "Saved", color: "#64748b" },
-        { id: "applied", label: "Applied", color: "#1268f3" },
-        { id: "applied-current", label: "Now applied", color: "#3b82f6" },
-        { id: "recruiter", label: "Recruiter", color: "#0891b2" },
-        { id: "recruiter-current", label: "At recruiter", color: "#06b6d4" },
-        { id: "technical", label: "Technical", color: "#6d5dfc" },
-        { id: "technical-current", label: "In technical", color: "#8b5cf6" },
-        { id: "final", label: "Final", color: "#f59e0b" },
-        { id: "final-current", label: "At final", color: "#fb923c" },
+        { id: "applied", label: "Applied", color: "#1268f3", fixedValue: total },
+        {
+            id: "interviewing",
+            label: "Interview",
+            color: "#6d5dfc",
+            fixedValue: reachedInterviewing,
+        },
         { id: "offer", label: "Offer", color: "#16a34a" },
         { id: "rejected", label: "Rejected", color: "#dc2626" },
         { id: "withdrawn", label: "Withdrawn", color: "#475569" },
     ];
-    const usedNodeIds = new Set<string>();
+    const usedNodeIds = new Set<string>(["applied"]);
     const rawLinks: Array<SankeyLink<PipelineNodeDatum, PipelineLinkDatum>> = [];
     const addLink = (
         source: string,
@@ -178,42 +161,10 @@ function buildPipelineSankey(applications: Application[]) {
         rawLinks.push({ source, target, value, color, label });
     };
 
-    addLink("tracked", "saved", counts.SAVED, "#94a3b8", "Tracked to saved");
-    addLink("tracked", "applied", reachedApplied, "#60a5fa", "Tracked to applied");
-    addLink("applied", "applied-current", counts.APPLIED, "#3b82f6", "Still applied");
-    addLink("applied", "recruiter", reachedRecruiter, "#22d3ee", "Applied to recruiter");
+    addLink("applied", "interviewing", reachedInterviewing, "#a78bfa", "Applied to interviewing");
     addLink("applied", "rejected", counts.REJECTED, "#f87171", "Applied to rejected");
     addLink("applied", "withdrawn", counts.WITHDRAWN, "#94a3b8", "Applied to withdrawn");
-    addLink(
-        "recruiter",
-        "recruiter-current",
-        counts.RECRUITER_SCREEN,
-        "#06b6d4",
-        "Still at recruiter",
-    );
-    addLink(
-        "recruiter",
-        "technical",
-        reachedTechnical,
-        "#7dd3fc",
-        "Recruiter to technical",
-    );
-    addLink(
-        "technical",
-        "technical-current",
-        counts.TECHNICAL_INTERVIEW,
-        "#a78bfa",
-        "Still in technical",
-    );
-    addLink("technical", "final", reachedFinal, "#c4b5fd", "Technical to final");
-    addLink(
-        "final",
-        "final-current",
-        counts.FINAL_INTERVIEW,
-        "#fdba74",
-        "Still at final",
-    );
-    addLink("final", "offer", counts.OFFER, "#4ade80", "Final to offer");
+    addLink("interviewing", "offer", counts.OFFER, "#4ade80", "Interviewing to offer");
 
     const graphInput: PipelineGraph = {
         nodes: nodeCatalog
@@ -239,7 +190,7 @@ function buildPipelineSankey(applications: Application[]) {
         counts,
         total,
         graph,
-        offerRate: Math.round((counts.OFFER / Math.max(reachedApplied, 1)) * 100),
+        offerRate: Math.round((counts.OFFER / Math.max(total, 1)) * 100),
         exitCount,
     };
 }

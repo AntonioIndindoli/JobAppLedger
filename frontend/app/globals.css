@@ -213,7 +213,7 @@ button {
 
 .pipeline-stats-container {
     display: grid;
-    grid-template-columns: minmax(430px, 1.45fr) minmax(300px, .85fr);
+    grid-template-columns: minmax(200px, 2fr) minmax(200px, 1fr);
     gap: 16px;
     align-items: stretch;
     margin: 0 42px 16px 38px;
@@ -458,7 +458,7 @@ button {
 
 .kanban {
     display: grid;
-    grid-template-columns: repeat(7, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 11px;
 }
 
@@ -478,16 +478,8 @@ button {
     color: #006bff
 }
 
-.lane.recruiter_screen h3 {
-    color: #008b91
-}
-
-.lane.technical_interview h3 {
+.lane.interviewing h3 {
     color: #4f33ff
-}
-
-.lane.final_interview h3 {
-    color: #ff8200
 }
 
 .lane.offer h3 {
