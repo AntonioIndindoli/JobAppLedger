@@ -53,15 +53,22 @@ const SOURCE_ALIASES: Record<string, string> = {
     referral: "Referrals",
 };
 const sourceDots = [
-    "#1268f3",
-    "#2f6ce5",
-    "#22c3bb",
-    "#fb8500",
-    "#22c55e",
-    "#ef4444",
-    "#b08b47",
-    "#57527f",
+    "#0a66c2",
+    "#c026d3",
+    "#0f766e",
+    "#f97316",
+    "#16a34a",
+    "#dc2626",
+    "#ca8a04",
+    "#475569",
 ];
+const WEEKLY_RANGE_OPTIONS = [
+    { label: "Last 4 weeks", weeks: 4 },
+    { label: "Last 6 weeks", weeks: 6 },
+    { label: "Last 12 weeks", weeks: 12 },
+] as const;
+type WeeklyRangeWeeks = (typeof WEEKLY_RANGE_OPTIONS)[number]["weeks"];
+const DEFAULT_WEEKLY_RANGE: WeeklyRangeWeeks = 6;
 
 type Mode = "signup" | "login";
 type AuthStatus = "checking" | "signedOut" | "signedIn";
@@ -108,7 +115,7 @@ const emptyForm = {
 
 const PIPELINE_WIDTH = 820;
 const PIPELINE_HEIGHT = 150;
-const WEEKLY_CHART_HEIGHT = 118;
+const WEEKLY_CHART_HEIGHT = 132;
 const WEEKLY_CHART_WIDTH = 540;
 
 function normalizeSource(source: string | null) {
@@ -134,11 +141,11 @@ function formatWeekLabel(date: Date) {
     return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function buildWeeklyApplications(applications: Application[]) {
+function buildWeeklyApplications(applications: Application[], weekCount: WeeklyRangeWeeks) {
     const thisWeekStart = getStartOfWeek(new Date());
-    const weeks = Array.from({ length: 6 }, (_, index) => {
+    const weeks = Array.from({ length: weekCount }, (_, index) => {
         const start = new Date(thisWeekStart);
-        start.setDate(thisWeekStart.getDate() - (5 - index) * 7);
+        start.setDate(thisWeekStart.getDate() - (weekCount - 1 - index) * 7);
         const end = new Date(start);
         end.setDate(start.getDate() + 7);
         return { start, end, label: formatWeekLabel(start), count: 0 };
@@ -153,10 +160,15 @@ function buildWeeklyApplications(applications: Application[]) {
     });
 
     const total = weeks.reduce((sum, week) => sum + week.count, 0);
-    const previousThree = weeks.slice(0, 3).reduce((sum, week) => sum + week.count, 0);
-    const latestThree = weeks.slice(3).reduce((sum, week) => sum + week.count, 0);
-    const delta = latestThree - previousThree;
-    const trend = delta === 0 ? "No change" : `${delta > 0 ? "+" : ""}${delta} vs previous 3 weeks`;
+    const comparisonWeeks = weekCount / 2;
+    const previousPeriod = weeks
+        .slice(0, comparisonWeeks)
+        .reduce((sum, week) => sum + week.count, 0);
+    const latestPeriod = weeks
+        .slice(comparisonWeeks)
+        .reduce((sum, week) => sum + week.count, 0);
+    const delta = latestPeriod - previousPeriod;
+    const trend = delta === 0 ? "No change" : `${delta > 0 ? "+" : ""}${delta} vs previous ${comparisonWeeks} weeks`;
 
     return { weeks, total, trend };
 }
@@ -231,8 +243,8 @@ function buildPipelineSankey(applications: Application[]) {
 
     const graph = sankey<PipelineNodeDatum, PipelineLinkDatum>()
         .nodeId((node) => node.id)
-        .nodeWidth(14)
-        .nodePadding(14)
+        .nodeWidth(5)
+        .nodePadding(5)
         .nodeAlign((node) => node.depth ?? 0)
         .nodeSort(null)
         .linkSort(null)
@@ -399,6 +411,8 @@ export default function MainPage() {
         Record<string, ActivityLog[]>
     >({});
     const [openTimelineId, setOpenTimelineId] = useState<string | null>(null);
+    const [weeklyRangeWeeks, setWeeklyRangeWeeks] =
+        useState<WeeklyRangeWeeks>(DEFAULT_WEEKLY_RANGE);
 
     const trackerApplications = useMemo(() => {
         const companyFilter = appliedTrackerFilters.company.trim().toLowerCase();
@@ -473,7 +487,13 @@ export default function MainPage() {
               .map((segment) => `${segment.color} ${segment.startPercent}% ${segment.endPercent}%`)
               .join(", ")})`
         : undefined;
-    const weeklyApplications = useMemo(() => buildWeeklyApplications(applications), [applications]);
+    const weeklyRangeLabel =
+        WEEKLY_RANGE_OPTIONS.find((option) => option.weeks === weeklyRangeWeeks)?.label ??
+        WEEKLY_RANGE_OPTIONS[1].label;
+    const weeklyApplications = useMemo(
+        () => buildWeeklyApplications(applications, weeklyRangeWeeks),
+        [applications, weeklyRangeWeeks],
+    );
     const maxWeeklyCount = Math.max(1, ...weeklyApplications.weeks.map((week) => week.count));
     const weeklyPoints = weeklyApplications.weeks.map((week, index) => {
         const x = 24 + (index * (WEEKLY_CHART_WIDTH - 48)) / Math.max(weeklyApplications.weeks.length - 1, 1);
@@ -1070,13 +1090,25 @@ export default function MainPage() {
                     <div className="panel weekly">
                         <h2>
                             Weekly Applications <span>ⓘ</span>
-                            <button>Last 6 weeks⌄</button>
+                            <select
+                                aria-label="Weekly applications timeframe"
+                                value={weeklyRangeWeeks}
+                                onChange={(e) =>
+                                    setWeeklyRangeWeeks(Number(e.target.value) as WeeklyRangeWeeks)
+                                }
+                            >
+                                {WEEKLY_RANGE_OPTIONS.map((option) => (
+                                    <option key={option.weeks} value={option.weeks}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
                         </h2>
                         <div className="chart">
                             <svg
                                 viewBox={`0 0 ${WEEKLY_CHART_WIDTH} ${WEEKLY_CHART_HEIGHT}`}
                                 role="img"
-                                aria-label="Applications submitted in the last six weeks"
+                                aria-label={`Applications submitted in the ${weeklyRangeLabel.toLowerCase()}`}
                                 preserveAspectRatio="none"
                             >
                                 <path
@@ -1093,10 +1125,20 @@ export default function MainPage() {
                                     </g>
                                 ))}
                             </svg>
-                            <div className="week-labels">
-                                {weeklyApplications.weeks.map((week) => (
-                                    <span key={week.label}>{week.label}</span>
-                                ))}
+                            <div
+                                className="week-labels"
+                                style={{
+                                    gridTemplateColumns: `repeat(${weeklyApplications.weeks.length}, 1fr)`,
+                                }}
+                            >
+                                {weeklyApplications.weeks.map((week, index) => {
+                                    const showLabel =
+                                        weeklyApplications.weeks.length <= 6 ||
+                                        index % 2 === 0 ||
+                                        index === weeklyApplications.weeks.length - 1;
+
+                                    return <span key={week.label}>{showLabel ? week.label : ""}</span>;
+                                })}
                             </div>
                         </div>
                         <aside>

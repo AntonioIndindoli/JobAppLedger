@@ -660,30 +660,37 @@ button {
 }
 
 .weekly {
-    position: relative;
-    padding: 16px 150px 18px 16px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 130px;
+    gap: 10px 24px;
+    padding: 16px;
 }
 
 .weekly h2 {
+    grid-column: 1 / -1;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.weekly h2 button {
+.weekly h2 select {
     margin-left: auto;
     border: 1px solid var(--border);
     background: white;
     border-radius: 7px;
     padding: 7px 12px;
     color: #34425d;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
 }
 
 .chart {
     position: relative;
     display: grid;
     gap: 4px;
-    height: 152px;
+    width: 100%;
+    min-width: 0;
     padding-top: 10px;
     border-bottom: 1px solid #d7e0ec;
     background: repeating-linear-gradient(to bottom, transparent 0 34px, #e4eaf3 35px 36px);
@@ -693,7 +700,7 @@ button {
 
 .chart svg {
     width: 100%;
-    height: 118px;
+    min-height: 100px;
     overflow: visible;
 }
 
@@ -707,19 +714,19 @@ button {
     stroke: var(--blue);
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke-width: 3;
+    stroke-width: 2;
 }
 
 .chart circle {
     fill: white;
     stroke: var(--blue);
-    stroke-width: 3;
+    stroke-width: 2;
 }
 
 .chart text {
     fill: #14213d;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 500;
     text-anchor: middle;
 }
 
@@ -733,9 +740,7 @@ button {
 }
 
 .weekly aside {
-    position: absolute;
-    right: 34px;
-    top: 62px;
+    align-self: center;
     display: grid;
     gap: 4px;
     color: #53617b;
@@ -754,6 +759,7 @@ button {
 }
 
 .weekly p {
+    grid-column: 1 / -1;
     text-align: center;
     margin-top: 16px;
 }
@@ -982,6 +988,16 @@ button {
     font-weight: 700;
 }
 
+@media (max-width: 1600px) {
+    .weekly {
+        grid-template-columns: 1fr;
+    }
+
+    .source-list {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 1100px) {
     .filter-row {
         grid-template-columns: 1fr 1fr;
@@ -1028,6 +1044,25 @@ button {
     .kanban,
     .filter-row {
         grid-template-columns: 1fr;
+    }
+
+    .weekly h2 {
+        flex-wrap: wrap;
+    }
+
+    .weekly h2 select {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .weekly aside {
+        grid-template-columns: repeat(3, max-content);
+        align-items: baseline;
+        gap: 4px 10px;
+    }
+
+    .weekly aside em {
+        grid-column: 1 / -1;
     }
 
     .drawer-backdrop {
