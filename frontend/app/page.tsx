@@ -48,6 +48,10 @@ const SOURCES = [
     "Recruiter Outreach",
 ];
 const SOURCE_OPTIONS = ["", ...SOURCES, "Company Careers", "Referral", "Other"];
+const SOURCE_ALIASES: Record<string, string> = {
+    "company careers": "Company Site",
+    referral: "Referrals",
+};
 const sourceDots = [
     "#1268f3",
     "#2f6ce5",
@@ -104,6 +108,58 @@ const emptyForm = {
 
 const PIPELINE_WIDTH = 820;
 const PIPELINE_HEIGHT = 150;
+const WEEKLY_CHART_HEIGHT = 118;
+const WEEKLY_CHART_WIDTH = 540;
+
+function normalizeSource(source: string | null) {
+    if (!source) return null;
+    const normalized = source.trim().toLowerCase();
+    return SOURCE_ALIASES[normalized] ?? source.trim();
+}
+
+function getApplicationTimestamp(app: Application) {
+    const rawDate = app.dateApplied ?? app.createdAt;
+    const timestamp = new Date(rawDate).getTime();
+    return Number.isNaN(timestamp) ? new Date(app.createdAt).getTime() : timestamp;
+}
+
+function getStartOfWeek(date: Date) {
+    const weekStart = new Date(date);
+    weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    return weekStart;
+}
+
+function formatWeekLabel(date: Date) {
+    return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function buildWeeklyApplications(applications: Application[]) {
+    const thisWeekStart = getStartOfWeek(new Date());
+    const weeks = Array.from({ length: 6 }, (_, index) => {
+        const start = new Date(thisWeekStart);
+        start.setDate(thisWeekStart.getDate() - (5 - index) * 7);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 7);
+        return { start, end, label: formatWeekLabel(start), count: 0 };
+    });
+
+    applications.forEach((app) => {
+        const timestamp = getApplicationTimestamp(app);
+        const week = weeks.find(
+            ({ start, end }) => timestamp >= start.getTime() && timestamp < end.getTime(),
+        );
+        if (week) week.count += 1;
+    });
+
+    const total = weeks.reduce((sum, week) => sum + week.count, 0);
+    const previousThree = weeks.slice(0, 3).reduce((sum, week) => sum + week.count, 0);
+    const latestThree = weeks.slice(3).reduce((sum, week) => sum + week.count, 0);
+    const delta = latestThree - previousThree;
+    const trend = delta === 0 ? "No change" : `${delta > 0 ? "+" : ""}${delta} vs previous 3 weeks`;
+
+    return { weeks, total, trend };
+}
 
 function isApplicationStatus(status: string): status is ApplicationStatus {
     return (STATUSES as readonly string[]).includes(status);
@@ -396,9 +452,35 @@ export default function MainPage() {
     const sourceCounts = SOURCES.map(
         (source) =>
             applications.filter(
-                (app) => app.source?.toLowerCase() === source.toLowerCase(),
+                (app) => normalizeSource(app.source)?.toLowerCase() === source.toLowerCase(),
             ).length,
     );
+    const totalSourceCount = sourceCounts.reduce((sum, count) => sum + count, 0);
+    const sourceSegments = sourceCounts.map((count, index) => {
+        const start = sourceCounts.slice(0, index).reduce((sum, sourceCount) => sum + sourceCount, 0);
+        const end = start + count;
+        return {
+            count,
+            color: sourceDots[index],
+            startPercent: totalSourceCount ? (start / totalSourceCount) * 100 : 0,
+            endPercent: totalSourceCount ? (end / totalSourceCount) * 100 : 0,
+            percentage: totalSourceCount ? Math.round((count / totalSourceCount) * 100) : 0,
+        };
+    });
+    const donutBackground = totalSourceCount
+        ? `radial-gradient(circle, white 42%, transparent 43%), conic-gradient(${sourceSegments
+              .filter((segment) => segment.count > 0)
+              .map((segment) => `${segment.color} ${segment.startPercent}% ${segment.endPercent}%`)
+              .join(", ")})`
+        : undefined;
+    const weeklyApplications = useMemo(() => buildWeeklyApplications(applications), [applications]);
+    const maxWeeklyCount = Math.max(1, ...weeklyApplications.weeks.map((week) => week.count));
+    const weeklyPoints = weeklyApplications.weeks.map((week, index) => {
+        const x = 24 + (index * (WEEKLY_CHART_WIDTH - 48)) / Math.max(weeklyApplications.weeks.length - 1, 1);
+        const y = WEEKLY_CHART_HEIGHT - 24 - (week.count / maxWeeklyCount) * (WEEKLY_CHART_HEIGHT - 42);
+        return { x, y, ...week };
+    });
+    const weeklyPath = weeklyPoints.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
     const isEditing = Boolean(editingId);
     const duplicateMatch = useMemo(
         () =>
@@ -962,17 +1044,28 @@ export default function MainPage() {
                         <h2>
                             Application Sources <span>ⓘ</span>
                         </h2>
-                        <div className="donut">No data yet</div>
+                        <div
+                            className={`donut${totalSourceCount ? " has-data" : ""}`}
+                            style={donutBackground ? { background: donutBackground } : undefined}
+                            aria-label={`${totalSourceCount} applications with tracked sources`}
+                        >
+                            <strong>{totalSourceCount}</strong>
+                            <span>{totalSourceCount === 1 ? "source" : "sources"}</span>
+                        </div>
                         <div className="source-list">
                             {SOURCES.map((source, i) => (
                                 <span key={source}>
                                     <b style={{ background: sourceDots[i] }} />
                                     {source}
-                                    <em>{sourceCounts[i]} (0%)</em>
+                                    <em>{sourceCounts[i]} ({sourceSegments[i].percentage}%)</em>
                                 </span>
                             ))}
                         </div>
-                        <p>Import jobs to see your source breakdown.</p>
+                        <p>
+                            {totalSourceCount
+                                ? "Your source breakdown updates as applications are added or edited."
+                                : "Import jobs or add sources to see your source breakdown."}
+                        </p>
                     </div>
                     <div className="panel weekly">
                         <h2>
@@ -980,21 +1073,43 @@ export default function MainPage() {
                             <button>Last 6 weeks⌄</button>
                         </h2>
                         <div className="chart">
-                            <i />
-                            <span>May 12</span>
-                            <span>May 19</span>
-                            <span>May 26</span>
-                            <span>Jun 2</span>
-                            <span>Jun 9</span>
-                            <span>Jun 16</span>
+                            <svg
+                                viewBox={`0 0 ${WEEKLY_CHART_WIDTH} ${WEEKLY_CHART_HEIGHT}`}
+                                role="img"
+                                aria-label="Applications submitted in the last six weeks"
+                                preserveAspectRatio="none"
+                            >
+                                <path
+                                    className="weekly-line-fill"
+                                    d={`${weeklyPath} L ${weeklyPoints.at(-1)?.x ?? 0} ${WEEKLY_CHART_HEIGHT - 22} L ${weeklyPoints[0]?.x ?? 0} ${WEEKLY_CHART_HEIGHT - 22} Z`}
+                                />
+                                <path className="weekly-line" d={weeklyPath} />
+                                {weeklyPoints.map((point) => (
+                                    <g key={point.label}>
+                                        <circle cx={point.x} cy={point.y} r="4" />
+                                        <text x={point.x} y={point.y - 10}>
+                                            {point.count}
+                                        </text>
+                                    </g>
+                                ))}
+                            </svg>
+                            <div className="week-labels">
+                                {weeklyApplications.weeks.map((week) => (
+                                    <span key={week.label}>{week.label}</span>
+                                ))}
+                            </div>
                         </div>
                         <aside>
                             <small>Total</small>
-                            <strong>{applications.length}</strong>
+                            <strong>{weeklyApplications.total}</strong>
                             <span>applications</span>
-                            <em>No change</em>
+                            <em>{weeklyApplications.trend}</em>
                         </aside>
-                        <p>Your weekly application trend will appear here.</p>
+                        <p>
+                            {weeklyApplications.total
+                                ? "Showing applications by applied date (or created date when applied date is missing)."
+                                : "Your weekly application trend will appear here."}
+                        </p>
                     </div>
                 </section>
                 {isApplicationFormOpen && (

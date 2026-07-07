@@ -612,6 +612,27 @@ button {
     font-size: 12px;
 }
 
+.donut.has-data {
+    color: #14213d;
+}
+
+.donut strong,
+.donut span {
+    grid-area: 1 / 1;
+}
+
+.donut strong {
+    transform: translateY(-7px);
+    font-size: 24px;
+}
+
+.donut span {
+    transform: translateY(15px);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
 .source-list {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -661,29 +682,54 @@ button {
 .chart {
     position: relative;
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    align-items: end;
-    height: 136px;
-    padding-top: 18px;
+    gap: 4px;
+    height: 152px;
+    padding-top: 10px;
     border-bottom: 1px solid #d7e0ec;
     background: repeating-linear-gradient(to bottom, transparent 0 34px, #e4eaf3 35px 36px);
     color: #53617b;
     font-size: 12px;
 }
 
-.chart i {
-    position: absolute;
-    left: 18px;
-    right: 26px;
-    bottom: 20px;
-    height: 2px;
-    background: var(--blue);
+.chart svg {
+    width: 100%;
+    height: 118px;
+    overflow: visible;
 }
 
-.chart span {
-    align-self: end;
+.weekly-line-fill {
+    fill: rgba(11, 107, 255, .09);
+    stroke: none;
+}
+
+.weekly-line {
+    fill: none;
+    stroke: var(--blue);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 3;
+}
+
+.chart circle {
+    fill: white;
+    stroke: var(--blue);
+    stroke-width: 3;
+}
+
+.chart text {
+    fill: #14213d;
+    font-size: 11px;
+    font-weight: 700;
+    text-anchor: middle;
+}
+
+.week-labels {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+}
+
+.week-labels span {
     text-align: center;
-    padding-top: 8px;
 }
 
 .weekly aside {
