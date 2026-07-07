@@ -1,6 +1,13 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import {
+    sankey,
+    sankeyLinkHorizontal,
+    type SankeyGraph,
+    type SankeyLink,
+    type SankeyNode,
+} from "d3-sankey";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 
 const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
@@ -16,6 +23,7 @@ const STATUSES = [
     "REJECTED",
     "WITHDRAWN",
 ] as const;
+type ApplicationStatus = (typeof STATUSES)[number];
 const DASHBOARD_STATUSES = [
     "SAVED",
     "APPLIED",
@@ -25,7 +33,7 @@ const DASHBOARD_STATUSES = [
     "OFFER",
     "REJECTED",
 ] as const;
-const STATUS_LABELS: Record<string, string> = {
+const STATUS_LABELS: Record<ApplicationStatus, string> = {
     SAVED: "Saved",
     APPLIED: "Applied",
     RECRUITER_SCREEN: "Recruiter Screen",
@@ -77,6 +85,16 @@ type ActivityLog = {
     message: string;
     createdAt: string;
 };
+type PipelineNodeDatum = {
+    id: string;
+    label: string;
+    color: string;
+};
+type PipelineLinkDatum = {
+    color: string;
+    label: string;
+};
+type PipelineGraph = SankeyGraph<PipelineNodeDatum, PipelineLinkDatum>;
 
 const emptyForm = {
     title: "",
@@ -88,6 +106,255 @@ const emptyForm = {
     notes: "",
     dateApplied: "",
 };
+
+const PIPELINE_WIDTH = 820;
+const PIPELINE_HEIGHT = 310;
+
+function isApplicationStatus(status: string): status is ApplicationStatus {
+    return (STATUSES as readonly string[]).includes(status);
+}
+
+function countApplicationsByStatus(applications: Application[]) {
+    const counts = Object.fromEntries(
+        STATUSES.map((status) => [status, 0]),
+    ) as Record<ApplicationStatus, number>;
+
+    applications.forEach((app) => {
+        if (isApplicationStatus(app.status)) counts[app.status] += 1;
+    });
+
+    return counts;
+}
+
+function buildPipelineSankey(applications: Application[]) {
+    const counts = countApplicationsByStatus(applications);
+    const total = STATUSES.reduce((sum, status) => sum + counts[status], 0);
+    if (!total) return { counts, total, graph: null, offerRate: 0, exitCount: 0 };
+
+    const exitCount = counts.REJECTED + counts.WITHDRAWN;
+    const reachedApplied =
+        counts.APPLIED +
+        counts.RECRUITER_SCREEN +
+        counts.TECHNICAL_INTERVIEW +
+        counts.FINAL_INTERVIEW +
+        counts.OFFER +
+        exitCount;
+    const reachedRecruiter =
+        counts.RECRUITER_SCREEN +
+        counts.TECHNICAL_INTERVIEW +
+        counts.FINAL_INTERVIEW +
+        counts.OFFER;
+    const reachedTechnical =
+        counts.TECHNICAL_INTERVIEW + counts.FINAL_INTERVIEW + counts.OFFER;
+    const reachedFinal = counts.FINAL_INTERVIEW + counts.OFFER;
+
+    const nodeCatalog: PipelineNodeDatum[] = [
+        { id: "tracked", label: "Tracked", color: "#111827" },
+        { id: "saved", label: "Saved", color: "#64748b" },
+        { id: "applied", label: "Applied", color: "#1268f3" },
+        { id: "applied-current", label: "Now applied", color: "#3b82f6" },
+        { id: "recruiter", label: "Recruiter", color: "#0891b2" },
+        { id: "recruiter-current", label: "At recruiter", color: "#06b6d4" },
+        { id: "technical", label: "Technical", color: "#6d5dfc" },
+        { id: "technical-current", label: "In technical", color: "#8b5cf6" },
+        { id: "final", label: "Final", color: "#f59e0b" },
+        { id: "final-current", label: "At final", color: "#fb923c" },
+        { id: "offer", label: "Offer", color: "#16a34a" },
+        { id: "rejected", label: "Rejected", color: "#dc2626" },
+        { id: "withdrawn", label: "Withdrawn", color: "#475569" },
+    ];
+    const usedNodeIds = new Set<string>();
+    const rawLinks: Array<SankeyLink<PipelineNodeDatum, PipelineLinkDatum>> = [];
+    const addLink = (
+        source: string,
+        target: string,
+        value: number,
+        color: string,
+        label: string,
+    ) => {
+        if (value <= 0) return;
+        usedNodeIds.add(source);
+        usedNodeIds.add(target);
+        rawLinks.push({ source, target, value, color, label });
+    };
+
+    addLink("tracked", "saved", counts.SAVED, "#94a3b8", "Tracked to saved");
+    addLink("tracked", "applied", reachedApplied, "#60a5fa", "Tracked to applied");
+    addLink("applied", "applied-current", counts.APPLIED, "#3b82f6", "Still applied");
+    addLink("applied", "recruiter", reachedRecruiter, "#22d3ee", "Applied to recruiter");
+    addLink("applied", "rejected", counts.REJECTED, "#f87171", "Applied to rejected");
+    addLink("applied", "withdrawn", counts.WITHDRAWN, "#94a3b8", "Applied to withdrawn");
+    addLink(
+        "recruiter",
+        "recruiter-current",
+        counts.RECRUITER_SCREEN,
+        "#06b6d4",
+        "Still at recruiter",
+    );
+    addLink(
+        "recruiter",
+        "technical",
+        reachedTechnical,
+        "#7dd3fc",
+        "Recruiter to technical",
+    );
+    addLink(
+        "technical",
+        "technical-current",
+        counts.TECHNICAL_INTERVIEW,
+        "#a78bfa",
+        "Still in technical",
+    );
+    addLink("technical", "final", reachedFinal, "#c4b5fd", "Technical to final");
+    addLink(
+        "final",
+        "final-current",
+        counts.FINAL_INTERVIEW,
+        "#fdba74",
+        "Still at final",
+    );
+    addLink("final", "offer", counts.OFFER, "#4ade80", "Final to offer");
+
+    const graphInput: PipelineGraph = {
+        nodes: nodeCatalog
+            .filter((node) => usedNodeIds.has(node.id))
+            .map((node) => ({ ...node })),
+        links: rawLinks.map((link) => ({ ...link })),
+    };
+
+    const graph = sankey<PipelineNodeDatum, PipelineLinkDatum>()
+        .nodeId((node) => node.id)
+        .nodeWidth(14)
+        .nodePadding(14)
+        .nodeAlign((node) => node.depth ?? 0)
+        .nodeSort(null)
+        .linkSort(null)
+        .iterations(40)
+        .extent([
+            [18, 16],
+            [PIPELINE_WIDTH - 18, PIPELINE_HEIGHT - 34],
+        ])(graphInput);
+
+    return {
+        counts,
+        total,
+        graph,
+        offerRate: Math.round((counts.OFFER / Math.max(reachedApplied, 1)) * 100),
+        exitCount,
+    };
+}
+
+function getSankeyEndLabel(
+    end: string | number | SankeyNode<PipelineNodeDatum, PipelineLinkDatum>,
+) {
+    return typeof end === "object" ? end.label : String(end);
+}
+
+function PipelineSankey({ applications }: { applications: Application[] }) {
+    const pipeline = useMemo(
+        () => buildPipelineSankey(applications),
+        [applications],
+    );
+    const linkPath = useMemo(
+        () => sankeyLinkHorizontal<PipelineNodeDatum, PipelineLinkDatum>(),
+        [],
+    );
+
+    return (
+        <section className="pipeline-graph" aria-labelledby="pipeline-heading">
+            <header className="pipeline-header">
+                <div>
+                    <p>Pipeline</p>
+                    <h2 id="pipeline-heading">Application Flow</h2>
+                </div>
+                <strong>{pipeline.total}</strong>
+            </header>
+            {pipeline.graph ? (
+                <>
+                    <div className="sankey-frame">
+                        <svg
+                            className="sankey-canvas"
+                            viewBox={`0 0 ${PIPELINE_WIDTH} ${PIPELINE_HEIGHT}`}
+                            role="img"
+                            aria-label="Sankey diagram of applications flowing through saved, applied, interview, offer, and exit statuses"
+                            preserveAspectRatio="xMidYMid meet"
+                        >
+                            <g className="sankey-links">
+                                {pipeline.graph.links.map((link) => {
+                                    const source = getSankeyEndLabel(link.source);
+                                    const target = getSankeyEndLabel(link.target);
+                                    return (
+                                        <path
+                                            key={`${source}-${target}`}
+                                            d={linkPath(link) ?? undefined}
+                                            stroke={link.color}
+                                            strokeWidth={Math.max(1, link.width ?? 1)}
+                                            className="sankey-link"
+                                        >
+                                            <title>{`${source} to ${target}: ${link.value}`}</title>
+                                        </path>
+                                    );
+                                })}
+                            </g>
+                            <g className="sankey-nodes">
+                                {pipeline.graph.nodes.map((node) => {
+                                    const x0 = node.x0 ?? 0;
+                                    const x1 = node.x1 ?? 0;
+                                    const y0 = node.y0 ?? 0;
+                                    const y1 = node.y1 ?? 0;
+                                    const labelOnRight = x0 < PIPELINE_WIDTH - 180;
+                                    return (
+                                        <g key={node.id} className="sankey-node">
+                                            <rect
+                                                x={x0}
+                                                y={y0}
+                                                width={Math.max(2, x1 - x0)}
+                                                height={Math.max(2, y1 - y0)}
+                                                rx="4"
+                                                fill={node.color}
+                                            />
+                                            <text
+                                                x={labelOnRight ? x1 + 8 : x0 - 8}
+                                                y={(y0 + y1) / 2}
+                                                textAnchor={labelOnRight ? "start" : "end"}
+                                                dominantBaseline="middle"
+                                            >
+                                                <tspan className="sankey-label">{node.label}</tspan>
+                                                <tspan
+                                                    className="sankey-value"
+                                                    x={labelOnRight ? x1 + 8 : x0 - 8}
+                                                    dy="14"
+                                                >
+                                                    {node.value ?? 0}
+                                                </tspan>
+                                            </text>
+                                        </g>
+                                    );
+                                })}
+                            </g>
+                        </svg>
+                    </div>
+                    <footer className="pipeline-insights">
+                        <span>
+                            <b>{pipeline.counts.OFFER}</b> offers
+                        </span>
+                        <span>
+                            <b>{pipeline.offerRate}%</b> offer rate
+                        </span>
+                        <span>
+                            <b>{pipeline.exitCount}</b> exits
+                        </span>
+                    </footer>
+                </>
+            ) : (
+                <div className="pipeline-empty-state">
+                    <h3>No application flow yet</h3>
+                    <p>Add applications to render the Sankey pipeline.</p>
+                </div>
+            )}
+        </section>
+    );
+}
 
 function Icon({
     children,
@@ -497,9 +764,7 @@ export default function MainPage() {
                     </div>
                 </section>
                 <section className="pipeline-stats-container">
-                    <div className="pipeline-graph">
-                        TODO: add Sankey flow chart. this will be the "pipeline" section that sits to the left of the stats cards and shows the flow of applications through the pipeline.
-                    </div>
+                    <PipelineSankey applications={applications} />
                     <section className="stat-grid">
                         <div className="stat-card">
                             <Icon>▣</Icon>
