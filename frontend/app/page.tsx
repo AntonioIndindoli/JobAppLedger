@@ -72,6 +72,7 @@ const DEFAULT_WEEKLY_RANGE: WeeklyRangeWeeks = 6;
 
 type Mode = "signup" | "login";
 type AuthStatus = "checking" | "signedOut" | "signedIn";
+type DashboardView = "dashboard" | "account";
 type Application = {
     id: string;
     title: string;
@@ -329,7 +330,7 @@ function PipelineSankey({ applications }: { applications: Application[] }) {
                                                 y={y0}
                                                 width={Math.max(2, x1 - x0)}
                                                 height={Math.max(2, y1 - y0)}
-                                                rx="4"
+                                                rx="0"
                                                 fill={node.color}
                                             />
                                             <text
@@ -413,6 +414,8 @@ export default function MainPage() {
     const [openTimelineId, setOpenTimelineId] = useState<string | null>(null);
     const [weeklyRangeWeeks, setWeeklyRangeWeeks] =
         useState<WeeklyRangeWeeks>(DEFAULT_WEEKLY_RANGE);
+    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+    const [currentView, setCurrentView] = useState<DashboardView>("dashboard");
 
     const trackerApplications = useMemo(() => {
         const companyFilter = appliedTrackerFilters.company.trim().toLowerCase();
@@ -609,6 +612,23 @@ export default function MainPage() {
         setAuthStatus("signedIn");
         setMessage(`Welcome ${data.user.email}`);
         loadApplications(data.accessToken);
+    }
+
+    async function signOut() {
+        await fetch(`${API_BASE_URL}/auth/logout`, {
+            method: "POST",
+            credentials: "include",
+        }).catch(() => undefined);
+        setToken("");
+        setUserEmail("");
+        setPassword("");
+        setApplications([]);
+        setHistoryByApp({});
+        setOpenTimelineId(null);
+        setIsProfileMenuOpen(false);
+        setCurrentView("dashboard");
+        setAuthStatus("signedOut");
+        setMessage("Signed out successfully.");
     }
 
     async function authedFetch(path: string, init: RequestInit = {}) {
@@ -825,15 +845,77 @@ export default function MainPage() {
                         ⌕ <span>Search jobs, companies, contacts...</span>
                         <kbd>⌘ K</kbd>
                     </div>
-                    <div className="profile">
+                    <div className="profile" onBlur={(e) => {
+                        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setIsProfileMenuOpen(false);
+                    }}>
                         <span className="bell">
                             ♧<b>2</b>
                         </span>
-                        <span className="avatar">👨🏽‍💼</span>
-                        <strong>{firstName}</strong>
-                        <span>⌄</span>
+                        <button
+                            type="button"
+                            className="profile-trigger"
+                            aria-haspopup="menu"
+                            aria-expanded={isProfileMenuOpen}
+                            onClick={() => setIsProfileMenuOpen((open) => !open)}
+                        >
+                            <span className="avatar">👨🏽‍💼</span>
+                            <strong>{firstName}</strong>
+                            <span aria-hidden="true">⌄</span>
+                        </button>
+                        {isProfileMenuOpen && (
+                            <div className="profile-menu" role="menu">
+                                <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() => {
+                                        setCurrentView("account");
+                                        setIsProfileMenuOpen(false);
+                                    }}
+                                >
+                                    View account
+                                </button>
+                                <button type="button" role="menuitem" onClick={signOut}>
+                                    Sign out
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </header>
+                {currentView === "account" ? (
+                    <section className="account-page">
+                        <div className="account-card">
+                            <div className="account-avatar">👨🏽‍💼</div>
+                            <div>
+                                <p>Account</p>
+                                <h1>{firstName}</h1>
+                                <span>{userEmail || email}</span>
+                            </div>
+                        </div>
+                        <div className="account-grid">
+                            <article>
+                                <span>Email address</span>
+                                <strong>{userEmail || email}</strong>
+                            </article>
+                            <article>
+                                <span>Applications tracked</span>
+                                <strong>{applications.length}</strong>
+                            </article>
+                            <article>
+                                <span>Active pipeline</span>
+                                <strong>{activePipeline}</strong>
+                            </article>
+                        </div>
+                        <div className="account-actions">
+                            <button type="button" className="primary" onClick={() => setCurrentView("dashboard")}>
+                                Return to dashboard
+                            </button>
+                            <button type="button" className="danger" onClick={signOut}>
+                                Sign out
+                            </button>
+                        </div>
+                    </section>
+                ) : (
+                    <>
                 <section className="hero">
                     <h1>Welcome back, {firstName} 👋</h1>
                     <p>
@@ -1154,6 +1236,8 @@ export default function MainPage() {
                         </p>
                     </div>
                 </section>
+                </>
+                )}
                 {isApplicationFormOpen && (
                     <div className="drawer-backdrop" onClick={closeApplicationForm}>
                         <aside
