@@ -56,6 +56,7 @@ const ROLE_KEYWORDS = [
 ];
 
 const SECTION_HEADERS = new Set([
+  "all jobs",
   "about us",
   "about the role",
   "benefits",
@@ -170,13 +171,31 @@ const LOCATION_LABEL_PATTERN = /^(?:locations?|job\s+location|work\s+location|ba
 const LOCATION_LABEL_ONLY_PATTERN = /^(?:locations?|job\s+location|work\s+location|based\s+in|office|offices|workplace\s+type|workplace|work\s+type)$/i;
 const LINKEDIN_HIRING_TITLE_PATTERN = /^(.+?)\s+hiring\s+(.+?)(?:\s+in\s+(.+?))?(?:\s+\|\s+LinkedIn)?$/i;
 const APPLICATION_TITLE_COMPANY_PATTERN = /^job application for\s+(.+?)\s+at\s+(.+?)$/i;
-const IGNORED_LINE_PATTERN = /^(?:apply now|apply|save|share this job|sign in|cookie policy|privacy policy|sign in to save|save job|easy apply|back to jobs|skip to main content|expand search|clear text|join now|people|learning|show|forgot password\?|email or phone|password|or|report this job|use ai to assess how you fit|tailor my resume|am i a good fit for this job\?|see who .* hired|posted\b.*|reposted\b.*|promoted\b.*|actively hiring|be among the first|new)$/i;
+const IGNORED_LINE_PATTERN = /^(?:>|all jobs|apply now|apply|save|share this job|sign in|cookie policy|privacy policy|sign in to save|save job|easy apply|back to jobs|skip to main content|expand search|clear text|join now|people|learning|show|forgot password\?|email or phone|password|or|report this job|use ai to assess how you fit|tailor my resume|am i a good fit for this job\?|see who .* hired|posted\b.*|reposted\b.*|promoted\b.*|actively hiring|be among the first|new)$/i;
 const NON_COMPANY_LINE_PATTERN = /^(?:remote|hybrid|onsite|on-site|location\b|department\b|team\b|employment type\b|full[- ]time|part[- ]time|contract|temporary|internship|mid[- ]senior|entry level|associate|director|executive|not applicable|posted\b.*|reposted\b.*|promoted\b.*|easy apply)$/i;
 const GENERIC_TITLE_KEYS = ["jobTitle", "job_title", "title", "positionTitle", "position_title", "positionName", "position_name", "name", "roleName", "role_name", "postingTitle", "posting_title"];
 const GENERIC_COMPANY_KEYS = ["company", "companyName", "company_name", "organization", "organizationName", "organization_name", "employer", "employerName", "employer_name", "hiringOrganization", "hiring_organization"];
 const GENERIC_LOCATION_KEYS = ["location", "locations", "locationName", "location_name", "jobLocation", "job_location", "jobLocations", "job_locations", "office", "offices", "workplace"];
 const GENERIC_DESCRIPTION_KEYS = ["description", "jobDescription", "job_description", "body", "content", "html", "descriptionHtml", "description_html"];
 const GENERIC_SALARY_KEYS = ["salary", "baseSalary", "base_salary", "compensation", "payRange", "pay_range", "salaryRange", "salary_range", "basePay", "base_pay"];
+const IGNORED_URL_TITLE_SEGMENTS = new Set([
+  "apply",
+  "boards",
+  "careers",
+  "detail",
+  "details",
+  "job",
+  "job-detail",
+  "job-details",
+  "jobdetails",
+  "jobs",
+  "posting",
+  "recruiting",
+  "view",
+  "view-job",
+  "viewjob",
+]);
+const IGNORED_TITLE_VALUES = new Set(["detail", "details", "job detail", "job details", "jobdetails", "view job", "viewjob"]);
 const US_STATE_NAME_PATTERN = "Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming";
 const CITY_REGION_COUNTRY_SOURCE = `[A-Z][a-zA-Z .'-]+,\\s?(?:(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|IA|ID|IL|IN|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)|(?:${US_STATE_NAME_PATTERN}))(?:,\\s?(?:United States|USA|US))?`;
 const CITY_REGION_COUNTRY_PATTERN = new RegExp(`\\b(${CITY_REGION_COUNTRY_SOURCE})\\b`);
@@ -212,10 +231,22 @@ function hasRoleKeyword(value) {
   return ROLE_KEYWORDS.some((keyword) => new RegExp(`(^|[^a-z0-9])${escapeRegExp(keyword)}([^a-z0-9]|$)`, "i").test(lower));
 }
 
+function decodeCommonHtmlEntities(value) {
+  return String(value ?? "")
+    .replace(/&nbsp;|&#160;|&#x[aA]0;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&bull;|&#8226;|&#x2022;/gi, " \u2022 ")
+    .replace(/&middot;|&#183;|&#x[bB]7;/g, " \u00b7 ")
+    .replace(/&ndash;|&#8211;|&#x2013;/g, "\u2013")
+    .replace(/&mdash;|&#8212;|&#x2014;/g, "\u2014")
+    .replace(/&quot;|&#34;|&#x22;/g, '"')
+    .replace(/&#39;|&#x27;|&apos;/g, "'");
+}
+
 function cleanCandidate(value) {
-  const cleaned = normalizeOptional(value)
+  const cleaned = normalizeOptional(decodeCommonHtmlEntities(value))
     ?.replace(/\s+/g, " ")
-    .replace(/^[|:,\-\u2013\u2014]+|[|:,\-\u2013\u2014]+$/g, "")
+    .replace(/^[|:,\-\u2013\u2014\u2022\u00b7]+|[|:,\-\u2013\u2014\u2022\u00b7]+$/g, "")
     .trim();
   return cleaned || null;
 }
@@ -254,6 +285,7 @@ function isRejectedTitle(value) {
   if (SECTION_HEADERS.has(candidate.toLowerCase())) return true;
   if (/^(?:careers?|jobs)(?:\s+at\b|\b)/i.test(candidate) && !hasRoleKeyword(candidate)) return true;
   if (isKnownSourceName(candidate)) return true;
+  if (IGNORED_TITLE_VALUES.has(candidate.toLowerCase())) return true;
   if (/^(company|organization|employer|department|team|location|salary|compensation)\s*[:\-]/i.test(candidate)) return true;
   if (/^(apply|save|sign in|log in|share|view job|job details)$/i.test(candidate)) return true;
   if (words > 16) return true;
@@ -283,6 +315,18 @@ function arrayify(value) {
 
 function splitTitleParts(value) {
   return cleanTitleCandidate(value)?.split(TITLE_SEPARATOR_PATTERN).map(cleanTitleCandidate).filter(Boolean) ?? [];
+}
+
+function splitCandidateTitleParts(value) {
+  return cleanCandidate(value)?.split(TITLE_SEPARATOR_PATTERN).map(cleanCandidate).filter(Boolean) ?? [];
+}
+
+function singleRoleTitlePart(value) {
+  const parts = splitCandidateTitleParts(value);
+  if (parts.length < 2) return null;
+
+  const roleParts = parts.filter(hasRoleKeyword);
+  return roleParts.length === 1 ? roleParts[0] : null;
 }
 
 function isOpaqueUrlSegment(value) {
@@ -792,7 +836,7 @@ export function cleanJobText(rawText) {
   const text = normalizeOptional(rawText);
   if (!text) return null;
 
-  return text
+  return decodeCommonHtmlEntities(text)
     .replace(/\r\n?/g, "\n")
     .replace(/\u00a0/g, " ")
     .replace(/[ \t]+/g, " ")
@@ -809,12 +853,16 @@ function titleCandidatesFromPageTitle(pageTitle) {
   if (!title) return [];
 
   const candidates = [];
-  const parts = splitTitleParts(title);
+  const parts = splitCandidateTitleParts(title);
   if (parts.length < 2) {
     candidates.push({ value: title, source: "pageTitle", weight: 20 });
   }
 
   if (parts.length >= 2) {
+    const roleParts = parts.filter(hasRoleKeyword);
+    if (roleParts.length !== 1) {
+      candidates.push({ value: title, source: "pageTitle", weight: 20 });
+    }
     parts.forEach((part, index) => {
       candidates.push({ value: part, source: "pageTitlePart", weight: index === 0 ? 18 : 14 });
     });
@@ -839,10 +887,9 @@ function titleCandidateFromUrl(sourceUrl) {
       return cleanTitleCandidate(titleCaseSlug(decodeURIComponent(afterJobs.at(-1))));
     }
 
-    const ignored = new Set(["jobs", "job", "careers", "view", "posting", "boards", "apply", "jobdetails"]);
     const slug = [...parts]
       .reverse()
-      .find((part) => !ignored.has(part.toLowerCase()) && !/^\d+$/.test(part) && !isOpaqueUrlSegment(part) && part.length > 3);
+      .find((part) => !IGNORED_URL_TITLE_SEGMENTS.has(part.toLowerCase()) && !/^\d+$/.test(part) && !isOpaqueUrlSegment(part) && part.length > 3);
     return slug ? cleanTitleCandidate(titleCaseSlug(decodeURIComponent(slug))) : null;
   } catch {
     return null;
@@ -855,9 +902,10 @@ function buildTitleCandidates({ pageTitle, rawText, sourceUrl } = {}) {
 
   lines.slice(0, 8).forEach((line, index) => {
     const labelMatch = line.match(TITLE_LABEL_PATTERN);
+    const lineTitle = labelMatch ? labelMatch[1] : singleRoleTitlePart(line) ?? line;
     candidates.push({
-      value: labelMatch ? labelMatch[1] : line,
-      source: labelMatch ? "titleLabel" : "topLine",
+      value: lineTitle,
+      source: labelMatch ? "titleLabel" : lineTitle === line ? "topLine" : "topLinePart",
       weight: (labelMatch ? 24 : 22) - index,
     });
     if (TITLE_LABEL_ONLY_PATTERN.test(line) && lines[index + 1]) {

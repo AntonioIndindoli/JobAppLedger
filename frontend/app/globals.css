@@ -891,45 +891,7 @@ button {
     background: white;
 }
 
-@media (max-width: 1100px) {
-    .sidebar {
-        position: static;
-        width: 220px;
-    }
 
-    .dashboard-main {
-        margin-left: 0
-    }
-
-    .stat-grid,
-    .mini-grid,
-    .analytics-grid {
-        grid-template-columns: 1fr
-    }
-
-    .pipeline-stats-container {
-        grid-template-columns: 1fr;
-        margin-left: 38px;
-        margin-right: 42px;
-    }
-
-    .pipeline-stats-container .stat-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .kanban {
-        grid-template-columns: repeat(2, 1fr)
-    }
-
-    .search {
-        width: 320px
-    }
-
-    .form-panel form,
-    .filter-row {
-        grid-template-columns: 1fr 1fr
-    }
-}
 
 .panel-title {
     display: flex;
@@ -1172,19 +1134,54 @@ button {
     color: #dc2626;
     font-weight: 700;
 }
-
 @media (max-width: 1600px) {
+    .sidebar {
+        position: static;
+        width: 220px;
+    }
+
+    .dashboard-main {
+        margin-left: 0
+    }
+
+    .stat-grid,
+    .mini-grid,
+    .analytics-grid {
+        grid-template-columns: 1fr
+    }
+
+    .pipeline-stats-container {
+        grid-template-columns: 1fr;
+        margin-left: 38px;
+        margin-right: 42px;
+    }
+
+    .pipeline-stats-container .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .kanban {
+        grid-template-columns: repeat(2, 1fr)
+    }
+
+    .search {
+        width: 320px
+    }
+
+    .form-panel form,
+    .filter-row {
+        grid-template-columns: 1fr 1fr
+    }
+
     .weekly {
         grid-template-columns: 1fr;
     }
 
     .source-list {
         grid-template-columns: 1fr;
-    }
-}
+    }    
 
-@media (max-width: 1100px) {
-    .filter-row {
+.filter-row {
         grid-template-columns: 1fr 1fr;
     }
 }

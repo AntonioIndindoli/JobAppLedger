@@ -251,6 +251,49 @@ test("parseJobDescription falls back to useful URL slugs when fetched text is sp
   assert.equal(parsed.parsedLocation, "Virtual - USA");
 });
 
+test("parseJobDescription ignores blocked Indeed route URLs without content", () => {
+  const parsed = parseJobDescription({
+    sourceUrl: "https://www.indeed.com/viewjob?jk=a02c1d9ae4db17fd&from=shareddesktop_copy",
+  });
+
+  assert.equal(parsed.source, "Indeed");
+  assert.equal(parsed.sourceUrl, "https://www.indeed.com/viewjob");
+  assert.equal(parsed.parsedTitle, null);
+  assert.equal(parsed.parsedCompany, null);
+  assert.equal(parsed.parsedLocation, null);
+  assert.equal(parsed.confidence, 0.1);
+});
+
+test("parseJobDescription handles Paylocity recruiting breadcrumb chrome", () => {
+  const parsed = parseJobDescription({
+    sourceUrl: "https://2000recruiting.paylocity.com/Recruiting/Jobs/Details/45427",
+    pageTitle: "Paylocity - Software Engineer",
+    rawText: `
+      Paylocity - Software Engineer
+      All Jobs
+      >
+      Software Engineer
+      Paylocity
+      Software Engineer
+      Fully Remote &bull;
+      Remote, US &bull;
+      Product & Technology
+      Job Type
+      Full-time
+      Description
+      Position Title: Engineer Software
+      This role involves developing high-quality software in a SaaS solution.
+      The pay range for this position is $84,100 - $120,100 /yr; however, base pay offered may vary.
+    `,
+  });
+
+  assert.equal(parsed.parsedTitle, "Software Engineer");
+  assert.equal(parsed.parsedCompany, "Paylocity");
+  assert.equal(parsed.parsedLocation, "Fully Remote");
+  assert.equal(parsed.parsedSalaryMin, 84100);
+  assert.equal(parsed.parsedSalaryMax, 120100);
+});
+
 test("extractTitle does not treat company substrings as role keywords", () => {
   assert.equal(
     extractTitle({
