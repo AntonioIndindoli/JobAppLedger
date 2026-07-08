@@ -44,6 +44,8 @@ const SOURCES = [
     "Lever",
     "Company Site",
     "Workday",
+    "Ashby",
+    "Wellfound",
     "Referrals",
     "Recruiter Outreach",
 ];
@@ -59,6 +61,8 @@ const sourceDots = [
     "#f97316",
     "#16a34a",
     "#dc2626",
+    "#0891b2",
+    "#7c3aed",
     "#ca8a04",
     "#475569",
 ];
@@ -82,9 +86,30 @@ type Application = {
     createdAt: string;
     sourceUrl: string | null;
     location: string | null;
+    salaryMin: number | null;
+    salaryMax: number | null;
+    description: string | null;
     notes: string | null;
     dateApplied: string | null;
 };
+type ImportDraft = {
+    id: string;
+    sourceUrl: string | null;
+    sourceDomain: string | null;
+    source: string | null;
+    pageTitle: string | null;
+    rawText: string | null;
+    parsedTitle: string | null;
+    parsedCompany: string | null;
+    parsedLocation: string | null;
+    parsedSalaryMin: number | null;
+    parsedSalaryMax: number | null;
+    parsedDescription: string | null;
+    confidence: number | null;
+    createdAt: string;
+    convertedAt: string | null;
+};
+type ParserDebug = Record<string, unknown>;
 type ActivityLog = {
     id: string;
     type: string;
@@ -110,6 +135,24 @@ const emptyForm = {
     source: "",
     sourceUrl: "",
     location: "",
+    notes: "",
+    dateApplied: "",
+};
+const emptyImportCapture = {
+    sourceUrl: "",
+    pageTitle: "",
+    rawText: "",
+};
+const emptyImportReview = {
+    title: "",
+    companyName: "",
+    status: "SAVED",
+    source: "",
+    sourceUrl: "",
+    location: "",
+    salaryMin: "",
+    salaryMax: "",
+    description: "",
     notes: "",
     dateApplied: "",
 };
@@ -241,6 +284,34 @@ function buildPipelineSankey(applications: Application[]) {
             .map((node) => ({ ...node })),
         links: rawLinks.map((link) => ({ ...link })),
     };
+
+    if (!graphInput.links.length) {
+        const node = graphInput.nodes[0];
+        const y0 = 16;
+        const y1 = PIPELINE_HEIGHT - 34;
+        return {
+            counts,
+            total,
+            graph: {
+                nodes: [
+                    {
+                        ...node,
+                        index: 0,
+                        depth: 0,
+                        height: 0,
+                        value: total,
+                        x0: 18,
+                        x1: 23,
+                        y0,
+                        y1,
+                    },
+                ],
+                links: [],
+            },
+            offerRate: Math.round((counts.OFFER / Math.max(total, 1)) * 100),
+            exitCount,
+        };
+    }
 
     const graph = sankey<PipelineNodeDatum, PipelineLinkDatum>()
         .nodeId((node) => node.id)
@@ -399,6 +470,15 @@ export default function MainPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isApplicationFormOpen, setIsApplicationFormOpen] = useState(false);
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [isImportDrawerOpen, setIsImportDrawerOpen] = useState(false);
+    const [importStep, setImportStep] = useState<"capture" | "review">("capture");
+    const [importCapture, setImportCapture] = useState(emptyImportCapture);
+    const [importReview, setImportReview] = useState(emptyImportReview);
+    const [importDraft, setImportDraft] = useState<ImportDraft | null>(null);
+    const [parserDebug, setParserDebug] = useState<ParserDebug | null>(null);
+    const [importErrors, setImportErrors] = useState<Record<string, string>>({});
+    const [importDuplicates, setImportDuplicates] = useState<Application[]>([]);
+    const [isImportSubmitting, setIsImportSubmitting] = useState(false);
     const [filters, setFilters] = useState({
         status: "",
         source: "",
@@ -625,6 +705,8 @@ export default function MainPage() {
         setApplications([]);
         setHistoryByApp({});
         setOpenTimelineId(null);
+        resetImportFlow();
+        setIsImportDrawerOpen(false);
         setIsProfileMenuOpen(false);
         setCurrentView("dashboard");
         setAuthStatus("signedOut");
@@ -684,6 +766,44 @@ export default function MainPage() {
         setIsApplicationFormOpen(false);
     }
 
+    function resetImportFlow() {
+        setImportStep("capture");
+        setImportCapture(emptyImportCapture);
+        setImportReview(emptyImportReview);
+        setImportDraft(null);
+        setParserDebug(null);
+        setImportErrors({});
+        setImportDuplicates([]);
+        setIsImportSubmitting(false);
+    }
+
+    function openImportDrawer() {
+        resetImportFlow();
+        setIsApplicationFormOpen(false);
+        setIsImportDrawerOpen(true);
+    }
+
+    function closeImportDrawer() {
+        resetImportFlow();
+        setIsImportDrawerOpen(false);
+    }
+
+    function buildImportReview(draft: ImportDraft) {
+        return {
+            title: draft.parsedTitle ?? "",
+            companyName: draft.parsedCompany ?? "",
+            status: "SAVED",
+            source: draft.source ?? "",
+            sourceUrl: draft.sourceUrl ?? "",
+            location: draft.parsedLocation ?? "",
+            salaryMin: draft.parsedSalaryMin ? String(draft.parsedSalaryMin) : "",
+            salaryMax: draft.parsedSalaryMax ? String(draft.parsedSalaryMax) : "",
+            description: draft.parsedDescription ?? "",
+            notes: "",
+            dateApplied: "",
+        };
+    }
+
     function validateApplicationForm() {
         const errors: Record<string, string> = {};
         if (!form.title.trim()) errors.title = "Job title is required.";
@@ -705,6 +825,121 @@ export default function MainPage() {
             errors.status = "Choose a valid status.";
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
+    }
+
+    function validateImportCapture() {
+        const errors: Record<string, string> = {};
+        const hasInput =
+            importCapture.sourceUrl.trim() ||
+            importCapture.pageTitle.trim() ||
+            importCapture.rawText.trim();
+        if (!hasInput) errors.rawText = "Add a job URL, page title, or description.";
+        if (importCapture.sourceUrl.trim()) {
+            try {
+                new URL(importCapture.sourceUrl);
+            } catch {
+                errors.sourceUrl = "Enter a valid URL, including https://.";
+            }
+        }
+        setImportErrors(errors);
+        return Object.keys(errors).length === 0;
+    }
+
+    function validateImportReview() {
+        const errors: Record<string, string> = {};
+        if (!importReview.title.trim()) errors.title = "Job title is required.";
+        if (!STATUSES.includes(importReview.status as (typeof STATUSES)[number]))
+            errors.status = "Choose a valid status.";
+        if (importReview.sourceUrl.trim()) {
+            try {
+                new URL(importReview.sourceUrl);
+            } catch {
+                errors.sourceUrl = "Enter a valid URL, including https://.";
+            }
+        }
+        const salaryMin = importReview.salaryMin.trim()
+            ? Number(importReview.salaryMin)
+            : null;
+        const salaryMax = importReview.salaryMax.trim()
+            ? Number(importReview.salaryMax)
+            : null;
+        if (salaryMin !== null && !Number.isInteger(salaryMin))
+            errors.salaryMin = "Use whole dollars.";
+        if (salaryMax !== null && !Number.isInteger(salaryMax))
+            errors.salaryMax = "Use whole dollars.";
+        if (
+            salaryMin !== null &&
+            salaryMax !== null &&
+            Number.isInteger(salaryMin) &&
+            Number.isInteger(salaryMax) &&
+            salaryMin > salaryMax
+        )
+            errors.salaryMax = "Max must be greater than min.";
+        if (importReview.dateApplied) {
+            const selected = new Date(`${importReview.dateApplied}T00:00:00`);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (selected > today)
+                errors.dateApplied = "Date applied cannot be in the future.";
+        }
+        setImportErrors(errors);
+        return Object.keys(errors).length === 0;
+    }
+
+    async function createImportDraft(e: FormEvent) {
+        e.preventDefault();
+        if (!validateImportCapture()) return;
+        setIsImportSubmitting(true);
+        const res = await authedFetch("/imports/create-draft", {
+            method: "POST",
+            body: JSON.stringify({ ...importCapture, debug: true }),
+        });
+        const data = await res.json().catch(() => ({}));
+        setIsImportSubmitting(false);
+        if (!res.ok) return setMessage(data.message ?? "Import failed");
+
+        setImportDraft(data.importDraft);
+        setImportReview(buildImportReview(data.importDraft));
+        setParserDebug(data.debug ?? null);
+        setImportDuplicates(data.duplicateCandidates ?? []);
+        setImportErrors({});
+        setImportStep("review");
+        setMessage(
+            data.duplicateCandidates?.length
+                ? "Possible duplicate found. Review before saving."
+                : "Import draft ready.",
+        );
+    }
+
+    async function convertImportDraft(e: FormEvent) {
+        e.preventDefault();
+        if (!importDraft || !validateImportReview()) return;
+        setIsImportSubmitting(true);
+        const payload = {
+            ...importReview,
+            salaryMin: importReview.salaryMin.trim()
+                ? Number(importReview.salaryMin)
+                : null,
+            salaryMax: importReview.salaryMax.trim()
+                ? Number(importReview.salaryMax)
+                : null,
+            dateApplied: importReview.dateApplied || null,
+        };
+        const res = await authedFetch(`/imports/${importDraft.id}/convert`, {
+            method: "POST",
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        setIsImportSubmitting(false);
+        if (res.status === 409 && data.duplicates) {
+            setImportDuplicates(data.duplicates);
+            return setMessage("Possible duplicate detected. Save was blocked.");
+        }
+        if (!res.ok) return setMessage(data.message ?? "Import conversion failed");
+
+        closeImportDrawer();
+        setMessage("Imported job saved.");
+        loadApplications();
     }
 
     async function saveApplication(e: FormEvent) {
@@ -923,7 +1158,9 @@ export default function MainPage() {
                         faster.
                     </p>
                     <div className="actions">
-                        <button className="primary">☁ Import Job</button>
+                        <button className="primary" onClick={openImportDrawer}>
+                            ☁ Import Job
+                        </button>
                         <button className="secondary" onClick={openCreateApplication}>
                             ＋ Add Application
                         </button>
@@ -1138,7 +1375,9 @@ export default function MainPage() {
                             Import jobs from LinkedIn, Indeed, Greenhouse, Lever, Workday, and
                             more.
                         </p>
-                        <button className="secondary small">☁ Import Job</button>
+                        <button className="secondary small" onClick={openImportDrawer}>
+                            ☁ Import Job
+                        </button>
                     </div>
                 </section>
                 <section className="analytics-grid">
@@ -1411,6 +1650,365 @@ export default function MainPage() {
                                     </button>
                                 </footer>
                             </form>
+                        </aside>
+                    </div>
+                )}
+                {isImportDrawerOpen && (
+                    <div className="drawer-backdrop" onClick={closeImportDrawer}>
+                        <aside
+                            className="application-drawer import-drawer"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="import-drawer-title"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {importStep === "capture" ? (
+                                <form onSubmit={createImportDraft}>
+                                    <header className="drawer-header">
+                                        <button
+                                            type="button"
+                                            className="drawer-close"
+                                            onClick={closeImportDrawer}
+                                        >
+                                            ←
+                                        </button>
+                                        <div>
+                                            <h2 id="import-drawer-title">Import job</h2>
+                                            <p>Paste the posting details and create a review draft.</p>
+                                        </div>
+                                    </header>
+                                    <section className="form-section">
+                                        <h3>Posting source</h3>
+                                        <label>
+                                            Job URL
+                                            <input
+                                                type="url"
+                                                value={importCapture.sourceUrl}
+                                                onChange={(e) =>
+                                                    setImportCapture({
+                                                        ...importCapture,
+                                                        sourceUrl: e.target.value,
+                                                    })
+                                                }
+                                                placeholder="https://..."
+                                            />
+                                        </label>
+                                        {importErrors.sourceUrl && (
+                                            <span className="field-error">
+                                                {importErrors.sourceUrl}
+                                            </span>
+                                        )}
+                                        <label>
+                                            Page title
+                                            <input
+                                                value={importCapture.pageTitle}
+                                                onChange={(e) =>
+                                                    setImportCapture({
+                                                        ...importCapture,
+                                                        pageTitle: e.target.value,
+                                                    })
+                                                }
+                                                placeholder="Senior Frontend Engineer - ExampleCo"
+                                            />
+                                        </label>
+                                    </section>
+                                    <section className="form-section">
+                                        <h3>Job description</h3>
+                                        <label>
+                                            Posting text
+                                            <textarea
+                                                value={importCapture.rawText}
+                                                onChange={(e) =>
+                                                    setImportCapture({
+                                                        ...importCapture,
+                                                        rawText: e.target.value,
+                                                    })
+                                                }
+                                                placeholder="Paste the job description..."
+                                                rows={10}
+                                            />
+                                        </label>
+                                        {importErrors.rawText && (
+                                            <span className="field-error">
+                                                {importErrors.rawText}
+                                            </span>
+                                        )}
+                                    </section>
+                                    <footer className="drawer-footer">
+                                        <button
+                                            type="button"
+                                            className="secondary"
+                                            onClick={closeImportDrawer}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button className="primary" disabled={isImportSubmitting}>
+                                            {isImportSubmitting ? "Creating..." : "Create draft"}
+                                        </button>
+                                    </footer>
+                                </form>
+                            ) : (
+                                <form onSubmit={convertImportDraft}>
+                                    <header className="drawer-header">
+                                        <button
+                                            type="button"
+                                            className="drawer-close"
+                                            onClick={closeImportDrawer}
+                                        >
+                                            ←
+                                        </button>
+                                        <div>
+                                            <h2 id="import-drawer-title">Review import</h2>
+                                            <p>Confirm the parsed job before saving it.</p>
+                                        </div>
+                                    </header>
+                                    {typeof importDraft?.confidence === "number" && (
+                                        <div className="import-confidence">
+                                            <span>Confidence</span>
+                                            <strong>{Math.round(importDraft.confidence * 100)}%</strong>
+                                        </div>
+                                    )}
+                                    {parserDebug && (
+                                        <details className="parser-debug">
+                                            <summary>Parser debug</summary>
+                                            <pre>{JSON.stringify(parserDebug, null, 2)}</pre>
+                                        </details>
+                                    )}
+                                    {importDuplicates.length > 0 && (
+                                        <div className="duplicate-warning import-warning">
+                                            <strong>Possible duplicate</strong>
+                                            <ul className="import-duplicate-list">
+                                                {importDuplicates.map((duplicate) => (
+                                                    <li key={duplicate.id}>
+                                                        {duplicate.title} at{" "}
+                                                        {duplicate.companyName ?? "Unknown company"}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    <section className="form-section">
+                                        <h3>Primary details</h3>
+                                        <label>
+                                            Job title *
+                                            <input
+                                                value={importReview.title}
+                                                onChange={(e) =>
+                                                    setImportReview({
+                                                        ...importReview,
+                                                        title: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            />
+                                        </label>
+                                        {importErrors.title && (
+                                            <span className="field-error">{importErrors.title}</span>
+                                        )}
+                                        <label>
+                                            Company
+                                            <input
+                                                value={importReview.companyName}
+                                                onChange={(e) =>
+                                                    setImportReview({
+                                                        ...importReview,
+                                                        companyName: e.target.value,
+                                                    })
+                                                }
+                                            />
+                                        </label>
+                                        <label>
+                                            Status
+                                            <select
+                                                value={importReview.status}
+                                                onChange={(e) =>
+                                                    setImportReview({
+                                                        ...importReview,
+                                                        status: e.target.value,
+                                                    })
+                                                }
+                                            >
+                                                {STATUSES.map((s) => (
+                                                    <option key={s} value={s}>
+                                                        {STATUS_LABELS[s]}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </label>
+                                        {importErrors.status && (
+                                            <span className="field-error">
+                                                {importErrors.status}
+                                            </span>
+                                        )}
+                                        <label>
+                                            Location
+                                            <input
+                                                value={importReview.location}
+                                                onChange={(e) =>
+                                                    setImportReview({
+                                                        ...importReview,
+                                                        location: e.target.value,
+                                                    })
+                                                }
+                                            />
+                                        </label>
+                                        <label>
+                                            Date applied
+                                            <input
+                                                type="date"
+                                                value={importReview.dateApplied}
+                                                onChange={(e) =>
+                                                    setImportReview({
+                                                        ...importReview,
+                                                        dateApplied: e.target.value,
+                                                    })
+                                                }
+                                            />
+                                        </label>
+                                        {importErrors.dateApplied && (
+                                            <span className="field-error">
+                                                {importErrors.dateApplied}
+                                            </span>
+                                        )}
+                                    </section>
+                                    <section className="form-section">
+                                        <h3>Source details</h3>
+                                        <label>
+                                            Source
+                                            <select
+                                                value={importReview.source}
+                                                onChange={(e) =>
+                                                    setImportReview({
+                                                        ...importReview,
+                                                        source: e.target.value,
+                                                    })
+                                                }
+                                            >
+                                                {importReview.source &&
+                                                    !SOURCE_OPTIONS.includes(importReview.source) && (
+                                                        <option value={importReview.source}>
+                                                            {importReview.source}
+                                                        </option>
+                                                    )}
+                                                {SOURCE_OPTIONS.map((source) => (
+                                                    <option key={source || "blank"} value={source}>
+                                                        {source || "Select a source"}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </label>
+                                        <label>
+                                            Job URL
+                                            <input
+                                                type="url"
+                                                value={importReview.sourceUrl}
+                                                onChange={(e) =>
+                                                    setImportReview({
+                                                        ...importReview,
+                                                        sourceUrl: e.target.value,
+                                                    })
+                                                }
+                                            />
+                                        </label>
+                                        {importErrors.sourceUrl && (
+                                            <span className="field-error">
+                                                {importErrors.sourceUrl}
+                                            </span>
+                                        )}
+                                    </section>
+                                    <section className="form-section">
+                                        <h3>Compensation</h3>
+                                        <div className="form-grid-two">
+                                            <label>
+                                                Salary min
+                                                <input
+                                                    inputMode="numeric"
+                                                    value={importReview.salaryMin}
+                                                    onChange={(e) =>
+                                                        setImportReview({
+                                                            ...importReview,
+                                                            salaryMin: e.target.value,
+                                                        })
+                                                    }
+                                                    placeholder="120000"
+                                                />
+                                            </label>
+                                            <label>
+                                                Salary max
+                                                <input
+                                                    inputMode="numeric"
+                                                    value={importReview.salaryMax}
+                                                    onChange={(e) =>
+                                                        setImportReview({
+                                                            ...importReview,
+                                                            salaryMax: e.target.value,
+                                                        })
+                                                    }
+                                                    placeholder="160000"
+                                                />
+                                            </label>
+                                        </div>
+                                        {importErrors.salaryMin && (
+                                            <span className="field-error">
+                                                {importErrors.salaryMin}
+                                            </span>
+                                        )}
+                                        {importErrors.salaryMax && (
+                                            <span className="field-error">
+                                                {importErrors.salaryMax}
+                                            </span>
+                                        )}
+                                    </section>
+                                    <section className="form-section">
+                                        <h3>Description</h3>
+                                        <label>
+                                            Job description
+                                            <textarea
+                                                value={importReview.description}
+                                                onChange={(e) =>
+                                                    setImportReview({
+                                                        ...importReview,
+                                                        description: e.target.value,
+                                                    })
+                                                }
+                                                rows={8}
+                                            />
+                                        </label>
+                                        <label>
+                                            Notes
+                                            <textarea
+                                                value={importReview.notes}
+                                                onChange={(e) =>
+                                                    setImportReview({
+                                                        ...importReview,
+                                                        notes: e.target.value,
+                                                    })
+                                                }
+                                                rows={4}
+                                            />
+                                        </label>
+                                    </section>
+                                    <footer className="drawer-footer">
+                                        <button
+                                            type="button"
+                                            className="secondary"
+                                            onClick={() => setImportStep("capture")}
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="secondary"
+                                            onClick={closeImportDrawer}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button className="primary" disabled={isImportSubmitting}>
+                                            {isImportSubmitting ? "Saving..." : "Save application"}
+                                        </button>
+                                    </footer>
+                                </form>
+                            )}
                         </aside>
                     </div>
                 )}

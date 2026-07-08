@@ -1,16 +1,5 @@
 import { getPrismaAsync } from "../db/prisma.js";
-
-function normalizeUrl(url) {
-  if (!url) return null;
-  try {
-    const parsed = new URL(url);
-    parsed.hash = "";
-    parsed.search = "";
-    return parsed.toString().replace(/\/$/, "");
-  } catch {
-    return String(url).trim().toLowerCase();
-  }
-}
+import { normalizeUrl } from "../utils/url.js";
 
 async function findOrCreateCompany(userId, companyName) {
   if (!companyName) return null;
@@ -105,8 +94,11 @@ export async function createApplication(userId, payload) {
       title: payload.title,
       status: payload.status,
       source: payload.source,
-      sourceUrl: payload.sourceUrl,
+      sourceUrl: normalizeUrl(payload.sourceUrl),
       location: payload.location,
+      salaryMin: payload.salaryMin,
+      salaryMax: payload.salaryMax,
+      description: payload.description,
       notes: payload.notes,
       dateApplied: payload.dateApplied,
     },
@@ -137,8 +129,11 @@ export async function updateApplication(userId, id, payload) {
       title: payload.title,
       status: payload.status,
       source: payload.source,
-      sourceUrl: payload.sourceUrl,
+      sourceUrl: normalizeUrl(payload.sourceUrl),
       location: payload.location,
+      salaryMin: payload.salaryMin,
+      salaryMax: payload.salaryMax,
+      description: payload.description,
       notes: payload.notes,
       dateApplied: payload.dateApplied,
     },

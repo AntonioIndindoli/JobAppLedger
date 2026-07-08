@@ -965,6 +965,74 @@ button {
     font-size: 13px;
 }
 
+.import-drawer .drawer-header {
+    align-items: flex-start;
+}
+
+.import-confidence {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 16px 24px 0;
+    padding: 10px 12px;
+    border: 1px solid #bfdbfe;
+    border-radius: 9px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 13px;
+}
+
+.import-confidence strong {
+    color: #14213d;
+    font-size: 18px;
+}
+
+.import-warning strong {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.parser-debug {
+    margin: 12px 24px 0;
+    border: 1px solid #dbe4f0;
+    border-radius: 9px;
+    background: #fbfdff;
+}
+
+.parser-debug summary {
+    padding: 10px 12px;
+    color: #14213d;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.parser-debug pre {
+    max-height: 320px;
+    overflow: auto;
+    margin: 0;
+    padding: 0 12px 12px;
+    color: #25324a;
+    font-size: 11px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.import-duplicate-list {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    padding-left: 18px;
+}
+
+.form-grid-two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
 .drawer-footer {
     position: sticky;
     bottom: 0;
@@ -1080,6 +1148,10 @@ button {
 
     .drawer-footer {
         display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid-two {
         grid-template-columns: 1fr;
     }
 

@@ -20,6 +20,14 @@ function parseDate(value, field) {
   return date;
 }
 
+function parseOptionalInt(value, field) {
+  if (value === undefined || value === null || value === "") return null;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed)) throw new Error(`${field} must be an integer.`);
+  if (parsed < 0 || parsed > 1000000) throw new Error(`${field} is outside the allowed range.`);
+  return parsed;
+}
+
 export function validateApplicationPayload(req, res, next) {
   try {
     const title = normalizeOptional(req.body.title);
@@ -28,6 +36,12 @@ export function validateApplicationPayload(req, res, next) {
     const status = req.body.status ?? "SAVED";
     if (!APP_STATUSES.has(status)) return res.status(400).json({ message: "status is invalid." });
 
+    const salaryMin = parseOptionalInt(req.body.salaryMin, "salaryMin");
+    const salaryMax = parseOptionalInt(req.body.salaryMax, "salaryMax");
+    if (salaryMin !== null && salaryMax !== null && salaryMin > salaryMax) {
+      return res.status(400).json({ message: "salaryMin cannot be greater than salaryMax." });
+    }
+
     req.validatedApplication = {
       title,
       status,
@@ -35,6 +49,9 @@ export function validateApplicationPayload(req, res, next) {
       source: normalizeOptional(req.body.source),
       sourceUrl: normalizeOptional(req.body.sourceUrl),
       location: normalizeOptional(req.body.location),
+      salaryMin,
+      salaryMax,
+      description: normalizeOptional(req.body.description),
       notes: normalizeOptional(req.body.notes),
       dateApplied: parseDate(req.body.dateApplied, "dateApplied"),
     };
