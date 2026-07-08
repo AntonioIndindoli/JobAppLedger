@@ -172,7 +172,7 @@ const LOCATION_LABEL_ONLY_PATTERN = /^(?:locations?|job\s+location|work\s+locati
 const LINKEDIN_HIRING_TITLE_PATTERN = /^(.+?)\s+hiring\s+(.+?)(?:\s+in\s+(.+?))?(?:\s+\|\s+LinkedIn)?$/i;
 const APPLICATION_TITLE_COMPANY_PATTERN = /^job application for\s+(.+?)\s+at\s+(.+?)$/i;
 const IGNORED_LINE_PATTERN = /^(?:>|all jobs|apply now|apply|save|share this job|sign in|cookie policy|privacy policy|sign in to save|save job|easy apply|back to jobs|skip to main content|expand search|clear text|join now|people|learning|show|forgot password\?|email or phone|password|or|report this job|use ai to assess how you fit|tailor my resume|am i a good fit for this job\?|see who .* hired|posted\b.*|reposted\b.*|promoted\b.*|actively hiring|be among the first|new)$/i;
-const NON_COMPANY_LINE_PATTERN = /^(?:remote|hybrid|onsite|on-site|location\b|department\b|team\b|employment type\b|full[- ]time|part[- ]time|contract|temporary|internship|mid[- ]senior|entry level|associate|director|executive|not applicable|posted\b.*|reposted\b.*|promoted\b.*|easy apply)$/i;
+const NON_COMPANY_LINE_PATTERN = /^(?:remote|hybrid|onsite|on-site|location\b.*|salary\b.*|compensation\b.*|pay range\b.*|base pay\b.*|department\b.*|team\b.*|employment type\b.*|full[- ]time|part[- ]time|contract|temporary|internship|mid[- ]senior|entry level|associate|director|executive|not applicable|posted\b.*|reposted\b.*|promoted\b.*|easy apply)$/i;
 const GENERIC_TITLE_KEYS = ["jobTitle", "job_title", "title", "positionTitle", "position_title", "positionName", "position_name", "name", "roleName", "role_name", "postingTitle", "posting_title"];
 const GENERIC_COMPANY_KEYS = ["company", "companyName", "company_name", "organization", "organizationName", "organization_name", "employer", "employerName", "employer_name", "hiringOrganization", "hiring_organization"];
 const GENERIC_LOCATION_KEYS = ["location", "locations", "locationName", "location_name", "jobLocation", "job_location", "jobLocations", "job_locations", "office", "offices", "workplace"];
@@ -1013,15 +1013,28 @@ function isCompanyLineCandidate(line, { allowRoleKeyword = false } = {}) {
   return Boolean(line && !NON_COMPANY_LINE_PATTERN.test(line) && !cityStateFromText(line) && (allowRoleKeyword || !hasRoleKeyword(line)));
 }
 
+function lineMatchesParsedTitle(line, parsedTitle) {
+  const expected = cleanTitleCandidate(parsedTitle)?.toLowerCase();
+  if (!expected) return false;
+  const lineTitle = cleanTitleCandidate(line)?.toLowerCase();
+  return lineTitle === expected || singleRoleTitlePart(line)?.toLowerCase() === expected;
+}
+
 function companyAdjacentToTitle(rawText, parsedTitle) {
   const lines = getMeaningfulLines(rawText, 20);
-  const titleIndex = lines.findIndex((line) => line.toLowerCase() === parsedTitle?.toLowerCase());
-  if (titleIndex < 0) return null;
+  for (let titleIndex = 0; titleIndex < lines.length; titleIndex += 1) {
+    if (!lineMatchesParsedTitle(lines[titleIndex], parsedTitle)) continue;
 
-  return lines
-    .slice(titleIndex + 1, titleIndex + 4)
-    .map(cleanCompanyName)
-    .find((line, index) => isCompanyLineCandidate(line, { allowRoleKeyword: index === 0 })) ?? null;
+    const company = lines
+      .slice(titleIndex + 1, titleIndex + 5)
+      .filter((line) => !lineMatchesParsedTitle(line, parsedTitle))
+      .map(cleanCompanyName)
+      .find((line) => isCompanyLineCandidate(line, { allowRoleKeyword: true }));
+
+    if (company) return company;
+  }
+
+  return null;
 }
 
 function companyFromApplicationLine(rawText, parsedTitle) {
@@ -1061,9 +1074,6 @@ function companyFromRawText(rawText, parsedTitle, markersOnly = false) {
 }
 
 export function extractCompany({ pageTitle, rawText, sourceUrl, source, parsedTitle } = {}) {
-  const pageTitleCompany = companyFromPageTitle(pageTitle, parsedTitle);
-  if (pageTitleCompany) return pageTitleCompany;
-
   const labeledCompany = companyFromRawText(rawText, parsedTitle, true);
   if (labeledCompany) return labeledCompany;
 
@@ -1072,6 +1082,9 @@ export function extractCompany({ pageTitle, rawText, sourceUrl, source, parsedTi
 
   const adjacentCompany = companyAdjacentToTitle(rawText, parsedTitle);
   if (adjacentCompany) return adjacentCompany;
+
+  const pageTitleCompany = companyFromPageTitle(pageTitle, parsedTitle);
+  if (pageTitleCompany) return pageTitleCompany;
 
   const urlCompany = companyFromUrl(sourceUrl, source);
   if (urlCompany) return urlCompany;

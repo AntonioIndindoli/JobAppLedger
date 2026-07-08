@@ -294,6 +294,27 @@ test("parseJobDescription handles Paylocity recruiting breadcrumb chrome", () =>
   assert.equal(parsed.parsedSalaryMax, 120100);
 });
 
+test("parseJobDescription prefers adjacent company over descriptive page-title suffix", () => {
+  const parsed = parseJobDescription({
+    sourceUrl: "https://careers.netapp.com/job/-/-/27600/92614166496?jobPipeline=RD_Programmatic",
+    pageTitle: "Software Engineer - Core Systems and Storage Roles (Multiple Individual Contributor Levels)",
+    rawText: `
+      Software Engineer - Core Systems and Storage Roles (Multiple Individual Contributor Levels)
+      NetApp
+      San Jose, CA, US / Boulder, Colorado, United States / Morrisville, North Carolina, United States / Cranberry Township, Pennsylvania, United States / Bellevue, Washington, United States
+      Job Summary
+      We are hiring experienced Systems Software Engineers across multiple NetApp engineering organizations.
+      Compensation: The target salary range for this position is $120,000 - $280,000.
+    `,
+  });
+
+  assert.equal(parsed.parsedTitle, "Software Engineer");
+  assert.equal(parsed.parsedCompany, "NetApp");
+  assert.equal(parsed.parsedLocation, "San Jose, CA, US");
+  assert.equal(parsed.parsedSalaryMin, 120000);
+  assert.equal(parsed.parsedSalaryMax, 280000);
+});
+
 test("extractTitle does not treat company substrings as role keywords", () => {
   assert.equal(
     extractTitle({
