@@ -315,6 +315,74 @@ test("parseJobDescription prefers adjacent company over descriptive page-title s
   assert.equal(parsed.parsedSalaryMax, 280000);
 });
 
+test("parseJobDescription handles SmartRecruiters browser chrome", () => {
+  const parsed = parseJobDescription({
+    sourceUrl: "https://jobs.smartrecruiters.com/BoschGroup/744000129052860-senior-principal-engineer-end-to-end-ai-training-framework",
+    pageTitle: "Senior Principal Engineer- End-to-End AI Training Framework",
+    rawText: `
+      Senior Principal Engineer- End-to-End AI Training Framework
+      As the Senior Principal Engineer, E2E AI Training Framework for Autonomous Driving Systems, you will spearhead the development and optimization.
+      Bosch Group Senior Principal Engineer- End-to-End AI Training Framework | SmartRecruiters
+      Google Chrome
+      Microsoft Edge
+      Apple Safari
+      Mozilla Firefox
+      Senior Principal Engineer- End-to-End AI Training Framework
+      Full-time
+      Legal Entity: Robert Bosch LLC
+      The U.S. base salary range for this full-time position is $240,000 - $320,000.
+    `,
+  });
+
+  assert.equal(parsed.source, "SmartRecruiters");
+  assert.equal(parsed.parsedTitle, "Senior Principal Engineer- End-to-End AI Training Framework");
+  assert.equal(parsed.parsedCompany, "Bosch Group");
+  assert.equal(parsed.parsedSalaryMin, 240000);
+  assert.equal(parsed.parsedSalaryMax, 320000);
+});
+
+test("parseJobDescription avoids SAP cookie navigation as company or location", () => {
+  const parsed = parseJobDescription({
+    sourceUrl: "https://careers.altria.com/job/Senior-Analyst-Data-&-AI-Readiness/2966-en_US",
+    pageTitle: "Senior Analyst - Data & AI Readiness",
+    rawText: `
+      Senior Analyst - Data & AI Readiness
+      Senior Analyst - Data & AI Readiness
+      Senior Analyst - Data & AI Readiness Job Details | Altria
+      Altria&rsquo;s Open Jobs Portal (&ldquo;Site&rdquo;) is hosted by SAP, a service provider. This Site uses cookies to offer you the best possible website experience.
+      Modify Cookie Preferences
+      Accept All Cookies
+      Altria
+      Our Vision & Cultural Aspiration
+      Workplace & Culture
+      The starting salary is based on but not limited to experience. The Salary Range for this position is: $91,500.00 - $132,750.00.
+    `,
+  });
+
+  assert.equal(parsed.parsedTitle, "Senior Analyst - Data & AI Readiness");
+  assert.equal(parsed.parsedCompany, "Altria");
+  assert.equal(parsed.parsedLocation, null);
+  assert.equal(parsed.parsedSalaryMin, 91500);
+  assert.equal(parsed.parsedSalaryMax, 132750);
+});
+
+test("parseJobDescription uses tracking content when fetched page is only marketing shell", () => {
+  const parsed = parseJobDescription({
+    sourceUrl:
+      "https://app.usebraintrust.com/jobs/17508/?utm_source=indeed&utm_content=AI+Automation+Engineer+%E2%80%94+Agentic+Builds+-+Remote+-+US+%2817508_2842679b328d6b2ee7b5f8693965cc50%29+%5B930486638%5D",
+    pageTitle: "Braintrust | Transforming Hiring with AI Recruiting",
+    rawText: `
+      Braintrust | Transforming Hiring with AI Recruiting
+      Braintrust is the new model for how work gets done. We connect organizations with top technical talent to complete strategic projects and drive innovation.
+      Braintrust | Transforming Hiring with AI Recruiting
+    `,
+  });
+
+  assert.equal(parsed.parsedTitle, "AI Automation Engineer - Agentic Builds");
+  assert.equal(parsed.parsedCompany, "Braintrust");
+  assert.equal(parsed.parsedLocation, "Remote - US");
+});
+
 test("extractTitle does not treat company substrings as role keywords", () => {
   assert.equal(
     extractTitle({

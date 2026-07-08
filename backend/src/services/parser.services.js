@@ -10,6 +10,7 @@ const JOB_SOURCES = [
   { name: "Lever", patterns: ["lever.co", "jobs.lever.co"] },
   { name: "Workday", patterns: ["myworkdayjobs.com", "myworkdaysite.com", "workdayjobs.com"] },
   { name: "Ashby", patterns: ["ashbyhq.com"] },
+  { name: "SmartRecruiters", patterns: ["smartrecruiters.com"] },
   { name: "Wellfound", patterns: ["wellfound.com"] },
 ];
 
@@ -167,11 +168,11 @@ const TITLE_LABEL_PATTERN = /^(?:job\s+title|title|role|position)\s*[:\-]\s*(.+)
 const TITLE_LABEL_ONLY_PATTERN = /^(?:job\s+title|title|role|position)$/i;
 const COMPANY_LABEL_PATTERN = /^(?:company|organization|hiring\s+organization|employer)\s*[:\-]\s*(.+)$/i;
 const COMPANY_LABEL_ONLY_PATTERN = /^(?:company|organization|hiring\s+organization|employer)$/i;
-const LOCATION_LABEL_PATTERN = /^(?:locations?|job\s+location|work\s+location|based\s+in|office|offices|workplace\s+type|workplace|work\s+type)\s*[:\-]?\s*(.+)$/i;
+const LOCATION_LABEL_PATTERN = /^(?:locations?|job\s+location|work\s+location|based\s+in|office|offices|workplace\s+type|workplace|work\s+type)\s*[:\-]\s*(.+)$/i;
 const LOCATION_LABEL_ONLY_PATTERN = /^(?:locations?|job\s+location|work\s+location|based\s+in|office|offices|workplace\s+type|workplace|work\s+type)$/i;
 const LINKEDIN_HIRING_TITLE_PATTERN = /^(.+?)\s+hiring\s+(.+?)(?:\s+in\s+(.+?))?(?:\s+\|\s+LinkedIn)?$/i;
 const APPLICATION_TITLE_COMPANY_PATTERN = /^job application for\s+(.+?)\s+at\s+(.+?)$/i;
-const IGNORED_LINE_PATTERN = /^(?:>|all jobs|apply now|apply|save|share this job|sign in|cookie policy|privacy policy|sign in to save|save job|easy apply|back to jobs|skip to main content|expand search|clear text|join now|people|learning|show|forgot password\?|email or phone|password|or|report this job|use ai to assess how you fit|tailor my resume|am i a good fit for this job\?|see who .* hired|posted\b.*|reposted\b.*|promoted\b.*|actively hiring|be among the first|new)$/i;
+const IGNORED_LINE_PATTERN = /^(?:>|all jobs|apply now|apply|save|share this job|sign in|cookie policy|privacy policy|modify cookie preferences|accept all cookies|google chrome|microsoft edge|apple safari|mozilla firefox|sign in to save|save job|easy apply|back to jobs|skip to main content|expand search|clear text|join now|people|learning|show|forgot password\?|email or phone|password|or|report this job|use ai to assess how you fit|tailor my resume|am i a good fit for this job\?|see who .* hired|posted\b.*|reposted\b.*|promoted\b.*|actively hiring|be among the first|new)$/i;
 const NON_COMPANY_LINE_PATTERN = /^(?:remote|hybrid|onsite|on-site|location\b.*|salary\b.*|compensation\b.*|pay range\b.*|base pay\b.*|department\b.*|team\b.*|employment type\b.*|full[- ]time|part[- ]time|contract|temporary|internship|mid[- ]senior|entry level|associate|director|executive|not applicable|posted\b.*|reposted\b.*|promoted\b.*|easy apply)$/i;
 const GENERIC_TITLE_KEYS = ["jobTitle", "job_title", "title", "positionTitle", "position_title", "positionName", "position_name", "name", "roleName", "role_name", "postingTitle", "posting_title"];
 const GENERIC_COMPANY_KEYS = ["company", "companyName", "company_name", "organization", "organizationName", "organization_name", "employer", "employerName", "employer_name", "hiringOrganization", "hiring_organization"];
@@ -214,6 +215,8 @@ function titleCaseSlug(value) {
     .replace(/\?.*$/, "")
     .split(/[-_\s]+/)
     .filter(Boolean)
+    .flatMap((part) => part.replace(/([a-z])([A-Z])/g, "$1 $2").split(/\s+/))
+    .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
     .join(" ");
 }
@@ -239,6 +242,11 @@ function decodeCommonHtmlEntities(value) {
     .replace(/&middot;|&#183;|&#x[bB]7;/g, " \u00b7 ")
     .replace(/&ndash;|&#8211;|&#x2013;/g, "\u2013")
     .replace(/&mdash;|&#8212;|&#x2014;/g, "\u2014")
+    .replace(/&ldquo;|&#8220;|&#x201c;/gi, '"')
+    .replace(/&rdquo;|&#8221;|&#x201d;/gi, '"')
+    .replace(/&lsquo;|&#8216;|&#x2018;/gi, "'")
+    .replace(/&rsquo;|&#8217;|&#x2019;/gi, "'")
+    .replace(/&trade;|&#8482;|&#x2122;/gi, "")
     .replace(/&quot;|&#34;|&#x22;/g, '"')
     .replace(/&#39;|&#x27;|&apos;/g, "'");
 }
@@ -260,7 +268,12 @@ function cleanTitleCandidate(value) {
     .trim();
   const linkedInHiringMatch = candidate?.match(LINKEDIN_HIRING_TITLE_PATTERN);
   const applicationMatch = value && String(value).match(APPLICATION_TITLE_COMPANY_PATTERN);
-  const cleaned = linkedInHiringMatch ? cleanCandidate(linkedInHiringMatch[2]) : applicationMatch ? cleanCandidate(applicationMatch[1]) : candidate;
+  const cleaned =
+    linkedInHiringMatch && hasRoleKeyword(linkedInHiringMatch[2])
+      ? cleanCandidate(linkedInHiringMatch[2])
+      : applicationMatch
+        ? cleanCandidate(applicationMatch[1])
+        : candidate;
   return cleaned || null;
 }
 
@@ -327,6 +340,44 @@ function singleRoleTitlePart(value) {
 
   const roleParts = parts.filter(hasRoleKeyword);
   return roleParts.length === 1 ? roleParts[0] : null;
+}
+
+function normalizeDashSeparators(value) {
+  return cleanCandidate(value)?.replace(/\s*[\u2013\u2014]\s*/g, " - ").replace(/\s+-\s+/g, " - ") ?? null;
+}
+
+function normalizeTrackingLocation(value) {
+  const location = normalizeDashSeparators(value);
+  if (!location) return null;
+  return location.replace(/\bUS\b/i, "US");
+}
+
+function trackingJobDetailsFromUrl(sourceUrl) {
+  if (!sourceUrl) return { title: null, location: null };
+  try {
+    const parsed = new URL(sourceUrl);
+    const rawValue = ["utm_content", "job_content", "job_title", "jobTitle", "title"]
+      .map((key) => parsed.searchParams.get(key))
+      .find(Boolean);
+    const text = normalizeDashSeparators(
+      rawValue
+        ?.replace(/\[[^\]]+\]/g, " ")
+        .replace(/\([^)]*\d{3,}[^)]*\)/g, " "),
+    );
+    if (!text) return { title: null, location: null };
+
+    const locationMatch = text.match(/\b((?:remote|hybrid|on-?site|virtual)\s*[-\u2013\u2014]\s*(?:us|usa|united states|canada))\b/i);
+    const location = normalizeTrackingLocation(locationMatch?.[1]);
+    const titleText = locationMatch ? text.slice(0, locationMatch.index) : text;
+    const title = cleanTitleCandidate(normalizeDashSeparators(titleText));
+
+    return {
+      title: title && hasRoleKeyword(title) ? title : null,
+      location,
+    };
+  } catch {
+    return { title: null, location: null };
+  }
 }
 
 function isOpaqueUrlSegment(value) {
@@ -897,7 +948,10 @@ function titleCandidateFromUrl(sourceUrl) {
 }
 
 function buildTitleCandidates({ pageTitle, rawText, sourceUrl } = {}) {
-  const candidates = [...titleCandidatesFromPageTitle(pageTitle)];
+  const trackingDetails = trackingJobDetailsFromUrl(sourceUrl);
+  const candidates = trackingDetails.title
+    ? [{ value: trackingDetails.title, source: "trackingParam", weight: 26 }, ...titleCandidatesFromPageTitle(pageTitle)]
+    : [...titleCandidatesFromPageTitle(pageTitle)];
   const lines = getMeaningfulLines(rawText, 10);
 
   lines.slice(0, 8).forEach((line, index) => {
@@ -975,6 +1029,7 @@ function companyFromPageTitle(pageTitle, parsedTitle) {
   const titleIndex = parts.findIndex((part) => hasRoleKeyword(part) || part?.toLowerCase() === parsedTitle?.toLowerCase());
   if (titleIndex === 0) return cleanCompanyName(parts[1]);
   if (titleIndex > 0) return cleanCompanyName(parts[0]);
+  if (parsedTitle && !hasRoleKeyword(parts[0]) && parts[0].length <= 60) return cleanCompanyName(parts[0]);
   return null;
 }
 
@@ -988,6 +1043,7 @@ function companyFromUrl(sourceUrl, source) {
     if (source === "Greenhouse" && parts[0]) return cleanCompanyName(titleCaseSlug(parts[0]));
     if (source === "Lever" && parts[0]) return cleanCompanyName(titleCaseSlug(parts[0]));
     if (source === "Ashby" && parts[0]) return cleanCompanyName(titleCaseSlug(parts[0]));
+    if (source === "SmartRecruiters" && parts[0]) return cleanCompanyName(titleCaseSlug(parts[0]));
     if (source === "Workday") {
       const hostPart = domain.split(".")[0];
       const company = hostPart.replace(/^wd\d+$/i, "");
@@ -1020,6 +1076,27 @@ function lineMatchesParsedTitle(line, parsedTitle) {
   return lineTitle === expected || singleRoleTitlePart(line)?.toLowerCase() === expected;
 }
 
+function companyFromLineWithTitle(line, parsedTitle) {
+  const text = cleanCandidate(line);
+  const title = cleanTitleCandidate(parsedTitle);
+  if (!text || !title) return null;
+
+  const pipeParts = text.split(/\s+\|\s+/).map(cleanCandidate).filter(Boolean);
+  if (pipeParts.length > 1) {
+    const companyPart = pipeParts.find(
+      (part) => !lineMatchesParsedTitle(part, title) && !/job details/i.test(part) && !hasRoleKeyword(part),
+    );
+    const company = cleanCompanyName(companyPart);
+    if (company) return company;
+  }
+
+  const lowerText = text.toLowerCase();
+  const titleIndex = lowerText.indexOf(title.toLowerCase());
+  if (titleIndex > 0) return cleanCompanyName(text.slice(0, titleIndex));
+
+  return null;
+}
+
 function companyAdjacentToTitle(rawText, parsedTitle) {
   const lines = getMeaningfulLines(rawText, 20);
   for (let titleIndex = 0; titleIndex < lines.length; titleIndex += 1) {
@@ -1028,7 +1105,7 @@ function companyAdjacentToTitle(rawText, parsedTitle) {
     const company = lines
       .slice(titleIndex + 1, titleIndex + 5)
       .filter((line) => !lineMatchesParsedTitle(line, parsedTitle))
-      .map(cleanCompanyName)
+      .map((line) => companyFromLineWithTitle(line, parsedTitle) ?? cleanCompanyName(line))
       .find((line) => isCompanyLineCandidate(line, { allowRoleKeyword: true }));
 
     if (company) return company;
@@ -1184,7 +1261,8 @@ function locationFromUrl(sourceUrl, parsedTitle) {
 
 export function extractLocation(rawText, { parsedTitle, parsedCompany, sourceUrl } = {}) {
   const text = normalizeOptional(rawText);
-  if (!text) return null;
+  const trackingLocation = trackingJobDetailsFromUrl(sourceUrl).location;
+  if (!text) return trackingLocation;
 
   const lines = getMeaningfulLines(text, 24);
   const adjacentLocation = locationAdjacentToTitleCompany(lines, parsedTitle, parsedCompany);
@@ -1216,6 +1294,8 @@ export function extractLocation(rawText, { parsedTitle, parsedCompany, sourceUrl
     !/^(this|we|you|the role)\b/i.test(line)
   );
   if (remoteLine) return remoteLine;
+
+  if (trackingLocation) return trackingLocation;
 
   return cityStateFromText(text) ?? locationFromUrl(sourceUrl, parsedTitle);
 }
@@ -1327,9 +1407,9 @@ function summarizeFetchResult(fetchResult) {
   };
 }
 
-function buildParserDebug({ input, sourceUrl, sourceDomain, pageTitle, rawText, cleanedText, sourceInfo, parsed, fetchResult }) {
+function buildParserDebug({ input, sourceUrl, extractionUrl, sourceDomain, pageTitle, rawText, cleanedText, sourceInfo, parsed, fetchResult }) {
   const meaningfulLines = getMeaningfulLines(cleanedText, 40);
-  const titleCandidates = rankTitleCandidates(buildTitleCandidates({ pageTitle, rawText: cleanedText, sourceUrl })).slice(0, 15);
+  const titleCandidates = rankTitleCandidates(buildTitleCandidates({ pageTitle, rawText: cleanedText, sourceUrl: extractionUrl ?? sourceUrl })).slice(0, 15);
   const titleIndex = meaningfulLines.findIndex((line) => line.toLowerCase() === parsed.parsedTitle?.toLowerCase());
   const companyTopLineCandidates = titleIndex >= 0 ? meaningfulLines.slice(titleIndex + 1, titleIndex + 4) : meaningfulLines.slice(0, 4);
 
@@ -1390,6 +1470,7 @@ export function scoreParserResult(parsed) {
 }
 
 export function parseJobDescription(input = {}) {
+  const extractionUrl = normalizeOptional(input.fetchUrl) ?? normalizeOptional(input.sourceUrl);
   const sourceUrl = normalizeUrl(normalizeOptional(input.sourceUrl));
   const sourceDomain = normalizeOptional(input.sourceDomain) ?? getDomainFromUrl(sourceUrl);
   const pageTitle = normalizeOptional(input.pageTitle);
@@ -1397,7 +1478,7 @@ export function parseJobDescription(input = {}) {
   const cleanedText = cleanJobText(rawText);
   const sourceInfo = detectJobSource({ sourceUrl, sourceDomain });
 
-  const parsedTitle = extractTitle({ pageTitle, rawText: cleanedText, sourceUrl });
+  const parsedTitle = extractTitle({ pageTitle, rawText: cleanedText, sourceUrl: extractionUrl ?? sourceUrl });
   const parsedCompany = extractCompany({
     pageTitle,
     rawText: cleanedText,
@@ -1405,7 +1486,7 @@ export function parseJobDescription(input = {}) {
     source: sourceInfo.source,
     parsedTitle,
   });
-  const parsedLocation = extractLocation(cleanedText, { parsedTitle, parsedCompany, sourceUrl });
+  const parsedLocation = extractLocation(cleanedText, { parsedTitle, parsedCompany, sourceUrl: extractionUrl ?? sourceUrl });
   const salary = extractSalaryRange(cleanedText);
 
   const parsed = {
@@ -1437,6 +1518,7 @@ export function parseJobDescription(input = {}) {
       sourceInfo,
       parsed: result,
       fetchResult: input.fetchResult,
+      extractionUrl,
     });
     console.info("[parser:job-description]", JSON.stringify(result.debug, null, 2));
   }
