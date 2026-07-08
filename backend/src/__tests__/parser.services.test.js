@@ -53,6 +53,7 @@ test("extractTitle handles page title patterns", () => {
   assert.equal(extractTitle({ pageTitle: "Senior Frontend Engineer - ExampleCo" }), "Senior Frontend Engineer");
   assert.equal(extractTitle({ pageTitle: "ExampleCo | Staff Software Engineer" }), "Staff Software Engineer");
   assert.equal(extractTitle({ pageTitle: "Product Manager at Stripe" }), "Product Manager");
+  assert.equal(extractTitle({ pageTitle: "Job Application for Senior Product Manager at Acme" }), "Senior Product Manager");
   assert.equal(extractTitle({ sourceUrl: "https://job-boards.greenhouse.io/twitch/jobs/8504990002" }), null);
 });
 
@@ -116,6 +117,29 @@ test("parseJobDescription handles labeled pasted text", () => {
   assert.equal(parsed.parsedSalaryMin, 170000);
   assert.equal(parsed.parsedSalaryMax, 210000);
   assert.deepEqual(parsed.skills, ["AWS", "Kubernetes", "Terraform"]);
+});
+
+test("parseJobDescription handles noisy selected job-board text", () => {
+  const parsed = parseJobDescription({
+    pageTitle: "Senior QA Engineer - Careers at ExampleCo",
+    rawText: `
+      Actively Hiring
+      Title
+      Senior QA Engineer
+      Company
+      ExampleCo
+      Easy Apply
+      Location
+      Chicago, IL
+
+      Lead test automation for web and mobile releases using JavaScript and Playwright.
+    `,
+  });
+
+  assert.equal(parsed.parsedTitle, "Senior QA Engineer");
+  assert.equal(parsed.parsedCompany, "ExampleCo");
+  assert.equal(parsed.parsedLocation, "Chicago, IL");
+  assert.deepEqual(parsed.skills, ["JavaScript"]);
 });
 
 test("parseJobDescription debug mode shows parser inputs and candidates", () => {
@@ -206,4 +230,88 @@ test("extractJobPageDataFromHtml handles JSON-LD @graph references and structure
   assert.equal(parsed.parsedLocation, "Remote - United States");
   assert.equal(parsed.parsedSalaryMin, 135000);
   assert.equal(parsed.parsedSalaryMax, 175000);
+});
+
+test("extractJobPageDataFromHtml reads framework application JSON payloads", () => {
+  const extracted = extractJobPageDataFromHtml(`
+    <html>
+      <head>
+        <title>Careers</title>
+        <meta property="og:title" content="Fallback Careers Page">
+      </head>
+      <body>
+        <script id="__NEXT_DATA__" type="application/json">
+          {
+            "props": {
+              "pageProps": {
+                "job": {
+                  "title": "Staff Platform Engineer",
+                  "companyName": "Acme Labs",
+                  "locations": [
+                    { "city": "San Francisco", "state": "CA" }
+                  ],
+                  "descriptionHtml": "<p>Build the internal platform for product teams with Go, Kubernetes, and Terraform.</p>",
+                  "salary": {
+                    "currency": "USD",
+                    "min": 180000,
+                    "max": 220000,
+                    "unit": "YEAR"
+                  }
+                }
+              }
+            }
+          }
+        </script>
+      </body>
+    </html>
+  `);
+
+  assert.equal(extracted.pageTitle, "Staff Platform Engineer");
+  assert.match(extracted.rawText, /Acme Labs/);
+  assert.match(extracted.rawText, /San Francisco, CA/);
+  assert.match(extracted.rawText, /Salary: USD 180000 - 220000/);
+
+  const parsed = parseJobDescription({ rawText: extracted.rawText, pageTitle: extracted.pageTitle });
+  assert.equal(parsed.parsedTitle, "Staff Platform Engineer");
+  assert.equal(parsed.parsedCompany, "Acme Labs");
+  assert.equal(parsed.parsedLocation, "San Francisco, CA");
+  assert.equal(parsed.parsedSalaryMin, 180000);
+  assert.equal(parsed.parsedSalaryMax, 220000);
+  assert.deepEqual(parsed.skills, ["Go", "Kubernetes", "Terraform"]);
+});
+
+test("extractJobPageDataFromHtml reads snake_case application JSON payloads", () => {
+  const extracted = extractJobPageDataFromHtml(`
+    <html>
+      <body>
+        <script type="application/json">
+          {
+            "data": {
+              "posting": {
+                "job_title": "Senior Security Analyst",
+                "company_name": "Example Security",
+                "city": "Austin",
+                "state": "TX",
+                "job_description": "Investigate security alerts, improve detection workflows, and write Python automation for incident response.",
+                "salary_range": {
+                  "currency": "USD",
+                  "salary_min": 120000,
+                  "salary_max": 150000,
+                  "unit": "YEAR"
+                }
+              }
+            }
+          }
+        </script>
+      </body>
+    </html>
+  `);
+
+  const parsed = parseJobDescription({ rawText: extracted.rawText, pageTitle: extracted.pageTitle });
+  assert.equal(parsed.parsedTitle, "Senior Security Analyst");
+  assert.equal(parsed.parsedCompany, "Example Security");
+  assert.equal(parsed.parsedLocation, "Austin, TX");
+  assert.equal(parsed.parsedSalaryMin, 120000);
+  assert.equal(parsed.parsedSalaryMax, 150000);
+  assert.deepEqual(parsed.skills, ["Python"]);
 });

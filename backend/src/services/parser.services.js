@@ -62,6 +62,8 @@ const SECTION_HEADERS = new Set([
   "department",
   "employment type",
   "how to apply",
+  "jobs",
+  "careers",
   "job description",
   "job details",
   "job overview",
@@ -159,8 +161,18 @@ const MAX_FETCH_BYTES = 1_000_000;
 const FETCH_TIMEOUT_MS = 10000;
 const TITLE_SEPARATOR_PATTERN = /\s+(?:[-|]|\u2013|\u2014|\u00b7)\s+/;
 const TITLE_LABEL_PATTERN = /^(?:job\s+title|title|role|position)\s*[:\-]\s*(.+)$/i;
+const TITLE_LABEL_ONLY_PATTERN = /^(?:job\s+title|title|role|position)$/i;
 const COMPANY_LABEL_PATTERN = /^(?:company|organization|hiring\s+organization|employer)\s*[:\-]\s*(.+)$/i;
-const LOCATION_LABEL_PATTERN = /^(?:locations?|job\s+location|work\s+location|based\s+in|office|offices|workplace\s+type)\s*[:\-]?\s*(.+)$/i;
+const COMPANY_LABEL_ONLY_PATTERN = /^(?:company|organization|hiring\s+organization|employer)$/i;
+const LOCATION_LABEL_PATTERN = /^(?:locations?|job\s+location|work\s+location|based\s+in|office|offices|workplace\s+type|workplace|work\s+type)\s*[:\-]?\s*(.+)$/i;
+const LOCATION_LABEL_ONLY_PATTERN = /^(?:locations?|job\s+location|work\s+location|based\s+in|office|offices|workplace\s+type|workplace|work\s+type)$/i;
+const IGNORED_LINE_PATTERN = /^(?:apply now|share this job|sign in|cookie policy|privacy policy|sign in to save|save job|easy apply|back to jobs|see who .* hired|posted\b.*|reposted\b.*|promoted\b.*|actively hiring|be among the first|new)$/i;
+const NON_COMPANY_LINE_PATTERN = /^(?:remote|hybrid|onsite|on-site|location\b|department\b|team\b|employment type\b|full[- ]time|part[- ]time|contract|temporary|internship|mid[- ]senior|entry level|associate|director|executive|not applicable|posted\b.*|reposted\b.*|promoted\b.*|easy apply)$/i;
+const GENERIC_TITLE_KEYS = ["jobTitle", "job_title", "title", "positionTitle", "position_title", "positionName", "position_name", "name", "roleName", "role_name", "postingTitle", "posting_title"];
+const GENERIC_COMPANY_KEYS = ["company", "companyName", "company_name", "organization", "organizationName", "organization_name", "employer", "employerName", "employer_name", "hiringOrganization", "hiring_organization"];
+const GENERIC_LOCATION_KEYS = ["location", "locations", "locationName", "location_name", "jobLocation", "job_location", "jobLocations", "job_locations", "office", "offices", "workplace"];
+const GENERIC_DESCRIPTION_KEYS = ["description", "jobDescription", "job_description", "body", "content", "html", "descriptionHtml", "description_html"];
+const GENERIC_SALARY_KEYS = ["salary", "baseSalary", "base_salary", "compensation", "payRange", "pay_range", "salaryRange", "salary_range", "basePay", "base_pay"];
 
 function normalizeOptional(value) {
   if (value === undefined || value === null) return null;
@@ -169,7 +181,9 @@ function normalizeOptional(value) {
 }
 
 function titleCaseSlug(value) {
-  return value
+  return String(value ?? "")
+    .replace(/(?:[_-](?:jr|req|requisition|job|jobid)\s*[-_]?\d+|\b(?:jr|req|requisition|job|jobid)\s*[-_]?\d+)$/i, "")
+    .replace(/\?.*$/, "")
     .split(/[-_\s]+/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
@@ -193,9 +207,20 @@ function cleanCandidate(value) {
   return cleaned || null;
 }
 
+function cleanTitleCandidate(value) {
+  if (value && typeof value === "object") return null;
+  const cleaned = cleanCandidate(value)
+    ?.replace(/^(?:job application for|application for|apply(?:ing)? for|job opening:?)\s+/i, "")
+    .replace(/\s+\|\s+(?:LinkedIn|Indeed|Glassdoor|ZipRecruiter).*$/i, "")
+    .replace(/\s+-\s+(?:LinkedIn|Indeed|Glassdoor|ZipRecruiter).*$/i, "")
+    .trim();
+  return cleaned || null;
+}
+
 function cleanCompanyName(value) {
   const cleaned = cleanCandidate(value)
     ?.replace(COMPANY_LABEL_PATTERN, "$1")
+    .replace(/^(?:careers?|jobs)\s+at\s+/i, "")
     .replace(COMPANY_SUFFIX_PATTERN, "")
     .replace(/^at\s+/i, "")
     .replace(/\s+/g, " ")
@@ -206,11 +231,12 @@ function cleanCompanyName(value) {
 }
 
 function isRejectedTitle(value) {
-  const candidate = cleanCandidate(value);
+  const candidate = cleanTitleCandidate(value);
   if (!candidate) return true;
   const words = candidate.split(/\s+/).length;
   if (candidate.length > 120 || candidate.length < 3) return true;
   if (SECTION_HEADERS.has(candidate.toLowerCase())) return true;
+  if (/^(?:careers?|jobs)(?:\s+at\b|\b)/i.test(candidate) && !hasRoleKeyword(candidate)) return true;
   if (isKnownSourceName(candidate)) return true;
   if (/^(company|organization|employer|department|team|location|salary|compensation)\s*[:\-]/i.test(candidate)) return true;
   if (/^(apply|save|sign in|log in|share|view job|job details)$/i.test(candidate)) return true;
@@ -225,7 +251,7 @@ function getMeaningfulLines(rawText, limit = 16) {
     .split("\n")
     .map(cleanCandidate)
     .filter(Boolean)
-    .filter((line) => !/^(apply now|share this job|sign in|cookie policy)$/i.test(line))
+    .filter((line) => !IGNORED_LINE_PATTERN.test(line))
     .slice(0, limit);
 }
 
@@ -240,7 +266,7 @@ function arrayify(value) {
 }
 
 function splitTitleParts(value) {
-  return cleanCandidate(value)?.split(TITLE_SEPARATOR_PATTERN).map(cleanCandidate).filter(Boolean) ?? [];
+  return cleanTitleCandidate(value)?.split(TITLE_SEPARATOR_PATTERN).map(cleanTitleCandidate).filter(Boolean) ?? [];
 }
 
 function normalizeFetchUrl(url) {
@@ -450,6 +476,167 @@ function extractStructuredSalaryLine(jobPosting) {
   return null;
 }
 
+function extractJsonScriptPayloads(html) {
+  const payloads = [];
+  for (const match of String(html ?? "").matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
+    const attrs = parseTagAttributes(match[1]);
+    const scriptType = String(attrs.type ?? "").toLowerCase();
+    const scriptId = String(attrs.id ?? "").toLowerCase();
+    const body = decodeHtmlEntities(match[2]).trim();
+    if (!body || body.length > MAX_FETCH_BYTES) continue;
+    if (scriptType === "application/ld+json") continue;
+    const looksLikeJson =
+      scriptType === "application/json" ||
+      scriptId === "__next_data__" ||
+      scriptId.includes("initial") ||
+      /^[{[]/.test(body);
+    if (!looksLikeJson) continue;
+
+    try {
+      payloads.push(JSON.parse(body));
+    } catch {
+      continue;
+    }
+  }
+  return payloads;
+}
+
+function getObjectValueByKeys(object, keys) {
+  if (!object || typeof object !== "object") return null;
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(object, key)) return object[key];
+  }
+  return null;
+}
+
+function genericStringValue(value) {
+  if (value === undefined || value === null) return null;
+  if (typeof value === "string" || typeof value === "number") return cleanCandidate(value);
+  if (Array.isArray(value)) return value.map(genericStringValue).filter(Boolean).join(" / ") || null;
+  if (typeof value !== "object") return null;
+  return cleanCandidate(value.label ?? value.name ?? value.title ?? value.displayName ?? value.value ?? value.text);
+}
+
+function genericCompanyValue(value) {
+  if (!value) return null;
+  if (typeof value === "string") return cleanCompanyName(value);
+  if (Array.isArray(value)) return genericCompanyValue(value[0]);
+  if (typeof value !== "object") return null;
+  return cleanCompanyName(value.name ?? value.companyName ?? value.legalName ?? value.displayName ?? value.title);
+}
+
+function genericLocationValue(value) {
+  if (!value) return null;
+  if (typeof value === "string") return cleanLocationCandidate(value);
+  if (Array.isArray(value)) return value.map(genericLocationValue).filter(Boolean).join(" / ") || null;
+  if (typeof value !== "object") return null;
+  const address = value.address && typeof value.address === "object" ? value.address : value;
+  const city = address.city ?? address.addressLocality ?? address.locality;
+  const region = address.state ?? address.region ?? address.addressRegion;
+  const country = genericStringValue(address.country ?? address.addressCountry);
+  const parts = [city, region, country].map(cleanCandidate).filter(Boolean);
+  return cleanLocationCandidate(parts.length ? parts.join(", ") : genericStringValue(value));
+}
+
+function genericLocationFromObjectFields(object) {
+  if (!object || typeof object !== "object" || Array.isArray(object)) return null;
+  const hasLocationFields = ["city", "state", "region", "country", "addressLocality", "addressRegion", "addressCountry"].some((key) =>
+    Object.prototype.hasOwnProperty.call(object, key),
+  );
+  return hasLocationFields ? genericLocationValue(object) : null;
+}
+
+function genericDescriptionValue(value) {
+  const text = typeof value === "string" ? stripHtmlToText(value) : genericStringValue(value);
+  if (!text || text.length < 30) return null;
+  return text;
+}
+
+function scoreGenericJobObject(object) {
+  if (!object || typeof object !== "object" || Array.isArray(object)) return 0;
+  const title = cleanTitleCandidate(getObjectValueByKeys(object, GENERIC_TITLE_KEYS));
+  const company = genericCompanyValue(getObjectValueByKeys(object, GENERIC_COMPANY_KEYS));
+  const location = genericLocationValue(getObjectValueByKeys(object, GENERIC_LOCATION_KEYS)) ?? genericLocationFromObjectFields(object);
+  const description = genericDescriptionValue(getObjectValueByKeys(object, GENERIC_DESCRIPTION_KEYS));
+  const hasJobishKey = Object.keys(object).some((key) => /job|posting|position|requisition|opening/i.test(key));
+
+  let score = 0;
+  if (title && !isRejectedTitle(title)) score += 4;
+  if (description) score += 4;
+  if (company) score += 2;
+  if (location) score += 2;
+  if (getObjectValueByKeys(object, GENERIC_SALARY_KEYS)) score += 1;
+  if (hasJobishKey) score += 1;
+  if (!title || isRejectedTitle(title)) score -= 4;
+  if (!description && !company && !location) score -= 3;
+  return score;
+}
+
+function collectJsonObjects(value, limit = 3000) {
+  const objects = [];
+  const seen = new Set();
+  const visit = (item) => {
+    if (objects.length >= limit || !item || typeof item !== "object" || seen.has(item)) return;
+    seen.add(item);
+    if (!Array.isArray(item)) objects.push(item);
+    for (const child of Array.isArray(item) ? item : Object.values(item)) visit(child);
+  };
+  visit(value);
+  return objects;
+}
+
+function extractGenericSalaryLine(object) {
+  const salaryValue = getObjectValueByKeys(object, GENERIC_SALARY_KEYS);
+  if (!salaryValue) return null;
+  if (typeof salaryValue === "number") return `Salary: USD ${salaryValue}`;
+  if (typeof salaryValue === "string") return /(\$|usd|cad|salary|compensation|pay|base)/i.test(salaryValue) ? `Salary: ${salaryValue}` : null;
+
+  const salaryObject = typeof salaryValue === "object" ? salaryValue.value ?? salaryValue : null;
+  if (!salaryObject || typeof salaryObject !== "object") return null;
+  const unitText = [salaryValue.unitText, salaryObject.unitText, salaryValue.unit, salaryObject.unit].map(normalizeOptional).filter(Boolean).join(" ");
+  if (unitText && isHourlyContext(unitText)) return null;
+
+  const min = parseStructuredMoneyValue(
+    salaryObject.minValue ?? salaryObject.min ?? salaryObject.minimum ?? salaryObject.minAmount ?? salaryObject.minimumSalary ?? salaryObject.salaryMin ?? salaryObject.salary_min ?? salaryObject.low,
+  );
+  const max = parseStructuredMoneyValue(
+    salaryObject.maxValue ?? salaryObject.max ?? salaryObject.maximum ?? salaryObject.maxAmount ?? salaryObject.maximumSalary ?? salaryObject.salaryMax ?? salaryObject.salary_max ?? salaryObject.high,
+  );
+  const value = parseStructuredMoneyValue(salaryObject.value ?? salaryObject.amount);
+  const currency = normalizeOptional(salaryValue.currency ?? salaryObject.currency ?? "USD");
+  if (min && max) return `Salary: ${currency} ${min} - ${max}`;
+  if (value) return `Salary: ${currency} ${value}`;
+  return null;
+}
+
+function extractGenericJobPayloadFromJson(json) {
+  const ranked = collectJsonObjects(json)
+    .map((object) => ({ object, score: scoreGenericJobObject(object) }))
+    .filter((candidate) => candidate.score >= 5)
+    .sort((a, b) => b.score - a.score);
+
+  const best = ranked[0]?.object;
+  if (!best) return null;
+
+  const title = cleanTitleCandidate(getObjectValueByKeys(best, GENERIC_TITLE_KEYS));
+  if (!title || isRejectedTitle(title)) return null;
+
+  return {
+    title,
+    company: genericCompanyValue(getObjectValueByKeys(best, GENERIC_COMPANY_KEYS)),
+    location: genericLocationValue(getObjectValueByKeys(best, GENERIC_LOCATION_KEYS)) ?? genericLocationFromObjectFields(best),
+    employmentType: genericStringValue(getObjectValueByKeys(best, ["employmentType", "jobType", "workType"])),
+    salary: extractGenericSalaryLine(best),
+    description: genericDescriptionValue(getObjectValueByKeys(best, GENERIC_DESCRIPTION_KEYS)),
+  };
+}
+
+function extractGenericJobPayload(html) {
+  return extractJsonScriptPayloads(html)
+    .map(extractGenericJobPayloadFromJson)
+    .find(Boolean) ?? null;
+}
+
 function extractStructuredJobPayload(html) {
   const scriptMatches = String(html ?? "").matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
   const graphNodes = [];
@@ -476,7 +663,7 @@ function extractStructuredJobPayload(html) {
 }
 
 export function extractJobPageDataFromHtml(html) {
-  const structured = extractStructuredJobPayload(html);
+  const structured = extractStructuredJobPayload(html) ?? extractGenericJobPayload(html);
   const metadata = extractHtmlMetadata(html);
   const pageTitle = structured?.title ?? metadata.title;
   const rawTextParts = [
@@ -586,20 +773,20 @@ export function cleanJobText(rawText) {
     .replace(/[ \t]+/g, " ")
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => !/^(apply now|share this job|cookie policy|privacy policy|sign in to save)$/i.test(line))
+    .filter((line) => !IGNORED_LINE_PATTERN.test(line))
     .join("\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
 function titleCandidatesFromPageTitle(pageTitle) {
-  const title = cleanCandidate(pageTitle);
+  const title = cleanTitleCandidate(pageTitle);
   if (!title) return [];
 
   const candidates = [];
   const parts = splitTitleParts(title);
   if (parts.length < 2) {
-    candidates.push({ value: title.replace(/\s+\|\s+(LinkedIn|Indeed|Glassdoor).*$/i, ""), source: "pageTitle", weight: 20 });
+    candidates.push({ value: title, source: "pageTitle", weight: 20 });
   }
 
   if (parts.length >= 2) {
@@ -624,14 +811,14 @@ function titleCandidateFromUrl(sourceUrl) {
       const jobIndex = parts.findIndex((part) => part.toLowerCase() === "jobs");
       const afterJobs = parts.slice(jobIndex + 1).filter((part) => !/^\d+$/.test(part));
       if (!afterJobs.length) return null;
-      return titleCaseSlug(decodeURIComponent(afterJobs.at(-1)));
+      return cleanTitleCandidate(titleCaseSlug(decodeURIComponent(afterJobs.at(-1))));
     }
 
-    const ignored = new Set(["jobs", "job", "careers", "view", "posting", "boards"]);
+    const ignored = new Set(["jobs", "job", "careers", "view", "posting", "boards", "apply", "jobdetails"]);
     const slug = [...parts]
       .reverse()
       .find((part) => !ignored.has(part.toLowerCase()) && !/^\d+$/.test(part) && part.length > 3);
-    return slug ? titleCaseSlug(decodeURIComponent(slug)) : null;
+    return slug ? cleanTitleCandidate(titleCaseSlug(decodeURIComponent(slug))) : null;
   } catch {
     return null;
   }
@@ -639,14 +826,18 @@ function titleCandidateFromUrl(sourceUrl) {
 
 function buildTitleCandidates({ pageTitle, rawText, sourceUrl } = {}) {
   const candidates = [...titleCandidatesFromPageTitle(pageTitle)];
+  const lines = getMeaningfulLines(rawText, 10);
 
-  getMeaningfulLines(rawText, 8).forEach((line, index) => {
+  lines.slice(0, 8).forEach((line, index) => {
     const labelMatch = line.match(TITLE_LABEL_PATTERN);
     candidates.push({
       value: labelMatch ? labelMatch[1] : line,
       source: labelMatch ? "titleLabel" : "topLine",
       weight: (labelMatch ? 24 : 16) - index,
     });
+    if (TITLE_LABEL_ONLY_PATTERN.test(line) && lines[index + 1]) {
+      candidates.push({ value: lines[index + 1], source: "titleLabelNextLine", weight: 25 - index });
+    }
   });
 
   const urlCandidate = titleCandidateFromUrl(sourceUrl);
@@ -656,14 +847,14 @@ function buildTitleCandidates({ pageTitle, rawText, sourceUrl } = {}) {
 }
 
 function scoreTitleCandidate(candidate, index) {
-  const value = cleanCandidate(candidate.value);
+  const value = cleanTitleCandidate(candidate.value);
   if (isRejectedTitle(value)) return -1;
 
   let score = candidate.weight ?? 0;
   const words = value.split(/\s+/).length;
   if (hasRoleKeyword(value)) score += 35;
   if (/^(senior|staff|principal|lead|junior|sr\.?|jr\.?)\b/i.test(value)) score += 8;
-  if (candidate.source === "titleLabel") score += 10;
+  if (candidate.source === "titleLabel" || candidate.source === "titleLabelNextLine") score += 10;
   if (index < 4) score += 5;
   if (value.length <= 80) score += 5;
   if (words > 10) score -= 8;
@@ -677,7 +868,7 @@ function rankTitleCandidates(candidates) {
       const score = scoreTitleCandidate(candidate, index);
       return {
         ...candidate,
-        value: cleanCandidate(candidate.value),
+        value: cleanTitleCandidate(candidate.value),
         score,
         rejected: score < 0,
       };
@@ -722,6 +913,10 @@ function companyFromUrl(sourceUrl, source) {
       const hostPart = domain.split(".")[0];
       const company = hostPart.replace(/^wd\d+$/i, "");
       if (company) return cleanCompanyName(titleCaseSlug(company));
+      const recruitingIndex = parts.findIndex((part) => part.toLowerCase() === "recruiting");
+      if (recruitingIndex >= 0 && parts[recruitingIndex + 1]) {
+        return cleanCompanyName(titleCaseSlug(parts[recruitingIndex + 1]));
+      }
     }
 
     if (!source) {
@@ -742,7 +937,7 @@ function companyFromRawText(rawText, parsedTitle, markersOnly = false) {
     const line = lines[index];
     const labelMatch = line.match(COMPANY_LABEL_PATTERN);
     if (labelMatch) return cleanCompanyName(labelMatch[1]);
-    if (/^(company|organization|hiring organization|employer)$/i.test(line) && lines[index + 1]) {
+    if (COMPANY_LABEL_ONLY_PATTERN.test(line) && lines[index + 1]) {
       return cleanCompanyName(lines[index + 1]);
     }
   }
@@ -753,7 +948,10 @@ function companyFromRawText(rawText, parsedTitle, markersOnly = false) {
   const topLineCandidates = titleIndex >= 0 ? lines.slice(titleIndex + 1, titleIndex + 4) : lines.slice(0, 4);
   return topLineCandidates
     .map(cleanCompanyName)
-    .find((line) => line && !hasRoleKeyword(line) && !/^(remote|hybrid|onsite|on-site|location\b)/i.test(line)) ?? null;
+    .find((line, index) => {
+      const immediatelyAfterTitle = titleIndex >= 0 && index === 0;
+      return line && !NON_COMPANY_LINE_PATTERN.test(line) && !cityStateFromText(line) && (immediatelyAfterTitle || !hasRoleKeyword(line));
+    }) ?? null;
 }
 
 export function extractCompany({ pageTitle, rawText, sourceUrl, source, parsedTitle } = {}) {
@@ -794,7 +992,7 @@ export function extractLocation(rawText) {
       const location = cleanLocationCandidate(labelMatch[1]);
       if (location) return location;
     }
-    if (/^(location|locations|job location|work location|office|offices|workplace type)$/i.test(line) && lines[index + 1]) {
+    if (LOCATION_LABEL_ONLY_PATTERN.test(line) && lines[index + 1]) {
       const location = cleanLocationCandidate(lines[index + 1]);
       if (location) return location;
     }
