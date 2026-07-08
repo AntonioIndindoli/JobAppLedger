@@ -5,6 +5,7 @@ import {
   detectJobSource,
   extractLocation,
   extractSalaryRange,
+  extractSkills,
   extractTitle,
   extractJobPageDataFromHtml,
   parseJobDescription,
@@ -38,6 +39,10 @@ test("extractSalaryRange parses annual salary ranges and ignores hourly rates", 
     min: 95000,
     max: 110000,
   });
+  assert.deepEqual(extractSalaryRange("Annual base salary range: CAD 125,000.00 to CAD 155,000.00"), {
+    min: 125000,
+    max: 155000,
+  });
   assert.deepEqual(extractSalaryRange("Compensation: $80/hr"), {
     min: null,
     max: null,
@@ -54,6 +59,16 @@ test("extractTitle handles page title patterns", () => {
 test("extractLocation prefers explicit location markers", () => {
   assert.equal(extractLocation("Location: Remote, United States\nSalary: $100k-$120k"), "Remote, United States");
   assert.equal(extractLocation("This role is open to candidates.\nHybrid - Austin, TX"), "Hybrid - Austin, TX");
+  assert.equal(extractLocation("This role is open to remote candidates.\nOffice\nNew York, NY, United States"), "New York, NY, United States");
+});
+
+test("extractSkills recognizes expanded technology dictionary", () => {
+  assert.deepEqual(extractSkills("Build with Prisma, Tailwind CSS, CI/CD, and GitHub Actions."), [
+    "Prisma",
+    "Tailwind CSS",
+    "CI/CD",
+    "GitHub Actions",
+  ]);
 });
 
 test("parseJobDescription returns an import-draft-ready payload", () => {
@@ -81,6 +96,26 @@ test("parseJobDescription returns an import-draft-ready payload", () => {
   assert.ok(parsed.parsedDescription.includes("Build user-facing product surfaces"));
   assert.ok(parsed.confidence >= 0.8);
   assert.deepEqual(parsed.skills, ["TypeScript", "React", "GraphQL"]);
+});
+
+test("parseJobDescription handles labeled pasted text", () => {
+  const parsed = parseJobDescription({
+    rawText: `
+      Role: Principal DevOps Engineer
+      Company: Example Systems Inc.
+      Workplace type: Remote - Canada
+
+      Own infrastructure automation with Terraform, Kubernetes, and AWS.
+      Annual base salary range: CAD 170,000.00 to CAD 210,000.00
+    `,
+  });
+
+  assert.equal(parsed.parsedTitle, "Principal DevOps Engineer");
+  assert.equal(parsed.parsedCompany, "Example Systems");
+  assert.equal(parsed.parsedLocation, "Remote - Canada");
+  assert.equal(parsed.parsedSalaryMin, 170000);
+  assert.equal(parsed.parsedSalaryMax, 210000);
+  assert.deepEqual(parsed.skills, ["AWS", "Kubernetes", "Terraform"]);
 });
 
 test("parseJobDescription debug mode shows parser inputs and candidates", () => {
@@ -121,4 +156,54 @@ test("extractJobPageDataFromHtml prefers JobPosting JSON-LD", () => {
   assert.match(extracted.rawText, /ExampleCo/);
   assert.match(extracted.rawText, /Build APIs with Node\.js/);
   assert.match(extracted.rawText, /\$150,000 - \$190,000/);
+});
+
+test("extractJobPageDataFromHtml handles JSON-LD @graph references and structured salary", () => {
+  const extracted = extractJobPageDataFromHtml(`
+    <html>
+      <head><title>Fallback title</title></head>
+      <body>
+        <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@id": "https://example.com/#org",
+                "@type": "Organization",
+                "name": "Example Graph Co"
+              },
+              {
+                "@type": "JobPosting",
+                "title": "Senior Data Engineer",
+                "hiringOrganization": { "@id": "https://example.com/#org" },
+                "jobLocationType": "TELECOMMUTE",
+                "applicantLocationRequirements": { "name": "United States" },
+                "baseSalary": {
+                  "currency": "USD",
+                  "value": {
+                    "@type": "QuantitativeValue",
+                    "minValue": 135000,
+                    "maxValue": 175000,
+                    "unitText": "YEAR"
+                  }
+                },
+                "description": "<p>Build data pipelines with Python, Spark, and Snowflake.</p>"
+              }
+            ]
+          }
+        </script>
+      </body>
+    </html>
+  `);
+
+  assert.equal(extracted.pageTitle, "Senior Data Engineer");
+  assert.match(extracted.rawText, /Example Graph Co/);
+  assert.match(extracted.rawText, /Remote - United States/);
+  assert.match(extracted.rawText, /Salary: USD 135000 - 175000/);
+
+  const parsed = parseJobDescription({ rawText: extracted.rawText, pageTitle: extracted.pageTitle });
+  assert.equal(parsed.parsedCompany, "Example Graph Co");
+  assert.equal(parsed.parsedLocation, "Remote - United States");
+  assert.equal(parsed.parsedSalaryMin, 135000);
+  assert.equal(parsed.parsedSalaryMax, 175000);
 });
