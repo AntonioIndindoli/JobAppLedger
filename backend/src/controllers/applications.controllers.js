@@ -3,6 +3,7 @@ import {
   deleteApplication,
   getApplication,
   getApplicationHistory,
+  listApplicationHistories,
   listApplications,
   transitionApplicationStatus,
   updateApplication,
@@ -11,6 +12,11 @@ import {
 export async function listApplicationsController(req, res) {
   const data = await listApplications(req.auth.sub, req.query);
   return res.status(200).json({ applications: data });
+}
+
+export async function listApplicationHistoriesController(req, res) {
+  const historyByApp = await listApplicationHistories(req.auth.sub);
+  return res.status(200).json({ historyByApp });
 }
 
 export async function getApplicationController(req, res) {

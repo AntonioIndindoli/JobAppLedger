@@ -46,8 +46,10 @@ export type ParserDebug = Record<string, unknown>;
 
 export type ActivityLog = {
     id: string;
+    applicationId: string;
     type: string;
     message: string;
+    metadata: unknown | null;
     createdAt: string;
 };
 

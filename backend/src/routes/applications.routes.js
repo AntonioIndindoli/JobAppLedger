@@ -6,6 +6,7 @@ import {
   deleteApplicationController,
   getApplicationController,
   getApplicationHistoryController,
+  listApplicationHistoriesController,
   listApplicationsController,
   transitionApplicationStatusController,
   updateApplicationController,
@@ -16,6 +17,7 @@ const router = Router();
 router.use(requireAuth);
 router.get("/", listApplicationsController);
 router.post("/", validateApplicationPayload, createApplicationController);
+router.get("/history", listApplicationHistoriesController);
 router.get("/:id", getApplicationController);
 router.get("/:id/history", getApplicationHistoryController);
 router.put("/:id", validateApplicationPayload, updateApplicationController);

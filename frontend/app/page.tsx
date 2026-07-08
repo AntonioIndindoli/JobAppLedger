@@ -241,6 +241,18 @@ export default function MainPage() {
         if (!res.ok)
             return setMessage(data.message ?? "Failed loading applications");
         setApplications(data.applications);
+        loadApplicationHistories(activeToken);
+    }
+
+    async function loadApplicationHistories(activeToken = token) {
+        if (!activeToken) return;
+        const res = await fetch(`${API_BASE_URL}/applications/history`, {
+            headers: { Authorization: `Bearer ${activeToken}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok)
+            return setMessage(data.message ?? "Failed loading application history");
+        setHistoryByApp(data.historyByApp ?? {});
     }
 
     async function loadHistory(id: string) {
@@ -478,7 +490,7 @@ export default function MainPage() {
         setApplications((prev) =>
             prev.map((app) => (app.id === id ? data.application : app)),
         );
-        if (openTimelineId === id) loadHistory(id);
+        loadHistory(id);
     }
 
     async function removeApplication(id: string) {
@@ -552,7 +564,6 @@ export default function MainPage() {
                     filters={filters}
                     firstName={firstName}
                     historyByApp={historyByApp}
-                    message={message}
                     openTimelineId={openTimelineId}
                     weeklyRangeWeeks={weeklyRangeWeeks}
                     onApplyTrackerFilters={() => setAppliedTrackerFilters(filters)}

@@ -59,6 +59,20 @@ export async function getApplicationHistory(userId, id) {
   return prisma.activityLog.findMany({ where: { userId, applicationId: id }, orderBy: { createdAt: "desc" } });
 }
 
+export async function listApplicationHistories(userId) {
+  const prisma = await getPrismaAsync();
+  const logs = await prisma.activityLog.findMany({
+    where: { userId },
+    orderBy: [{ applicationId: "asc" }, { createdAt: "desc" }],
+  });
+
+  return logs.reduce((historyByApp, entry) => {
+    if (!historyByApp[entry.applicationId]) historyByApp[entry.applicationId] = [];
+    historyByApp[entry.applicationId].push(entry);
+    return historyByApp;
+  }, {});
+}
+
 async function detectDuplicates(prisma, userId, payload, excludeId) {
   const normalizedUrl = normalizeUrl(payload.sourceUrl);
   const where = [{ userId }];

@@ -1,18 +1,26 @@
 "use client";
 
-import { AppIcon, MetricIcon } from "../AppIcon";
+import { MetricIcon } from "../AppIcon";
 import { PipelineSankey } from "./PipelineSankey";
-import type { Application } from "../../lib/types";
+import type { ActivityLog, Application } from "../../lib/types";
 
 type DashboardStatsProps = {
     activePipeline: number;
     applications: Application[];
+    historyByApp: Record<string, ActivityLog[]>;
 };
 
-export function DashboardStats({ activePipeline, applications }: DashboardStatsProps) {
+export function DashboardStats({
+    activePipeline,
+    applications,
+    historyByApp,
+}: DashboardStatsProps) {
     return (
         <section className="pipeline-stats-container">
-            <PipelineSankey applications={applications} />
+            <PipelineSankey
+                applications={applications}
+                historyByApp={historyByApp}
+            />
             <section className="stat-grid">
                 <div className="stat-card">
                     <MetricIcon name="applications" />

@@ -336,7 +336,7 @@ button {
 .sankey-node text {
     pointer-events: none;
     fill: #26334d;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 700;
 }
 
@@ -569,7 +569,8 @@ button {
     margin: 0;
     padding: 6px;
     border: 1px solid var(--border);
-    border-radius: 7px;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
     font-size: 12px;
 }
 
@@ -597,7 +598,8 @@ button {
     min-height: 176px;
     padding: 8px;
     border: 1px dashed #cfd9e8;
-    border-radius: 7px;
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
 }
 
 .job-card {

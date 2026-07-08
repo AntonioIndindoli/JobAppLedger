@@ -12,7 +12,6 @@ import type {
     ApplicationFilters,
     WeeklyRangeWeeks,
 } from "../../lib/types";
-import { AppIcon } from "../AppIcon";
 import { ApplicationTracker } from "./ApplicationTracker";
 import { DashboardCards } from "./DashboardCards";
 import { DashboardStats } from "./DashboardStats";
@@ -26,7 +25,6 @@ type DashboardHomeProps = {
     filters: ApplicationFilters;
     firstName: string;
     historyByApp: Record<string, ActivityLog[]>;
-    message: string;
     openTimelineId: string | null;
     weeklyRangeWeeks: WeeklyRangeWeeks;
     onApplyTrackerFilters: () => void;
@@ -47,7 +45,6 @@ export function DashboardHome({
     filters,
     firstName,
     historyByApp,
-    message,
     openTimelineId,
     weeklyRangeWeeks,
     onApplyTrackerFilters,
@@ -78,7 +75,11 @@ export function DashboardHome({
                     faster.
                 </p>
             </section>
-            <DashboardStats activePipeline={activePipeline} applications={applications} />
+            <DashboardStats
+                activePipeline={activePipeline}
+                applications={applications}
+                historyByApp={historyByApp}
+            />
             <ApplicationTracker
                 applications={applications}
                 filters={filters}
