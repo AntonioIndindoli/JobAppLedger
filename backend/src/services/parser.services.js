@@ -180,7 +180,7 @@ const GENERIC_SALARY_KEYS = ["salary", "baseSalary", "base_salary", "compensatio
 const US_STATE_NAME_PATTERN = "Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming";
 const CITY_REGION_COUNTRY_SOURCE = `[A-Z][a-zA-Z .'-]+,\\s?(?:(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|IA|ID|IL|IN|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)|(?:${US_STATE_NAME_PATTERN}))(?:,\\s?(?:United States|USA|US))?`;
 const CITY_REGION_COUNTRY_PATTERN = new RegExp(`\\b(${CITY_REGION_COUNTRY_SOURCE})\\b`);
-const ROLE_LOCATION_LINE_PATTERN = new RegExp(`\\bin\\s+(${CITY_REGION_COUNTRY_SOURCE})\\b`, "i");
+const ROLE_LOCATION_LINE_PATTERN = new RegExp(`\\bin\\s+(${CITY_REGION_COUNTRY_SOURCE})\\b`);
 const US_STATE_ABBREVIATIONS = new Set(["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"]);
 
 function normalizeOptional(value) {

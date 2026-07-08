@@ -181,6 +181,7 @@ test("parseJobDescription handles Greenhouse application line company and remote
       About Renaissance
       Job Description
       We are seeking a Full Stack Software Engineer with strong backend experience in .NET Core and frontend experience in React.
+      Bachelor's degree in Computer Science or a related field, or equivalent practical experience.
       Salary Range
       $68,000 - $93,500 USD
     `,
