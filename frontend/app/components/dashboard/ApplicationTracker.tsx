@@ -17,6 +17,7 @@ type ApplicationTrackerProps = {
     openTimelineId: string | null;
     trackerApplications: Application[];
     onApplyFilters: () => void;
+    onImportOpen: () => void;
     onCreateApplication: () => void;
     onFiltersChange: (filters: ApplicationFilters) => void;
     onRemoveApplication: (id: string) => void;
@@ -24,6 +25,20 @@ type ApplicationTrackerProps = {
     onToggleTimeline: (id: string) => void | Promise<void>;
     onTransitionStatus: (id: string, nextStatus: string) => void | Promise<void>;
 };
+
+function formatAppliedDate(dateApplied: string | null) {
+    if (!dateApplied) return "No applied date";
+
+    const date = new Date(dateApplied);
+    if (Number.isNaN(date.getTime())) return "No applied date";
+
+    return new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC",
+    }).format(date);
+}
 
 export function ApplicationTracker({
     applications,
@@ -33,6 +48,7 @@ export function ApplicationTracker({
     openTimelineId,
     trackerApplications,
     onApplyFilters,
+    onImportOpen,
     onCreateApplication,
     onFiltersChange,
     onRemoveApplication,
@@ -58,10 +74,16 @@ export function ApplicationTracker({
                     </h2>
                     <p>Track your applications across stages.</p>
                 </div>
-                <button className="primary" onClick={onCreateApplication}>
-                    <AppIcon name="plus" size={18} />
-                    Add Application
-                </button>
+                <div className="panel-title">
+                    <button className="primary" onClick={onImportOpen}>
+                        <AppIcon name="import" size={18} />
+                        Import Job
+                    </button>
+                    <button className="secondary" onClick={onCreateApplication}>
+                        <AppIcon name="plus" size={18} />
+                        Add Application
+                    </button>
+                </div>
             </div>
             <div className="filter-row" aria-label="Application filters">
                 <select
@@ -127,8 +149,13 @@ export function ApplicationTracker({
                             if (id) onTransitionStatus(id, status);
                         }}
                     >
-                        <h3>{STATUS_LABELS[status]}</h3>
-                        <strong>{groupedApplications[status].length}</strong>
+                        <h3 className="lane-header">
+                            <span className="lane-title">
+                                <span className="lane-dot" aria-hidden="true" />
+                                {STATUS_LABELS[status]}
+                            </span>
+                            <strong>{groupedApplications[status].length}</strong>
+                        </h3>
                         <div className="dropzone">
                             {groupedApplications[status].map((application) => (
                                 <article
@@ -145,6 +172,10 @@ export function ApplicationTracker({
                                     <b>{application.title}</b>
                                     <span>{application.companyName ?? "Unknown"}</span>
                                     <small>{application.source ?? "No source"}</small>
+                                    <small className="applied-date">
+                                        <AppIcon name="calendar" size={12} />
+                                        {formatAppliedDate(application.dateApplied)}
+                                    </small>
                                     <div>
                                         <button onClick={() => onStartEdit(application)}>
                                             <AppIcon name="edit" size={13} />

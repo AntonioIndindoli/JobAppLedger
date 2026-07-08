@@ -77,19 +77,8 @@ export function DashboardHome({
                     Track your job search, stay on top of interviews, and follow up
                     faster.
                 </p>
-                <div className="actions">
-                    <button className="primary" onClick={onImportOpen}>
-                        <AppIcon name="import" size={18} />
-                        Import Job
-                    </button>
-                    <button className="secondary" onClick={onCreateApplication}>
-                        <AppIcon name="plus" size={18} />
-                        Add Application
-                    </button>
-                </div>
             </section>
             <DashboardStats activePipeline={activePipeline} applications={applications} />
-            {message && <p className="notice">{message}</p>}
             <ApplicationTracker
                 applications={applications}
                 filters={filters}
@@ -98,6 +87,7 @@ export function DashboardHome({
                 openTimelineId={openTimelineId}
                 trackerApplications={trackerApplications}
                 onApplyFilters={onApplyTrackerFilters}
+                onImportOpen={onImportOpen}
                 onCreateApplication={onCreateApplication}
                 onFiltersChange={onFiltersChange}
                 onRemoveApplication={onRemoveApplication}

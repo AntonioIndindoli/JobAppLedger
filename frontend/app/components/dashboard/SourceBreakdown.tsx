@@ -34,9 +34,9 @@ export function SourceBreakdown({ applications }: SourceBreakdownProps) {
     });
     const donutBackground = totalSourceCount
         ? `radial-gradient(circle, white 42%, transparent 43%), conic-gradient(${sourceSegments
-              .filter((segment) => segment.count > 0)
-              .map((segment) => `${segment.color} ${segment.startPercent}% ${segment.endPercent}%`)
-              .join(", ")})`
+            .filter((segment) => segment.count > 0)
+            .map((segment) => `${segment.color} ${segment.startPercent}% ${segment.endPercent}%`)
+            .join(", ")})`
         : undefined;
 
     return (
@@ -50,24 +50,26 @@ export function SourceBreakdown({ applications }: SourceBreakdownProps) {
                     <AppIcon name="info" size={14} />
                 </span>
             </h2>
-            <div
-                className={`donut${totalSourceCount ? " has-data" : ""}`}
-                style={donutBackground ? { background: donutBackground } : undefined}
-                aria-label={`${totalSourceCount} applications with tracked sources`}
-            >
-                <strong>{totalSourceCount}</strong>
-                <span>{totalSourceCount === 1 ? "source" : "sources"}</span>
-            </div>
-            <div className="source-list">
-                {SOURCES.map((source, index) => (
-                    <span key={source}>
-                        <b style={{ background: SOURCE_DOTS[index] }} />
-                        {source}
-                        <em>
-                            {sourceCounts[index]} ({sourceSegments[index].percentage}%)
-                        </em>
-                    </span>
-                ))}
+            <div className="sources-chart">
+                <div
+                    className={`donut${totalSourceCount ? " has-data" : ""}`}
+                    style={donutBackground ? { background: donutBackground } : undefined}
+                    aria-label={`${totalSourceCount} applications with tracked sources`}
+                >
+                    <strong>{totalSourceCount}</strong>
+                    <span>{totalSourceCount === 1 ? "source" : "sources"}</span>
+                </div>
+                <div className="source-list">
+                    {SOURCES.map((source, index) => (
+                        <span key={source}>
+                            <b style={{ background: SOURCE_DOTS[index] }} />
+                            {source}
+                            <em>
+                                {sourceCounts[index]} ({sourceSegments[index].percentage}%)
+                            </em>
+                        </span>
+                    ))}
+                </div>
             </div>
             <p>
                 {totalSourceCount

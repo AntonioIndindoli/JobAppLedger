@@ -27,6 +27,7 @@ export const DASHBOARD_STATUSES = [
     "INTERVIEWING",
     "OFFER",
     "REJECTED",
+    "WITHDRAWN",
 ] as const;
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {

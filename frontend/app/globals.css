@@ -75,7 +75,8 @@ button {
 .secondary svg,
 .danger svg,
 .drawer-close svg,
-.job-card button svg {
+.job-card button svg,
+.applied-date svg {
     flex: 0 0 auto;
 }
 
@@ -499,7 +500,6 @@ button {
 
 .panel h2 {
     display: flex;
-    align-items: center;
     gap: 8px;
     margin: 0;
     font-size: 15px;
@@ -536,39 +536,61 @@ button {
     gap: 11px;
 }
 
-.lane h3 {
+.lane {
+    --lane-color: #0f766e;
+}
+
+.lane.applied {
+    --lane-color: #006bff;
+}
+
+.lane.interviewing {
+    --lane-color: #4f33ff;
+}
+
+.lane.offer {
+    --lane-color: #00a33d;
+}
+
+.lane.rejected {
+    --lane-color: #e22b2b;
+}
+
+.lane.withdrawn {
+    --lane-color: #64748b;
+}
+
+.lane-header {
     min-height: 38px;
-    display: grid;
-    place-items: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     margin: 0;
     padding: 6px;
     border: 1px solid var(--border);
     border-radius: 7px;
     font-size: 12px;
-    color: #111827;
 }
 
-.lane.applied h3 {
-    color: #006bff
+.lane-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--lane-color);
+    font-weight: 800;
 }
 
-.lane.interviewing h3 {
-    color: #4f33ff
+.lane-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--lane-color);
 }
 
-.lane.offer h3 {
-    color: #00a33d
-}
-
-.lane.rejected h3 {
-    color: #e22b2b
-}
-
-.lane>strong {
-    display: block;
-    text-align: center;
-    padding: 3px 0 8px;
-    font-size: 14px;
+.lane-header strong {
+    color: var(--lane-color);
+    font-size: 13px;
 }
 
 .dropzone {
@@ -592,6 +614,14 @@ button {
 .job-card small {
     display: block;
     margin-bottom: 3px;
+}
+
+.job-card .applied-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #53617b;
+    font-weight: 700;
 }
 
 .job-card button {
@@ -694,15 +724,27 @@ button {
 }
 
 .sources {
+    gap: 12px 24px;
+    padding: 16px;
+}
+
+.sources-chart {
     display: grid;
     grid-template-columns: 145px 1fr;
     gap: 12px 24px;
     padding: 16px;
 }
 
-.sources h2,
+.sources h2 {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 8px;
+}
+
 .sources p {
     grid-column: 1 / -1;
+    text-align: center;
+    margin-top: 16px;
 }
 
 .donut {
@@ -773,7 +815,6 @@ button {
 .weekly h2 {
     grid-column: 1 / -1;
     display: flex;
-    align-items: center;
     gap: 8px;
 }
 
@@ -1134,6 +1175,7 @@ button {
     color: #dc2626;
     font-weight: 700;
 }
+
 @media (max-width: 1600px) {
     .sidebar {
         position: static;
@@ -1179,9 +1221,9 @@ button {
 
     .source-list {
         grid-template-columns: 1fr;
-    }    
+    }
 
-.filter-row {
+    .filter-row {
         grid-template-columns: 1fr 1fr;
     }
 }
@@ -1274,6 +1316,7 @@ button {
         order: 3;
     }
 }
+
 .profile {
     position: relative;
 }
