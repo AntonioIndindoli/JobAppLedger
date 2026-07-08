@@ -168,7 +168,8 @@ const COMPANY_LABEL_PATTERN = /^(?:company|organization|hiring\s+organization|em
 const COMPANY_LABEL_ONLY_PATTERN = /^(?:company|organization|hiring\s+organization|employer)$/i;
 const LOCATION_LABEL_PATTERN = /^(?:locations?|job\s+location|work\s+location|based\s+in|office|offices|workplace\s+type|workplace|work\s+type)\s*[:\-]?\s*(.+)$/i;
 const LOCATION_LABEL_ONLY_PATTERN = /^(?:locations?|job\s+location|work\s+location|based\s+in|office|offices|workplace\s+type|workplace|work\s+type)$/i;
-const IGNORED_LINE_PATTERN = /^(?:apply now|share this job|sign in|cookie policy|privacy policy|sign in to save|save job|easy apply|back to jobs|see who .* hired|posted\b.*|reposted\b.*|promoted\b.*|actively hiring|be among the first|new)$/i;
+const LINKEDIN_HIRING_TITLE_PATTERN = /^(.+?)\s+hiring\s+(.+?)(?:\s+in\s+(.+?))?(?:\s+\|\s+LinkedIn)?$/i;
+const IGNORED_LINE_PATTERN = /^(?:apply now|apply|save|share this job|sign in|cookie policy|privacy policy|sign in to save|save job|easy apply|back to jobs|skip to main content|expand search|clear text|join now|people|learning|show|forgot password\?|email or phone|password|or|report this job|use ai to assess how you fit|tailor my resume|am i a good fit for this job\?|see who .* hired|posted\b.*|reposted\b.*|promoted\b.*|actively hiring|be among the first|new)$/i;
 const NON_COMPANY_LINE_PATTERN = /^(?:remote|hybrid|onsite|on-site|location\b|department\b|team\b|employment type\b|full[- ]time|part[- ]time|contract|temporary|internship|mid[- ]senior|entry level|associate|director|executive|not applicable|posted\b.*|reposted\b.*|promoted\b.*|easy apply)$/i;
 const GENERIC_TITLE_KEYS = ["jobTitle", "job_title", "title", "positionTitle", "position_title", "positionName", "position_name", "name", "roleName", "role_name", "postingTitle", "posting_title"];
 const GENERIC_COMPANY_KEYS = ["company", "companyName", "company_name", "organization", "organizationName", "organization_name", "employer", "employerName", "employer_name", "hiringOrganization", "hiring_organization"];
@@ -176,7 +177,9 @@ const GENERIC_LOCATION_KEYS = ["location", "locations", "locationName", "locatio
 const GENERIC_DESCRIPTION_KEYS = ["description", "jobDescription", "job_description", "body", "content", "html", "descriptionHtml", "description_html"];
 const GENERIC_SALARY_KEYS = ["salary", "baseSalary", "base_salary", "compensation", "payRange", "pay_range", "salaryRange", "salary_range", "basePay", "base_pay"];
 const US_STATE_NAME_PATTERN = "Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming";
-const CITY_REGION_COUNTRY_PATTERN = new RegExp(`\\b([A-Z][a-zA-Z .'-]+,\\s?(?:(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|IA|ID|IL|IN|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)|(?:${US_STATE_NAME_PATTERN}))(?:,\\s?(?:United States|USA|US))?)\\b`);
+const CITY_REGION_COUNTRY_SOURCE = `[A-Z][a-zA-Z .'-]+,\\s?(?:(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|IA|ID|IL|IN|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)|(?:${US_STATE_NAME_PATTERN}))(?:,\\s?(?:United States|USA|US))?`;
+const CITY_REGION_COUNTRY_PATTERN = new RegExp(`\\b(${CITY_REGION_COUNTRY_SOURCE})\\b`);
+const ROLE_LOCATION_LINE_PATTERN = new RegExp(`\\bin\\s+(${CITY_REGION_COUNTRY_SOURCE})\\b`, "i");
 
 function normalizeOptional(value) {
   if (value === undefined || value === null) return null;
@@ -217,11 +220,13 @@ function cleanCandidate(value) {
 
 function cleanTitleCandidate(value) {
   if (value && typeof value === "object") return null;
-  const cleaned = cleanCandidate(value)
+  const candidate = cleanCandidate(value)
     ?.replace(/^(?:job application for|application for|apply(?:ing)? for|job opening:?)\s+/i, "")
     .replace(/\s+\|\s+(?:LinkedIn|Indeed|Glassdoor|ZipRecruiter).*$/i, "")
     .replace(/\s+-\s+(?:LinkedIn|Indeed|Glassdoor|ZipRecruiter).*$/i, "")
     .trim();
+  const linkedInHiringMatch = candidate?.match(LINKEDIN_HIRING_TITLE_PATTERN);
+  const cleaned = linkedInHiringMatch ? cleanCandidate(linkedInHiringMatch[2]) : candidate;
   return cleaned || null;
 }
 
@@ -896,6 +901,11 @@ function companyFromPageTitle(pageTitle, parsedTitle) {
   if (!title) return null;
   if (parsedTitle && title.toLowerCase() === cleanTitleCandidate(parsedTitle)?.toLowerCase()) return null;
 
+  const linkedInHiringMatch = title.match(LINKEDIN_HIRING_TITLE_PATTERN);
+  if (linkedInHiringMatch && cleanTitleCandidate(linkedInHiringMatch[2])?.toLowerCase() === parsedTitle?.toLowerCase()) {
+    return cleanCompanyName(linkedInHiringMatch[1]);
+  }
+
   const atMatch = title.match(/^(.+?)\s+at\s+(.+?)$/i);
   if (atMatch && hasRoleKeyword(atMatch[1])) return cleanCompanyName(atMatch[2]);
 
@@ -1007,18 +1017,43 @@ function cityStateFromText(text) {
   return cleanLocationCandidate(cityStateMatch?.[1]);
 }
 
+function locationFromRoleLocationLine(line) {
+  const locationMatch = String(line ?? "").match(ROLE_LOCATION_LINE_PATTERN);
+  return cleanLocationCandidate(locationMatch?.[1]);
+}
+
+function isCountryOnlyLocation(value) {
+  return /^(?:United States|USA|US|Canada|Remote)$/i.test(String(value ?? "").trim());
+}
+
 function isStandaloneLocationLine(line) {
   const location = cleanLocationCandidate(line);
   if (!location || location.length > 100) return false;
   if (/[.!?]$/.test(location) || /\d/.test(location)) return false;
+  if (isCountryOnlyLocation(location)) return true;
   return cityStateFromText(location) === location || /^[A-Z][a-zA-Z .'-]+,\s?[A-Z][a-zA-Z .'-]+(?:,\s?(?:United States|USA|US|Canada))$/i.test(location);
 }
 
-export function extractLocation(rawText) {
+function locationAdjacentToTitleCompany(lines, parsedTitle, parsedCompany) {
+  if (!parsedTitle || !parsedCompany) return null;
+  for (let index = 0; index < lines.length - 2; index += 1) {
+    const titleMatches = cleanTitleCandidate(lines[index])?.toLowerCase() === parsedTitle.toLowerCase();
+    const companyMatches = cleanCompanyName(lines[index + 1])?.toLowerCase() === parsedCompany.toLowerCase();
+    if (!titleMatches || !companyMatches) continue;
+    const location = cleanLocationCandidate(lines[index + 2]);
+    if (location && isStandaloneLocationLine(location)) return location;
+  }
+  return null;
+}
+
+export function extractLocation(rawText, { parsedTitle, parsedCompany } = {}) {
   const text = normalizeOptional(rawText);
   if (!text) return null;
 
   const lines = getMeaningfulLines(text, 24);
+  const adjacentLocation = locationAdjacentToTitleCompany(lines, parsedTitle, parsedCompany);
+  if (adjacentLocation) return adjacentLocation;
+
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     const labelMatch = line.match(LOCATION_LABEL_PATTERN);
@@ -1031,6 +1066,9 @@ export function extractLocation(rawText) {
       if (location) return location;
     }
   }
+
+  const roleLocation = lines.map(locationFromRoleLocationLine).find(Boolean);
+  if (roleLocation) return roleLocation;
 
   const locationLine = lines.find(isStandaloneLocationLine);
   if (locationLine) return cleanLocationCandidate(locationLine);
@@ -1231,7 +1269,7 @@ export function parseJobDescription(input = {}) {
     source: sourceInfo.source,
     parsedTitle,
   });
-  const parsedLocation = extractLocation(cleanedText);
+  const parsedLocation = extractLocation(cleanedText, { parsedTitle, parsedCompany });
   const salary = extractSalaryRange(cleanedText);
 
   const parsed = {

@@ -59,7 +59,24 @@ button {
     height: 28px;
     border-radius: 6px;
     color: white;
-    background: var(--blue);
+    background: linear-gradient(145deg, #0b6bff, #064fbe);
+    box-shadow: 0 8px 18px rgba(11, 107, 255, .22);
+}
+
+.brand-mark svg,
+.nav-item svg,
+.search svg,
+.bell svg,
+.avatar svg,
+.profile-trigger svg,
+.heading-icon svg,
+.info-icon svg,
+.primary svg,
+.secondary svg,
+.danger svg,
+.drawer-close svg,
+.job-card button svg {
+    flex: 0 0 auto;
 }
 
 .nav-item {
@@ -75,12 +92,19 @@ button {
     color: #14213d;
     font-size: 15px;
     text-align: left;
+    transition: background .15s ease, color .15s ease;
 }
 
 .nav-item.active {
     background: #eaf3ff;
     color: #0066ff;
     font-weight: 700;
+}
+
+.nav-item:hover,
+.nav-item:focus-visible {
+    background: #f1f7ff;
+    outline: none;
 }
 
 .dashboard-main {
@@ -111,6 +135,10 @@ button {
     box-shadow: 0 8px 22px rgba(20, 46, 80, .04);
 }
 
+.search svg {
+    color: #0b6bff;
+}
+
 .search kbd {
     margin-left: auto;
     color: #768199;
@@ -125,8 +153,14 @@ button {
 
 .bell {
     position: relative;
-    font-size: 22px;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
     color: #17264a;
+    background: #f3f8ff;
+    border: 1px solid #dce8f7;
 }
 
 .bell b {
@@ -150,6 +184,7 @@ button {
     height: 42px;
     border-radius: 50%;
     background: #dceeff;
+    color: #0b56c7;
 }
 
 .hero,
@@ -188,10 +223,15 @@ button {
 
 .primary,
 .secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     border-radius: 7px;
     padding: 10px 18px;
     font-weight: 700;
     border: 1px solid #b7d3ff;
+    line-height: 1.2;
 }
 
 .primary {
@@ -398,30 +438,41 @@ button {
     font-weight: 700;
 }
 
-.icon-bubble {
+.metric-icon {
     display: grid;
     place-items: center;
     width: 58px;
     height: 58px;
     border-radius: 50%;
-    background: #e7f0ff;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, .86), rgba(255, 255, 255, .42)),
+        #e7f0ff;
     color: var(--blue);
-    font-size: 24px;
+    box-shadow: inset 0 0 0 1px rgba(11, 107, 255, .12);
 }
 
-.icon-bubble.green {
-    background: #ddf7e5;
+.metric-icon.green {
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, .86), rgba(255, 255, 255, .42)),
+        #ddf7e5;
     color: #00aa45;
+    box-shadow: inset 0 0 0 1px rgba(0, 170, 69, .12);
 }
 
-.icon-bubble.purple {
-    background: #efe7ff;
-    color: #743cff
+.metric-icon.purple {
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, .86), rgba(255, 255, 255, .42)),
+        #efe7ff;
+    color: #743cff;
+    box-shadow: inset 0 0 0 1px rgba(116, 60, 255, .12);
 }
 
-.icon-bubble.orange {
-    background: #fff0de;
-    color: #ff7a00
+.metric-icon.orange {
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, .86), rgba(255, 255, 255, .42)),
+        #fff0de;
+    color: #ff7a00;
+    box-shadow: inset 0 0 0 1px rgba(255, 122, 0, .12);
 }
 
 .notice {
@@ -447,9 +498,32 @@ button {
 }
 
 .panel h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin: 0;
     font-size: 15px;
     font-weight: 800;
+}
+
+.heading-icon,
+.info-icon {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+}
+
+.heading-icon {
+    width: 27px;
+    height: 27px;
+    border-radius: 8px;
+    color: #0b56c7;
+    background: #edf5ff;
+    box-shadow: inset 0 0 0 1px rgba(11, 107, 255, .1);
+}
+
+.info-icon {
+    color: #7b86a0;
 }
 
 .panel-title p {
@@ -521,10 +595,24 @@ button {
 }
 
 .job-card button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     margin-right: 7px;
     color: var(--blue);
     background: none;
     border: 0;
+    border-radius: 5px;
+    padding: 2px 0;
+    text-decoration: none;
+    font: inherit;
+    font-weight: 700;
+}
+
+.job-card button:hover,
+.job-card button:focus-visible {
+    color: #064fbe;
+    outline: none;
     text-decoration: underline;
 }
 
@@ -537,10 +625,18 @@ button {
     pointer-events: none;
 }
 
-.empty-tracker div,
 .empty-illustration {
-    font-size: 40px;
-    filter: drop-shadow(0 5px 8px rgba(11, 107, 255, .18));
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    margin: 16px auto 10px;
+    border-radius: 18px;
+    color: #0b56c7;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, .92), rgba(255, 255, 255, .5)),
+        #eaf3ff;
+    box-shadow: inset 0 0 0 1px rgba(11, 107, 255, .12), 0 12px 22px rgba(11, 107, 255, .08);
 }
 
 .empty-tracker h3,
@@ -569,7 +665,15 @@ button {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
     text-align: left;
+}
+
+.empty-card h2>span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
 }
 
 .empty-card h2 a {
@@ -845,6 +949,10 @@ button {
 .filter-row select,
 .filter-row button {
     min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
     border: 1px solid var(--border);
     border-radius: 7px;
     padding: 10px;
@@ -902,10 +1010,19 @@ button {
 
 .drawer-close {
     display: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
     border: 0;
+    border-radius: 9px;
     background: transparent;
     color: var(--blue);
-    font-size: 22px;
+}
+
+.drawer-close:hover,
+.drawer-close:focus-visible {
+    background: #eef6ff;
+    outline: none;
 }
 
 .form-section {
@@ -1143,7 +1260,7 @@ button {
     }
 
     .drawer-close {
-        display: block;
+        display: inline-grid;
     }
 
     .drawer-footer {
@@ -1197,6 +1314,9 @@ button {
 }
 
 .profile-menu button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     border: 0;
     border-radius: 8px;
     padding: 10px 12px;
@@ -1240,7 +1360,7 @@ button {
     height: 82px;
     border-radius: 50%;
     background: #dceeff;
-    font-size: 38px;
+    color: #0b56c7;
 }
 
 .account-card p,
@@ -1273,6 +1393,19 @@ button {
     display: grid;
     gap: 8px;
     padding: 22px;
+}
+
+.account-stat-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 4px;
+    border-radius: 10px;
+    color: #0b56c7;
+    background: #edf5ff;
+    text-transform: none;
+    letter-spacing: 0;
 }
 
 .account-grid strong {

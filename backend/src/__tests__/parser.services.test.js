@@ -167,6 +167,49 @@ test("parseJobDescription handles Ashby structured text with hyphenated title", 
   assert.equal(parsed.parsedSalaryMax, 232000);
 });
 
+test("parseJobDescription handles LinkedIn public page chrome", () => {
+  const parsed = parseJobDescription({
+    sourceUrl: "https://www.linkedin.com/jobs/view/4377842915/",
+    pageTitle: "Winaxis LLC hiring Software Engineer in United States | LinkedIn",
+    rawText: `
+      Winaxis LLC hiring Software Engineer in United States | LinkedIn
+      Winaxis LLC hiring Software Engineer in United States | LinkedIn
+      Skip to main content
+      LinkedIn
+      Software Engineer in Pittsburg, CA
+      Expand search
+      Jobs
+      People
+      Learning
+      Clear text
+      Join now
+      Software Engineer
+      Winaxis LLC
+      United States
+      Apply
+      Software Engineer
+      Winaxis LLC
+      United States
+      4 months ago
+      77 applicants
+      See who Winaxis LLC has hired for this role
+
+      About Us
+      At Winaxis, we design and deliver innovative software solutions.
+      What We Offer Competitive salary and benefits package.
+      $130,000.00
+      $175,000.00
+    `,
+  });
+
+  assert.equal(parsed.source, "LinkedIn");
+  assert.equal(parsed.parsedTitle, "Software Engineer");
+  assert.equal(parsed.parsedCompany, "Winaxis");
+  assert.equal(parsed.parsedLocation, "United States");
+  assert.equal(parsed.parsedSalaryMin, 130000);
+  assert.equal(parsed.parsedSalaryMax, 175000);
+});
+
 test("extractTitle does not treat company substrings as role keywords", () => {
   assert.equal(
     extractTitle({
