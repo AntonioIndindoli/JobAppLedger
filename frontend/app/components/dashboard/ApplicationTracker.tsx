@@ -72,7 +72,6 @@ export function ApplicationTracker({
                             <AppIcon name="info" size={14} />
                         </span>
                     </h2>
-                    <p>Track your applications across stages.</p>
                 </div>
                 <div className="panel-title">
                     <button className="primary" onClick={onImportOpen}>
@@ -156,7 +155,7 @@ export function ApplicationTracker({
                             </span>
                             <strong>{groupedApplications[status].length}</strong>
                         </h3>
-                        <div className="dropzone">
+                        <div className={`dropzone ${status.toLowerCase()}`}>
                             {groupedApplications[status].map((application) => (
                                 <article
                                     key={application.id}
@@ -171,7 +170,6 @@ export function ApplicationTracker({
                                 >
                                     <b>{application.title}</b>
                                     <span>{application.companyName ?? "Unknown"}</span>
-                                    <small>{application.source ?? "No source"}</small>
                                     <small className="applied-date">
                                         <AppIcon name="calendar" size={12} />
                                         {formatAppliedDate(application.dateApplied)}

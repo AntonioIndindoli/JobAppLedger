@@ -69,10 +69,9 @@ export function DashboardHome({
     return (
         <>
             <section className="hero">
-                <h1>Welcome back, {firstName}</h1>
+                <h1>Your job search at a glance</h1>
                 <p>
-                    Track your job search, stay on top of interviews, and follow up
-                    faster.
+                    Track applications, interviews, offers, and follow-ups in one place.
                 </p>
             </section>
             <DashboardStats

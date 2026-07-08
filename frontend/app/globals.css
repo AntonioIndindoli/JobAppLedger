@@ -32,7 +32,7 @@ button {
 .dashboard-shell {
     min-height: 100vh;
     display: flex;
-    background: linear-gradient(180deg, #f5f8ff, #c5ccdd);
+    background: linear-gradient(180deg, #f5f8ff, #d7ddec);
 }
 
 .sidebar {
@@ -568,7 +568,6 @@ button {
     gap: 8px;
     margin: 0;
     padding: 6px;
-    border: 1px solid var(--border);
     border-top-left-radius: 7px;
     border-top-right-radius: 7px;
     font-size: 12px;
@@ -597,9 +596,38 @@ button {
 .dropzone {
     min-height: 176px;
     padding: 8px;
-    border: 1px dashed #cfd9e8;
     border-bottom-left-radius: 7px;
     border-bottom-right-radius: 7px;
+}
+
+.lane.saved .lane-header,
+.dropzone.saved {
+  background: #0f766d17;
+}
+
+.lane.applied .lane-header,
+.dropzone.applied {
+  background: #006aff18;
+}
+
+.lane.interviewing .lane-header,
+.dropzone.interviewing {
+  background: #4e33ff1a;
+}
+
+.lane.offer .lane-header,
+.dropzone.offer {
+  background: #00a33c1a;
+}
+
+.lane.rejected .lane-header,
+.dropzone.rejected {
+  background: #e22b2b1c;
+}
+
+.lane.withdrawn .lane-header,
+.dropzone.withdrawn {
+  background: #64748b1a;
 }
 
 .job-card {

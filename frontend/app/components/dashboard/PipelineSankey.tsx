@@ -88,16 +88,16 @@ const PIPELINE_STATUSES: PipelineStatus[] = [
 const NODE_CATALOG: Record<PipelineNodeId, PipelineNodeDatum> = {
     APPLIED: { id: "APPLIED", label: "Applied", color: "#1268f3" },
     INTERVIEWING: { id: "INTERVIEWING", label: "Interview", color: "#6d5dfc" },
-    NO_RESPONSE: { id: "NO_RESPONSE", label: "No Response", color: "#64748b" },
+    NO_RESPONSE: { id: "NO_RESPONSE", label: "No Response", color: "#1268f3" },
     OFFER: { id: "OFFER", label: "Offer", color: "#16a34a" },
     REJECTED: { id: "REJECTED", label: "Rejected", color: "#dc2626" },
     WITHDRAWN: { id: "WITHDRAWN", label: "Withdrawn", color: "#475569" },
 };
 
 const LINK_COLORS: Record<PipelineNodeId, string> = {
-    APPLIED: "#60a5fa",
+    APPLIED: "#1268f3",
     INTERVIEWING: "#a78bfa",
-    NO_RESPONSE: "#94a3b8",
+    NO_RESPONSE: "#1268f3",
     OFFER: "#4ade80",
     REJECTED: "#f87171",
     WITHDRAWN: "#94a3b8",
