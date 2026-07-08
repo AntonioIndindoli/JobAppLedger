@@ -308,14 +308,14 @@ button {
 
 .sankey-frame {
     width: 100%;
-    min-height: 212px;
+    min-height: 250px;
 }
 
 .sankey-canvas {
     display: block;
     width: 100%;
     height: auto;
-    min-height: 212px;
+    min-height: 250px;
 }
 
 .sankey-link {

@@ -41,6 +41,42 @@ const PIPELINE_NODE_ORDER: PipelineNodeId[] = [
     "WITHDRAWN",
 ];
 
+const NODE_COLUMN: Record<PipelineNodeId, number> = {
+    APPLIED: 0,
+    INTERVIEWING: 1,
+    NO_RESPONSE: 2,
+    OFFER: 2,
+    REJECTED: 2,
+    WITHDRAWN: 2,
+};
+
+const NODE_ORDER: Record<PipelineNodeId, number> = {
+    APPLIED: 0,
+    INTERVIEWING: 0,
+    OFFER: 0,
+    REJECTED: 1,
+    WITHDRAWN: 2,
+    NO_RESPONSE: 3,
+};
+
+const LINK_ORDER: Record<PipelineNodeId, Partial<Record<PipelineNodeId, number>>> = {
+    APPLIED: {
+        INTERVIEWING: 0,
+        REJECTED: 1,
+        WITHDRAWN: 2,
+        NO_RESPONSE: 3,
+    },
+    INTERVIEWING: {
+        OFFER: 0,
+        REJECTED: 1,
+        WITHDRAWN: 2,
+    },
+    OFFER: {},
+    REJECTED: {},
+    WITHDRAWN: {},
+    NO_RESPONSE: {},
+};
+
 const PIPELINE_STATUSES: PipelineStatus[] = [
     "APPLIED",
     "INTERVIEWING",
@@ -157,9 +193,7 @@ function buildApplicationPath(
             (status) => status === "INTERVIEWING" || status === "OFFER",
         );
 
-    if (currentStatus === "APPLIED") {
-        return reachedInterview ? ["APPLIED", "INTERVIEWING"] : ["APPLIED", "NO_RESPONSE"];
-    }
+    if (currentStatus === "APPLIED") return ["APPLIED", "NO_RESPONSE"];
 
     if (currentStatus === "INTERVIEWING") {
         return ["APPLIED", "INTERVIEWING"];
@@ -182,6 +216,37 @@ function buildApplicationPath(
 
 function canAddLink(source: PipelineNodeId, target: PipelineNodeId) {
     return ALLOWED_TRANSITIONS[source].includes(target);
+}
+
+function getSankeyEndId(
+    end: string | number | SankeyNode<PipelineNodeDatum, PipelineLinkDatum>,
+) {
+    return typeof end === "object" ? end.id : String(end);
+}
+
+function compareNodes(
+    first: SankeyNode<PipelineNodeDatum, PipelineLinkDatum>,
+    second: SankeyNode<PipelineNodeDatum, PipelineLinkDatum>,
+) {
+    return NODE_ORDER[first.id] - NODE_ORDER[second.id];
+}
+
+function compareLinks(
+    first: SankeyLink<PipelineNodeDatum, PipelineLinkDatum>,
+    second: SankeyLink<PipelineNodeDatum, PipelineLinkDatum>,
+) {
+    const firstSource = getSankeyEndId(first.source) as PipelineNodeId;
+    const secondSource = getSankeyEndId(second.source) as PipelineNodeId;
+    const firstTarget = getSankeyEndId(first.target) as PipelineNodeId;
+    const secondTarget = getSankeyEndId(second.target) as PipelineNodeId;
+
+    const firstOrder =
+        LINK_ORDER[firstSource]?.[firstTarget] ?? NODE_ORDER[firstTarget];
+    const secondOrder =
+        LINK_ORDER[secondSource]?.[secondTarget] ?? NODE_ORDER[secondTarget];
+
+    if (firstOrder !== secondOrder) return firstOrder - secondOrder;
+    return NODE_ORDER[firstSource] - NODE_ORDER[secondSource];
 }
 
 function buildPipelineSankey(
@@ -273,11 +338,11 @@ function buildPipelineSankey(
     const graph = sankey<PipelineNodeDatum, PipelineLinkDatum>()
         .nodeId((node) => node.id)
         .nodeWidth(5)
-        .nodePadding(5)
-        .nodeAlign((node) => node.depth ?? 0)
-        .nodeSort(null)
-        .linkSort(null)
-        .iterations(40)
+        .nodePadding(14)
+        .nodeAlign((node, columns) => Math.min(NODE_COLUMN[node.id], columns - 1))
+        .nodeSort(compareNodes)
+        .linkSort(compareLinks)
+        .iterations(64)
         .extent([
             [18, 16],
             [PIPELINE_WIDTH - 18, PIPELINE_HEIGHT - 34],

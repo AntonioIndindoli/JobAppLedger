@@ -82,13 +82,10 @@ export const DEFAULT_WEEKLY_RANGE: WeeklyRangeWeeks = 6;
 
 export const NAV_ITEMS: Array<{ label: string; icon: AppIconName }> = [
     { label: "Dashboard", icon: "dashboard" },
-    { label: "Pipeline", icon: "pipeline" },
     { label: "Applications", icon: "applications" },
-    { label: "Import Job", icon: "import" },
     { label: "Interviews", icon: "calendar" },
     { label: "Tasks", icon: "checklist" },
     { label: "Contacts", icon: "contacts" },
-    { label: "Analytics", icon: "analytics" },
     { label: "Settings", icon: "settings" },
 ];
 
@@ -124,6 +121,6 @@ export const EMPTY_IMPORT_REVIEW: ImportReviewValues = {
 };
 
 export const PIPELINE_WIDTH = 820;
-export const PIPELINE_HEIGHT = 150;
+export const PIPELINE_HEIGHT = 210;
 export const WEEKLY_CHART_HEIGHT = 132;
 export const WEEKLY_CHART_WIDTH = 540;

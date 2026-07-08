@@ -618,42 +618,6 @@ Then load the extension in Chrome:
 
 ---
 
-## Project Structure
-
-```text
-JobAppLedger/
-├── app/
-│   ├── dashboard/
-│   ├── pipeline/
-│   ├── applications/
-│   ├── contacts/
-│   ├── analytics/
-│   ├── import/
-│   └── api/
-├── components/
-│   ├── ui/
-│   ├── application/
-│   ├── dashboard/
-│   ├── pipeline/
-│   └── charts/
-├── lib/
-│   ├── auth.ts
-│   ├── db.ts
-│   ├── parsers/
-│   ├── analytics/
-│   └── validations/
-├── prisma/
-│   ├── schema.prisma
-│   └── seed.ts
-├── extension/
-│   ├── manifest.json
-│   ├── src/
-│   └── dist/
-└── README.md
-```
-
----
-
 ## Security and Privacy
 
 JobAppLedger is designed around user-controlled data capture.
