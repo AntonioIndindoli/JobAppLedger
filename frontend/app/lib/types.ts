@@ -6,7 +6,7 @@ export type WeeklyRangeWeeks = (typeof WEEKLY_RANGE_OPTIONS)[number]["weeks"];
 
 export type Mode = "signup" | "login";
 export type AuthStatus = "checking" | "signedOut" | "signedIn";
-export type DashboardView = "dashboard" | "account";
+export type DashboardView = "dashboard" | "applications" | "account";
 
 export type Application = {
     id: string;

@@ -3,6 +3,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 
 import { AccountView } from "./components/AccountView";
+import { ApplicationsView } from "./components/ApplicationsView";
 import { ApplicationDrawer } from "./components/ApplicationDrawer";
 import { AuthPanel } from "./components/AuthPanel";
 import { DashboardShell } from "./components/DashboardShell";
@@ -555,6 +556,14 @@ export default function MainPage() {
                     firstName={firstName}
                     onReturnToDashboard={() => setCurrentView("dashboard")}
                     onSignOut={signOut}
+                />
+            ) : currentView === "applications" ? (
+                <ApplicationsView
+                    applications={applications}
+                    onCreateApplication={openCreateApplication}
+                    onImportOpen={openImportDrawer}
+                    onRemoveApplication={removeApplication}
+                    onStartEdit={startEdit}
                 />
             ) : (
                 <DashboardHome

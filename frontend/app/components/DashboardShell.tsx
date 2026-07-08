@@ -27,6 +27,12 @@ export function DashboardShell({
     onProfileMenuChange,
     onSignOut,
 }: DashboardShellProps) {
+    function getNavItemView(label: string): DashboardView | null {
+        if (label === "Dashboard") return "dashboard";
+        if (label === "Applications") return "applications";
+        return null;
+    }
+
     return (
         <div className="dashboard-shell">
             <aside className="sidebar">
@@ -36,24 +42,28 @@ export function DashboardShell({
                     </span>
                     <strong>JobAppLedger</strong>
                 </div>
-                {NAV_ITEMS.map((item, index) => (
-                    <button
-                        key={item.label}
-                        type="button"
-                        className={
-                            index === 0 && currentView === "dashboard"
-                                ? "nav-item active"
-                                : "nav-item"
-                        }
-                        onClick={() => {
-                            if (item.label === "Dashboard") onCurrentViewChange("dashboard");
-                            if (item.label === "Import Job") onImportOpen();
-                        }}
-                    >
-                        <AppIcon name={item.icon} size={18} />
-                        <span>{item.label}</span>
-                    </button>
-                ))}
+                {NAV_ITEMS.map((item) => {
+                    const view = getNavItemView(item.label);
+
+                    return (
+                        <button
+                            key={item.label}
+                            type="button"
+                            className={
+                                view && currentView === view
+                                    ? "nav-item active"
+                                    : "nav-item"
+                            }
+                            onClick={() => {
+                                if (view) onCurrentViewChange(view);
+                                if (item.label === "Import Job") onImportOpen();
+                            }}
+                        >
+                            <AppIcon name={item.icon} size={18} />
+                            <span>{item.label}</span>
+                        </button>
+                    );
+                })}
             </aside>
             <main className="dashboard-main">
                 <header className="topbar">
