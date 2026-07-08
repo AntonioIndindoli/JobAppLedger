@@ -142,6 +142,41 @@ test("parseJobDescription handles noisy selected job-board text", () => {
   assert.deepEqual(parsed.skills, ["JavaScript"]);
 });
 
+test("parseJobDescription handles Ashby structured text with hyphenated title", () => {
+  const parsed = parseJobDescription({
+    sourceUrl: "https://jobs.ashbyhq.com/applied/ee6b42c8-6569-449d-8e69-4cc3c07fea74?utm_source=LinkedInPaid",
+    pageTitle: "Software Engineer - Game Development",
+    rawText: `
+      Software Engineer - Game Development
+      Applied Intuition
+      Sunnyvale, California, United States
+      FULL_TIME
+      Salary: USD 173000 - 232000
+
+      About Applied Intuition
+      Applied Intuition, Inc. is powering the future of physical AI.
+      We are looking for a software engineer with a strong background in game engine/realtime development.
+    `,
+  });
+
+  assert.equal(parsed.source, "Ashby");
+  assert.equal(parsed.parsedTitle, "Software Engineer - Game Development");
+  assert.equal(parsed.parsedCompany, "Applied Intuition");
+  assert.equal(parsed.parsedLocation, "Sunnyvale, California, United States");
+  assert.equal(parsed.parsedSalaryMin, 173000);
+  assert.equal(parsed.parsedSalaryMax, 232000);
+});
+
+test("extractTitle does not treat company substrings as role keywords", () => {
+  assert.equal(
+    extractTitle({
+      pageTitle: "Software Engineer - Game Development",
+      rawText: "Software Engineer - Game Development\nApplied Intuition\nSunnyvale, California, United States",
+    }),
+    "Software Engineer - Game Development",
+  );
+});
+
 test("parseJobDescription debug mode shows parser inputs and candidates", () => {
   const parsed = parseJobDescription({
     debug: true,

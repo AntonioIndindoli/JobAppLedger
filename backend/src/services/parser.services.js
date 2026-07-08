@@ -43,6 +43,8 @@ const ROLE_KEYWORDS = [
   "customer",
   "devops",
   "finance",
+  "game",
+  "gameplay",
   "legal",
   "machine learning",
   "qa",
@@ -173,6 +175,8 @@ const GENERIC_COMPANY_KEYS = ["company", "companyName", "company_name", "organiz
 const GENERIC_LOCATION_KEYS = ["location", "locations", "locationName", "location_name", "jobLocation", "job_location", "jobLocations", "job_locations", "office", "offices", "workplace"];
 const GENERIC_DESCRIPTION_KEYS = ["description", "jobDescription", "job_description", "body", "content", "html", "descriptionHtml", "description_html"];
 const GENERIC_SALARY_KEYS = ["salary", "baseSalary", "base_salary", "compensation", "payRange", "pay_range", "salaryRange", "salary_range", "basePay", "base_pay"];
+const US_STATE_NAME_PATTERN = "Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming";
+const CITY_REGION_COUNTRY_PATTERN = new RegExp(`\\b([A-Z][a-zA-Z .'-]+,\\s?(?:(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|IA|ID|IL|IN|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)|(?:${US_STATE_NAME_PATTERN}))(?:,\\s?(?:United States|USA|US))?)\\b`);
 
 function normalizeOptional(value) {
   if (value === undefined || value === null) return null;
@@ -194,9 +198,13 @@ function isKnownSourceName(value) {
   return SOURCE_NAMES.has(String(value ?? "").trim().toLowerCase());
 }
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function hasRoleKeyword(value) {
   const lower = String(value ?? "").toLowerCase();
-  return ROLE_KEYWORDS.some((keyword) => lower.includes(keyword));
+  return ROLE_KEYWORDS.some((keyword) => new RegExp(`(^|[^a-z0-9])${escapeRegExp(keyword)}([^a-z0-9]|$)`, "i").test(lower));
 }
 
 function cleanCandidate(value) {
@@ -833,7 +841,7 @@ function buildTitleCandidates({ pageTitle, rawText, sourceUrl } = {}) {
     candidates.push({
       value: labelMatch ? labelMatch[1] : line,
       source: labelMatch ? "titleLabel" : "topLine",
-      weight: (labelMatch ? 24 : 16) - index,
+      weight: (labelMatch ? 24 : 22) - index,
     });
     if (TITLE_LABEL_ONLY_PATTERN.test(line) && lines[index + 1]) {
       candidates.push({ value: lines[index + 1], source: "titleLabelNextLine", weight: 25 - index });
@@ -886,6 +894,7 @@ export function extractTitle({ pageTitle, rawText, sourceUrl } = {}) {
 function companyFromPageTitle(pageTitle, parsedTitle) {
   const title = cleanCandidate(pageTitle);
   if (!title) return null;
+  if (parsedTitle && title.toLowerCase() === cleanTitleCandidate(parsedTitle)?.toLowerCase()) return null;
 
   const atMatch = title.match(/^(.+?)\s+at\s+(.+?)$/i);
   if (atMatch && hasRoleKeyword(atMatch[1])) return cleanCompanyName(atMatch[2]);
@@ -930,6 +939,21 @@ function companyFromUrl(sourceUrl, source) {
   return null;
 }
 
+function isCompanyLineCandidate(line, { allowRoleKeyword = false } = {}) {
+  return Boolean(line && !NON_COMPANY_LINE_PATTERN.test(line) && !cityStateFromText(line) && (allowRoleKeyword || !hasRoleKeyword(line)));
+}
+
+function companyAdjacentToTitle(rawText, parsedTitle) {
+  const lines = getMeaningfulLines(rawText, 20);
+  const titleIndex = lines.findIndex((line) => line.toLowerCase() === parsedTitle?.toLowerCase());
+  if (titleIndex < 0) return null;
+
+  return lines
+    .slice(titleIndex + 1, titleIndex + 4)
+    .map(cleanCompanyName)
+    .find((line, index) => isCompanyLineCandidate(line, { allowRoleKeyword: index === 0 })) ?? null;
+}
+
 function companyFromRawText(rawText, parsedTitle, markersOnly = false) {
   const lines = getMeaningfulLines(rawText, 20);
 
@@ -950,7 +974,7 @@ function companyFromRawText(rawText, parsedTitle, markersOnly = false) {
     .map(cleanCompanyName)
     .find((line, index) => {
       const immediatelyAfterTitle = titleIndex >= 0 && index === 0;
-      return line && !NON_COMPANY_LINE_PATTERN.test(line) && !cityStateFromText(line) && (immediatelyAfterTitle || !hasRoleKeyword(line));
+      return isCompanyLineCandidate(line, { allowRoleKeyword: immediatelyAfterTitle });
     }) ?? null;
 }
 
@@ -960,6 +984,9 @@ export function extractCompany({ pageTitle, rawText, sourceUrl, source, parsedTi
 
   const labeledCompany = companyFromRawText(rawText, parsedTitle, true);
   if (labeledCompany) return labeledCompany;
+
+  const adjacentCompany = companyAdjacentToTitle(rawText, parsedTitle);
+  if (adjacentCompany) return adjacentCompany;
 
   const urlCompany = companyFromUrl(sourceUrl, source);
   if (urlCompany) return urlCompany;
@@ -976,8 +1003,15 @@ function cleanLocationCandidate(value) {
 }
 
 function cityStateFromText(text) {
-  const cityStateMatch = String(text ?? "").match(/\b([A-Z][a-zA-Z .'-]+,\s?(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|IA|ID|IL|IN|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)(?:,\s?(?:United States|USA|US))?)\b/);
+  const cityStateMatch = String(text ?? "").match(CITY_REGION_COUNTRY_PATTERN);
   return cleanLocationCandidate(cityStateMatch?.[1]);
+}
+
+function isStandaloneLocationLine(line) {
+  const location = cleanLocationCandidate(line);
+  if (!location || location.length > 100) return false;
+  if (/[.!?]$/.test(location) || /\d/.test(location)) return false;
+  return cityStateFromText(location) === location || /^[A-Z][a-zA-Z .'-]+,\s?[A-Z][a-zA-Z .'-]+(?:,\s?(?:United States|USA|US|Canada))$/i.test(location);
 }
 
 export function extractLocation(rawText) {
@@ -997,6 +1031,9 @@ export function extractLocation(rawText) {
       if (location) return location;
     }
   }
+
+  const locationLine = lines.find(isStandaloneLocationLine);
+  if (locationLine) return cleanLocationCandidate(locationLine);
 
   const remoteLine = lines.find((line) =>
     /\b(remote|hybrid|onsite|on-site)\b/i.test(line) &&

@@ -127,6 +127,48 @@ type PipelineLinkDatum = {
     label: string;
 };
 type PipelineGraph = SankeyGraph<PipelineNodeDatum, PipelineLinkDatum>;
+type AppIconName =
+    | "account"
+    | "analytics"
+    | "applications"
+    | "arrow-left"
+    | "arrow-right"
+    | "bell"
+    | "calendar"
+    | "checklist"
+    | "chevron-down"
+    | "clock"
+    | "contacts"
+    | "dashboard"
+    | "document"
+    | "edit"
+    | "filter"
+    | "history"
+    | "import"
+    | "info"
+    | "ledger"
+    | "logout"
+    | "minus"
+    | "pipeline"
+    | "plus"
+    | "search"
+    | "settings"
+    | "source"
+    | "trash"
+    | "trend";
+type IconTone = "blue" | "green" | "purple" | "orange";
+
+const NAV_ITEMS: Array<{ label: string; icon: AppIconName }> = [
+    { label: "Dashboard", icon: "dashboard" },
+    { label: "Pipeline", icon: "pipeline" },
+    { label: "Applications", icon: "applications" },
+    { label: "Import Job", icon: "import" },
+    { label: "Interviews", icon: "calendar" },
+    { label: "Tasks", icon: "checklist" },
+    { label: "Contacts", icon: "contacts" },
+    { label: "Analytics", icon: "analytics" },
+    { label: "Settings", icon: "settings" },
+];
 
 const emptyForm = {
     title: "",
