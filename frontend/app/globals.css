@@ -247,6 +247,13 @@ button {
     color: var(--blue);
 }
 
+.primary:disabled,
+.secondary:disabled {
+    cursor: not-allowed;
+    opacity: .58;
+    box-shadow: none;
+}
+
 .secondary.small {
     padding: 8px 14px;
     font-size: 12px;
@@ -736,14 +743,76 @@ button {
     min-width: 0;
 }
 
-.empty-card h2 a {
+.empty-card h2 a,
+.card-link {
+    border: 0;
+    padding: 0;
+    background: transparent;
     color: var(--blue);
+    font: inherit;
     font-size: 12px;
+    font-weight: 800;
+}
+
+.card-link:hover,
+.card-link:focus-visible {
+    color: #064fbe;
+    outline: none;
+    text-decoration: underline;
 }
 
 .empty-card p {
     max-width: 310px;
     margin: 0 auto 10px;
+}
+
+.upcoming-card {
+    text-align: left;
+}
+
+.interview-card-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.interview-card-item {
+    display: grid;
+    gap: 3px;
+    padding: 10px;
+    border: 1px solid #e4edf8;
+    border-radius: 8px;
+    background: #fbfdff;
+}
+
+.interview-card-item strong {
+    color: #14213d;
+    font-size: 13px;
+}
+
+.interview-card-item span,
+.interview-card-item small {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.interview-card-item small {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 700;
+}
+
+.interview-card-item em {
+    justify-self: start;
+    margin-top: 4px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4f33ff;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 800;
 }
 
 .analytics-grid {
@@ -1577,6 +1646,10 @@ button {
     white-space: nowrap;
 }
 
+.interviews-toolbar {
+    grid-template-columns: minmax(220px, 2fr) minmax(150px, 1fr) minmax(150px, 1fr) minmax(135px, 1fr) minmax(135px, 1fr) auto;
+}
+
 .applications-table-panel {
     position: relative;
     min-height: 320px;
@@ -1596,6 +1669,10 @@ button {
     width: 100%;
     min-width: 980px;
     border-collapse: collapse;
+}
+
+.interviews-table {
+    min-width: 1040px;
 }
 
 .applications-table th,
@@ -1626,6 +1703,12 @@ button {
     margin-bottom: 4px;
     color: #14213d;
     font-size: 14px;
+}
+
+.applications-table td>span:not(.status-pill) {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--muted);
 }
 
 .applications-table td a {
@@ -1714,6 +1797,31 @@ button {
 }
 
 .status-pill.withdrawn {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.status-pill.scheduled {
+    background: #eef2ff;
+    color: #4f33ff;
+}
+
+.status-pill.completed {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.status-pill.passed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-pill.failed {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-pill.canceled {
     background: #e2e8f0;
     color: #475569;
 }

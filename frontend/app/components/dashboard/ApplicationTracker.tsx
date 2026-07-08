@@ -19,6 +19,7 @@ type ApplicationTrackerProps = {
     onApplyFilters: () => void;
     onImportOpen: () => void;
     onCreateApplication: () => void;
+    onCreateInterview: (applicationId?: string) => void;
     onFiltersChange: (filters: ApplicationFilters) => void;
     onRemoveApplication: (id: string) => void;
     onStartEdit: (application: Application) => void;
@@ -50,6 +51,7 @@ export function ApplicationTracker({
     onApplyFilters,
     onImportOpen,
     onCreateApplication,
+    onCreateInterview,
     onFiltersChange,
     onRemoveApplication,
     onStartEdit,
@@ -184,6 +186,14 @@ export function ApplicationTracker({
                                         >
                                             <AppIcon name="trash" size={13} />
                                             Delete
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                onCreateInterview(application.id)
+                                            }
+                                        >
+                                            <AppIcon name="calendar" size={13} />
+                                            Interview
                                         </button>
                                         <button
                                             onClick={() => onToggleTimeline(application.id)}

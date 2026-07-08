@@ -1,12 +1,20 @@
-import type { DASHBOARD_STATUSES, STATUSES, WEEKLY_RANGE_OPTIONS } from "./constants";
+import type {
+    DASHBOARD_STATUSES,
+    INTERVIEW_OUTCOMES,
+    INTERVIEW_TYPES,
+    STATUSES,
+    WEEKLY_RANGE_OPTIONS,
+} from "./constants";
 
 export type ApplicationStatus = (typeof STATUSES)[number];
 export type DashboardStatus = (typeof DASHBOARD_STATUSES)[number];
+export type InterviewType = (typeof INTERVIEW_TYPES)[number];
+export type InterviewOutcome = (typeof INTERVIEW_OUTCOMES)[number];
 export type WeeklyRangeWeeks = (typeof WEEKLY_RANGE_OPTIONS)[number]["weeks"];
 
 export type Mode = "signup" | "login";
 export type AuthStatus = "checking" | "signedOut" | "signedIn";
-export type DashboardView = "dashboard" | "applications" | "account";
+export type DashboardView = "dashboard" | "applications" | "interviews" | "account";
 
 export type Application = {
     id: string;
@@ -53,6 +61,23 @@ export type ActivityLog = {
     createdAt: string;
 };
 
+export type Interview = {
+    id: string;
+    applicationId: string;
+    type: string;
+    scheduledAt: string;
+    durationMinutes: number | null;
+    location: string | null;
+    meetingUrl: string | null;
+    interviewerName: string | null;
+    notes: string | null;
+    outcome: string;
+    applicationTitle: string | null;
+    companyName: string | null;
+    createdAt: string;
+    updatedAt: string;
+};
+
 export type ApplicationFormValues = {
     title: string;
     companyName: string;
@@ -62,6 +87,19 @@ export type ApplicationFormValues = {
     location: string;
     notes: string;
     dateApplied: string;
+};
+
+export type InterviewFormValues = {
+    applicationId: string;
+    type: string;
+    scheduledDate: string;
+    scheduledTime: string;
+    durationMinutes: string;
+    location: string;
+    meetingUrl: string;
+    interviewerName: string;
+    notes: string;
+    outcome: string;
 };
 
 export type ImportCaptureValues = {

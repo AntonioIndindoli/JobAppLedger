@@ -378,6 +378,9 @@ DELETE /api/tasks/:id
 ### Interviews
 
 ```http
+GET   /api/interviews
+GET   /api/interviews?upcoming=true
+GET   /api/interviews?applicationId=:applicationId
 POST  /api/interviews
 PATCH /api/interviews/:id
 DELETE /api/interviews/:id

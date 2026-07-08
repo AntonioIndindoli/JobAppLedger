@@ -4,6 +4,9 @@ import type {
     ApplicationStatus,
     ImportCaptureValues,
     ImportReviewValues,
+    InterviewFormValues,
+    InterviewOutcome,
+    InterviewType,
     WeeklyRangeWeeks,
 } from "./types";
 
@@ -37,6 +40,42 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
     OFFER: "Offer",
     REJECTED: "Rejected",
     WITHDRAWN: "Withdrawn",
+};
+
+export const INTERVIEW_TYPES = [
+    "RECRUITER_SCREEN",
+    "TECHNICAL",
+    "MANAGER",
+    "PANEL",
+    "FINAL",
+    "TAKE_HOME",
+    "OTHER",
+] as const;
+
+export const INTERVIEW_TYPE_LABELS: Record<InterviewType, string> = {
+    RECRUITER_SCREEN: "Recruiter Screen",
+    TECHNICAL: "Technical",
+    MANAGER: "Manager",
+    PANEL: "Panel",
+    FINAL: "Final",
+    TAKE_HOME: "Take Home",
+    OTHER: "Other",
+};
+
+export const INTERVIEW_OUTCOMES = [
+    "SCHEDULED",
+    "COMPLETED",
+    "PASSED",
+    "FAILED",
+    "CANCELED",
+] as const;
+
+export const INTERVIEW_OUTCOME_LABELS: Record<InterviewOutcome, string> = {
+    SCHEDULED: "Scheduled",
+    COMPLETED: "Completed",
+    PASSED: "Passed",
+    FAILED: "Failed",
+    CANCELED: "Canceled",
 };
 
 export const SOURCES = [
@@ -98,6 +137,19 @@ export const EMPTY_APPLICATION_FORM: ApplicationFormValues = {
     location: "",
     notes: "",
     dateApplied: "",
+};
+
+export const EMPTY_INTERVIEW_FORM: InterviewFormValues = {
+    applicationId: "",
+    type: "RECRUITER_SCREEN",
+    scheduledDate: "",
+    scheduledTime: "",
+    durationMinutes: "30",
+    location: "",
+    meetingUrl: "",
+    interviewerName: "",
+    notes: "",
+    outcome: "SCHEDULED",
 };
 
 export const EMPTY_IMPORT_CAPTURE: ImportCaptureValues = {

@@ -13,6 +13,7 @@ import { AppIcon } from "./AppIcon";
 type ApplicationsViewProps = {
     applications: Application[];
     onCreateApplication: () => void;
+    onCreateInterview: (applicationId?: string) => void;
     onImportOpen: () => void;
     onRemoveApplication: (id: string) => void;
     onStartEdit: (application: Application) => void;
@@ -72,6 +73,7 @@ function getStatusLabel(status: string) {
 export function ApplicationsView({
     applications,
     onCreateApplication,
+    onCreateInterview,
     onImportOpen,
     onRemoveApplication,
     onStartEdit,
@@ -372,6 +374,15 @@ export function ApplicationsView({
                                             >
                                                 <AppIcon name="edit" size={14} />
                                                 Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    onCreateInterview(application.id)
+                                                }
+                                            >
+                                                <AppIcon name="calendar" size={14} />
+                                                Interview
                                             </button>
                                             <button
                                                 type="button"

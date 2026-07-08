@@ -2,19 +2,24 @@
 
 import { MetricIcon } from "../AppIcon";
 import { PipelineSankey } from "./PipelineSankey";
-import type { ActivityLog, Application } from "../../lib/types";
+import { isUpcomingInterview } from "../../lib/interview-utils";
+import type { ActivityLog, Application, Interview } from "../../lib/types";
 
 type DashboardStatsProps = {
     activePipeline: number;
     applications: Application[];
     historyByApp: Record<string, ActivityLog[]>;
+    interviews: Interview[];
 };
 
 export function DashboardStats({
     activePipeline,
     applications,
     historyByApp,
+    interviews,
 }: DashboardStatsProps) {
+    const upcomingInterviewCount = interviews.filter(isUpcomingInterview).length;
+
     return (
         <section className="pipeline-stats-container">
             <PipelineSankey
@@ -42,7 +47,7 @@ export function DashboardStats({
                     <MetricIcon name="calendar" tone="purple" />
                     <div>
                         <p>Interviews Scheduled</p>
-                        <strong>0</strong>
+                        <strong>{upcomingInterviewCount}</strong>
                         <span>Upcoming</span>
                     </div>
                 </div>

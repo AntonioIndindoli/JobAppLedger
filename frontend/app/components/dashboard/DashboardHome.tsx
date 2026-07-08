@@ -6,10 +6,15 @@ import {
     filterApplications,
     groupDashboardApplications,
 } from "../../lib/application-analytics";
+import {
+    isUpcomingInterview,
+    sortInterviewsBySchedule,
+} from "../../lib/interview-utils";
 import type {
     ActivityLog,
     Application,
     ApplicationFilters,
+    Interview,
     WeeklyRangeWeeks,
 } from "../../lib/types";
 import { ApplicationTracker } from "./ApplicationTracker";
@@ -23,18 +28,20 @@ type DashboardHomeProps = {
     applications: Application[];
     appliedTrackerFilters: ApplicationFilters;
     filters: ApplicationFilters;
-    firstName: string;
     historyByApp: Record<string, ActivityLog[]>;
+    interviews: Interview[];
     openTimelineId: string | null;
     weeklyRangeWeeks: WeeklyRangeWeeks;
     onApplyTrackerFilters: () => void;
     onCreateApplication: () => void;
+    onCreateInterview: (applicationId?: string) => void;
     onFiltersChange: (filters: ApplicationFilters) => void;
     onImportOpen: () => void;
     onRemoveApplication: (id: string) => void;
     onStartEdit: (application: Application) => void;
     onToggleTimeline: (id: string) => void | Promise<void>;
     onTransitionStatus: (id: string, nextStatus: string) => void | Promise<void>;
+    onViewInterviews: () => void;
     onWeeklyRangeChange: (weeks: WeeklyRangeWeeks) => void;
 };
 
@@ -43,18 +50,20 @@ export function DashboardHome({
     applications,
     appliedTrackerFilters,
     filters,
-    firstName,
     historyByApp,
+    interviews,
     openTimelineId,
     weeklyRangeWeeks,
     onApplyTrackerFilters,
     onCreateApplication,
+    onCreateInterview,
     onFiltersChange,
     onImportOpen,
     onRemoveApplication,
     onStartEdit,
     onToggleTimeline,
     onTransitionStatus,
+    onViewInterviews,
     onWeeklyRangeChange,
 }: DashboardHomeProps) {
     const trackerApplications = useMemo(
@@ -64,6 +73,14 @@ export function DashboardHome({
     const groupedApplications = useMemo(
         () => groupDashboardApplications(trackerApplications),
         [trackerApplications],
+    );
+    const upcomingInterviews = useMemo(
+        () =>
+            sortInterviewsBySchedule(
+                interviews.filter(isUpcomingInterview),
+                "asc",
+            ),
+        [interviews],
     );
 
     return (
@@ -78,6 +95,7 @@ export function DashboardHome({
                 activePipeline={activePipeline}
                 applications={applications}
                 historyByApp={historyByApp}
+                interviews={interviews}
             />
             <ApplicationTracker
                 applications={applications}
@@ -89,13 +107,19 @@ export function DashboardHome({
                 onApplyFilters={onApplyTrackerFilters}
                 onImportOpen={onImportOpen}
                 onCreateApplication={onCreateApplication}
+                onCreateInterview={onCreateInterview}
                 onFiltersChange={onFiltersChange}
                 onRemoveApplication={onRemoveApplication}
                 onStartEdit={onStartEdit}
                 onToggleTimeline={onToggleTimeline}
                 onTransitionStatus={onTransitionStatus}
             />
-            <DashboardCards onImportOpen={onImportOpen} />
+            <DashboardCards
+                upcomingInterviews={upcomingInterviews}
+                onCreateInterview={() => onCreateInterview()}
+                onImportOpen={onImportOpen}
+                onViewInterviews={onViewInterviews}
+            />
             <section className="analytics-grid">
                 <SourceBreakdown applications={applications} />
                 <WeeklyApplications

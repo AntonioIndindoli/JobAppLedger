@@ -8,15 +8,21 @@ import { ApplicationDrawer } from "./components/ApplicationDrawer";
 import { AuthPanel } from "./components/AuthPanel";
 import { DashboardShell } from "./components/DashboardShell";
 import { ImportDrawer } from "./components/ImportDrawer";
+import { InterviewDrawer } from "./components/InterviewDrawer";
+import { InterviewsView } from "./components/InterviewsView";
 import { DashboardHome } from "./components/dashboard/DashboardHome";
 import { countActiveApplications } from "./lib/application-analytics";
+import { toLocalDateTimeInputs } from "./lib/interview-utils";
 import {
     ACCESS_TOKEN_KEY,
     API_BASE_URL,
     DEFAULT_WEEKLY_RANGE,
     EMPTY_APPLICATION_FORM,
     EMPTY_IMPORT_CAPTURE,
+    EMPTY_INTERVIEW_FORM,
     EMPTY_IMPORT_REVIEW,
+    INTERVIEW_OUTCOMES,
+    INTERVIEW_TYPES,
     STATUSES,
     USER_EMAIL_KEY,
 } from "./lib/constants";
@@ -29,6 +35,8 @@ import type {
     DashboardView,
     ImportDraft,
     ImportReviewValues,
+    Interview,
+    InterviewFormValues,
     Mode,
     ParserDebug,
     WeeklyRangeWeeks,
@@ -51,10 +59,20 @@ export default function MainPage() {
     const [authStatus, setAuthStatus] = useState<AuthStatus>("checking");
     const [message, setMessage] = useState("");
     const [applications, setApplications] = useState<Application[]>([]);
+    const [interviews, setInterviews] = useState<Interview[]>([]);
     const [form, setForm] = useState<ApplicationFormValues>(EMPTY_APPLICATION_FORM);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isApplicationFormOpen, setIsApplicationFormOpen] = useState(false);
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [interviewForm, setInterviewForm] =
+        useState<InterviewFormValues>(EMPTY_INTERVIEW_FORM);
+    const [interviewEditingId, setInterviewEditingId] = useState<string | null>(
+        null,
+    );
+    const [isInterviewFormOpen, setIsInterviewFormOpen] = useState(false);
+    const [interviewErrors, setInterviewErrors] = useState<Record<string, string>>(
+        {},
+    );
     const [isImportDrawerOpen, setIsImportDrawerOpen] = useState(false);
     const [importStep, setImportStep] = useState<"capture" | "review">("capture");
     const [importCapture, setImportCapture] = useState(EMPTY_IMPORT_CAPTURE);
@@ -174,7 +192,10 @@ export default function MainPage() {
     }, []);
 
     useEffect(() => {
-        if (authStatus === "signedIn" && token) loadApplications(token);
+        if (authStatus === "signedIn" && token) {
+            loadApplications(token);
+            loadInterviews(token);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authStatus, token]);
 
@@ -193,6 +214,7 @@ export default function MainPage() {
         setAuthStatus("signedIn");
         setMessage(`Welcome ${data.user.email}`);
         loadApplications(data.accessToken);
+        loadInterviews(data.accessToken);
     }
 
     async function signOut() {
@@ -204,10 +226,13 @@ export default function MainPage() {
         setUserEmail("");
         setPassword("");
         setApplications([]);
+        setInterviews([]);
         setHistoryByApp({});
         setOpenTimelineId(null);
+        resetInterviewForm();
         resetImportFlow();
         setIsImportDrawerOpen(false);
+        setIsInterviewFormOpen(false);
         setIsProfileMenuOpen(false);
         setCurrentView("dashboard");
         setAuthStatus("signedOut");
@@ -245,6 +270,16 @@ export default function MainPage() {
         loadApplicationHistories(activeToken);
     }
 
+    async function loadInterviews(activeToken = token) {
+        if (!activeToken) return;
+        const res = await fetch(`${API_BASE_URL}/interviews`, {
+            headers: { Authorization: `Bearer ${activeToken}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) return setMessage(data.message ?? "Failed loading interviews");
+        setInterviews(data.interviews ?? []);
+    }
+
     async function loadApplicationHistories(activeToken = token) {
         if (!activeToken) return;
         const res = await fetch(`${API_BASE_URL}/applications/history`, {
@@ -271,12 +306,43 @@ export default function MainPage() {
 
     function openCreateApplication() {
         resetApplicationForm();
+        setIsInterviewFormOpen(false);
+        setIsImportDrawerOpen(false);
         setIsApplicationFormOpen(true);
     }
 
     function closeApplicationForm() {
         resetApplicationForm();
         setIsApplicationFormOpen(false);
+    }
+
+    function resetInterviewForm(applicationId = "") {
+        setInterviewForm({ ...EMPTY_INTERVIEW_FORM, applicationId });
+        setInterviewEditingId(null);
+        setInterviewErrors({});
+    }
+
+    function openCreateInterview(applicationId = "") {
+        if (applications.length === 0) {
+            setMessage("Add an application before scheduling an interview.");
+            return;
+        }
+
+        const selectedApplicationId = applications.some(
+            (application) => application.id === applicationId,
+        )
+            ? applicationId
+            : "";
+
+        resetInterviewForm(selectedApplicationId);
+        setIsApplicationFormOpen(false);
+        setIsImportDrawerOpen(false);
+        setIsInterviewFormOpen(true);
+    }
+
+    function closeInterviewForm() {
+        resetInterviewForm();
+        setIsInterviewFormOpen(false);
     }
 
     function resetImportFlow() {
@@ -293,6 +359,7 @@ export default function MainPage() {
     function openImportDrawer() {
         resetImportFlow();
         setIsApplicationFormOpen(false);
+        setIsInterviewFormOpen(false);
         setIsImportDrawerOpen(true);
     }
 
@@ -338,6 +405,88 @@ export default function MainPage() {
             errors.status = "Choose a valid status.";
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
+    }
+
+    function validateInterviewForm() {
+        const errors: Record<string, string> = {};
+        if (!interviewForm.applicationId) {
+            errors.applicationId = "Choose an application.";
+        } else if (
+            !applications.some(
+                (application) => application.id === interviewForm.applicationId,
+            )
+        ) {
+            errors.applicationId = "Choose a valid application.";
+        }
+
+        if (
+            !INTERVIEW_TYPES.includes(
+                interviewForm.type as (typeof INTERVIEW_TYPES)[number],
+            )
+        )
+            errors.type = "Choose a valid interview type.";
+
+        if (!interviewForm.scheduledDate) {
+            errors.scheduledDate = "Choose an interview date.";
+        }
+        if (!interviewForm.scheduledTime) {
+            errors.scheduledTime = "Choose an interview time.";
+        }
+        if (interviewForm.scheduledDate && interviewForm.scheduledTime) {
+            const scheduledAt = new Date(
+                `${interviewForm.scheduledDate}T${interviewForm.scheduledTime}:00`,
+            );
+            if (Number.isNaN(scheduledAt.getTime()))
+                errors.scheduledDate = "Choose a valid interview date and time.";
+        }
+
+        if (interviewForm.durationMinutes.trim()) {
+            const durationMinutes = Number(interviewForm.durationMinutes);
+            if (!Number.isInteger(durationMinutes)) {
+                errors.durationMinutes = "Use whole minutes.";
+            } else if (durationMinutes < 1 || durationMinutes > 1440) {
+                errors.durationMinutes = "Duration must be between 1 and 1440 minutes.";
+            }
+        }
+
+        if (interviewForm.meetingUrl.trim()) {
+            try {
+                const parsed = new URL(interviewForm.meetingUrl);
+                if (!["http:", "https:"].includes(parsed.protocol)) throw new Error();
+            } catch {
+                errors.meetingUrl = "Enter a valid URL, including https://.";
+            }
+        }
+
+        if (
+            !INTERVIEW_OUTCOMES.includes(
+                interviewForm.outcome as (typeof INTERVIEW_OUTCOMES)[number],
+            )
+        )
+            errors.outcome = "Choose a valid outcome.";
+
+        setInterviewErrors(errors);
+        return Object.keys(errors).length === 0;
+    }
+
+    function buildInterviewPayload() {
+        const scheduledAt = new Date(
+            `${interviewForm.scheduledDate}T${interviewForm.scheduledTime}:00`,
+        );
+
+        return {
+            applicationId: interviewForm.applicationId,
+            type: interviewForm.type,
+            scheduledAt: scheduledAt.toISOString(),
+            durationMinutes: interviewForm.durationMinutes.trim()
+                ? Number(interviewForm.durationMinutes)
+                : null,
+            location: interviewForm.location,
+            meetingUrl: interviewForm.meetingUrl,
+            interviewerName: interviewForm.interviewerName,
+            notes: interviewForm.notes,
+            outcome: interviewForm.outcome,
+        };
     }
 
     function validateImportCapture() {
@@ -474,6 +623,28 @@ export default function MainPage() {
         loadApplications();
     }
 
+    async function saveInterview(event: FormEvent) {
+        event.preventDefault();
+        if (!validateInterviewForm()) return;
+
+        const wasEditing = Boolean(interviewEditingId);
+        const method = interviewEditingId ? "PATCH" : "POST";
+        const url = interviewEditingId
+            ? `/interviews/${interviewEditingId}`
+            : "/interviews";
+        const res = await authedFetch(url, {
+            method,
+            body: JSON.stringify(buildInterviewPayload()),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) return setMessage(data.message ?? "Interview save failed");
+
+        closeInterviewForm();
+        setMessage(wasEditing ? "Interview updated." : "Interview saved.");
+        loadInterviews();
+        loadApplications();
+    }
+
     async function transitionStatus(id: string, nextStatus: string) {
         const original = applications;
         setApplications((prev) =>
@@ -499,6 +670,15 @@ export default function MainPage() {
         if (!res.ok) return setMessage("Delete failed");
         if (editingId === id) closeApplicationForm();
         loadApplications();
+        loadInterviews();
+    }
+
+    async function removeInterview(id: string) {
+        const res = await authedFetch(`/interviews/${id}`, { method: "DELETE" });
+        if (!res.ok) return setMessage("Interview delete failed");
+        if (interviewEditingId === id) closeInterviewForm();
+        setInterviews((prev) => prev.filter((interview) => interview.id !== id));
+        setMessage("Interview deleted.");
     }
 
     function startEdit(app: Application) {
@@ -514,7 +694,35 @@ export default function MainPage() {
             notes: app.notes ?? "",
             dateApplied: app.dateApplied ? app.dateApplied.slice(0, 10) : "",
         });
+        setIsInterviewFormOpen(false);
+        setIsImportDrawerOpen(false);
         setIsApplicationFormOpen(true);
+    }
+
+    function startEditInterview(interview: Interview) {
+        const { scheduledDate, scheduledTime } = toLocalDateTimeInputs(
+            interview.scheduledAt,
+        );
+
+        setInterviewEditingId(interview.id);
+        setInterviewErrors({});
+        setInterviewForm({
+            applicationId: interview.applicationId,
+            type: interview.type,
+            scheduledDate,
+            scheduledTime,
+            durationMinutes: interview.durationMinutes
+                ? String(interview.durationMinutes)
+                : "",
+            location: interview.location ?? "",
+            meetingUrl: interview.meetingUrl ?? "",
+            interviewerName: interview.interviewerName ?? "",
+            notes: interview.notes ?? "",
+            outcome: interview.outcome,
+        });
+        setIsApplicationFormOpen(false);
+        setIsImportDrawerOpen(false);
+        setIsInterviewFormOpen(true);
     }
 
     async function toggleTimeline(id: string) {
@@ -561,9 +769,18 @@ export default function MainPage() {
                 <ApplicationsView
                     applications={applications}
                     onCreateApplication={openCreateApplication}
+                    onCreateInterview={openCreateInterview}
                     onImportOpen={openImportDrawer}
                     onRemoveApplication={removeApplication}
                     onStartEdit={startEdit}
+                />
+            ) : currentView === "interviews" ? (
+                <InterviewsView
+                    applications={applications}
+                    interviews={interviews}
+                    onCreateInterview={() => openCreateInterview()}
+                    onRemoveInterview={removeInterview}
+                    onStartEdit={startEditInterview}
                 />
             ) : (
                 <DashboardHome
@@ -571,18 +788,20 @@ export default function MainPage() {
                     applications={applications}
                     appliedTrackerFilters={appliedTrackerFilters}
                     filters={filters}
-                    firstName={firstName}
                     historyByApp={historyByApp}
+                    interviews={interviews}
                     openTimelineId={openTimelineId}
                     weeklyRangeWeeks={weeklyRangeWeeks}
                     onApplyTrackerFilters={() => setAppliedTrackerFilters(filters)}
                     onCreateApplication={openCreateApplication}
+                    onCreateInterview={openCreateInterview}
                     onFiltersChange={setFilters}
                     onImportOpen={openImportDrawer}
                     onRemoveApplication={removeApplication}
                     onStartEdit={startEdit}
                     onToggleTimeline={toggleTimeline}
                     onTransitionStatus={transitionStatus}
+                    onViewInterviews={() => setCurrentView("interviews")}
                     onWeeklyRangeChange={setWeeklyRangeWeeks}
                 />
             )}
@@ -597,6 +816,19 @@ export default function MainPage() {
                     onFormChange={setForm}
                     onRemoveApplication={removeApplication}
                     onSubmit={saveApplication}
+                />
+            )}
+
+            {isInterviewFormOpen && (
+                <InterviewDrawer
+                    applications={applications}
+                    editingId={interviewEditingId}
+                    form={interviewForm}
+                    formErrors={interviewErrors}
+                    onClose={closeInterviewForm}
+                    onFormChange={setInterviewForm}
+                    onRemoveInterview={removeInterview}
+                    onSubmit={saveInterview}
                 />
             )}
 
