@@ -48,6 +48,7 @@ function buildPipelineSankey(applications: Application[]) {
             color: "#6d5dfc",
             fixedValue: reachedInterviewing,
         },
+        { id: "no-response", label: "No Response", color: "#64748b" },
         { id: "offer", label: "Offer", color: "#16a34a" },
         { id: "rejected", label: "Rejected", color: "#dc2626" },
         { id: "withdrawn", label: "Withdrawn", color: "#475569" },
@@ -68,6 +69,7 @@ function buildPipelineSankey(applications: Application[]) {
     };
 
     addLink("applied", "interviewing", reachedInterviewing, "#a78bfa", "Applied to interviewing");
+    addLink("applied", "no-response", counts.APPLIED, "#94a3b8", "Applied to no response");
     addLink("applied", "rejected", counts.REJECTED, "#f87171", "Applied to rejected");
     addLink("applied", "withdrawn", counts.WITHDRAWN, "#94a3b8", "Applied to withdrawn");
     addLink("interviewing", "offer", counts.OFFER, "#4ade80", "Interviewing to offer");
@@ -161,7 +163,7 @@ export function PipelineSankey({ applications }: { applications: Application[] }
                             className="sankey-canvas"
                             viewBox={`0 0 ${PIPELINE_WIDTH} ${PIPELINE_HEIGHT}`}
                             role="img"
-                            aria-label="Sankey diagram of applications flowing through saved, applied, interview, offer, and exit statuses"
+                            aria-label="Sankey diagram of applications flowing through applied, no response, interview, offer, and exit statuses"
                             preserveAspectRatio="xMidYMid meet"
                         >
                             <g className="sankey-links">
