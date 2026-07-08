@@ -167,6 +167,33 @@ test("parseJobDescription handles Ashby structured text with hyphenated title", 
   assert.equal(parsed.parsedSalaryMax, 232000);
 });
 
+test("parseJobDescription handles Greenhouse application line company and remote subtitle", () => {
+  const parsed = parseJobDescription({
+    sourceUrl: "https://job-boards.greenhouse.io/renaissancelearning-nam/jobs/5205535008?gh_src=z3ilbxha8us",
+    pageTitle: "Software Engineer I",
+    rawText: `
+      Software Engineer I
+      Remote - US
+      Job Application for Software Engineer I at Renaissance Learning North America
+      Software Engineer I
+      Remote - US
+
+      About Renaissance
+      Job Description
+      We are seeking a Full Stack Software Engineer with strong backend experience in .NET Core and frontend experience in React.
+      Salary Range
+      $68,000 - $93,500 USD
+    `,
+  });
+
+  assert.equal(parsed.source, "Greenhouse");
+  assert.equal(parsed.parsedTitle, "Software Engineer I");
+  assert.equal(parsed.parsedCompany, "Renaissance Learning North America");
+  assert.equal(parsed.parsedLocation, "Remote - US");
+  assert.equal(parsed.parsedSalaryMin, 68000);
+  assert.equal(parsed.parsedSalaryMax, 93500);
+});
+
 test("parseJobDescription handles LinkedIn public page chrome", () => {
   const parsed = parseJobDescription({
     sourceUrl: "https://www.linkedin.com/jobs/view/4377842915/",
@@ -208,6 +235,19 @@ test("parseJobDescription handles LinkedIn public page chrome", () => {
   assert.equal(parsed.parsedLocation, "United States");
   assert.equal(parsed.parsedSalaryMin, 130000);
   assert.equal(parsed.parsedSalaryMax, 175000);
+});
+
+test("parseJobDescription falls back to useful URL slugs when fetched text is sparse", () => {
+  const parsed = parseJobDescription({
+    sourceUrl: "https://frontdoor.jobs/virtual-usa/software-engineer/72A8979ED0B14D56B48BB397DDE3D312/job/?vs=1606",
+    rawText:
+      "We're obsessed with taking the hassle out of owning a home. We bring together innovative tech and world-class experience to simplify our customers' lives.",
+  });
+
+  assert.equal(parsed.sourceUrl, "https://frontdoor.jobs/virtual-usa/software-engineer/72A8979ED0B14D56B48BB397DDE3D312/job");
+  assert.equal(parsed.parsedTitle, "Software Engineer");
+  assert.equal(parsed.parsedCompany, "Frontdoor");
+  assert.equal(parsed.parsedLocation, "Virtual - USA");
 });
 
 test("extractTitle does not treat company substrings as role keywords", () => {

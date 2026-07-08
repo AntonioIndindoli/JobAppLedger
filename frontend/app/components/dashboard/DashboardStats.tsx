@@ -1,0 +1,64 @@
+"use client";
+
+import { AppIcon, MetricIcon } from "../AppIcon";
+import { PipelineSankey } from "./PipelineSankey";
+import type { Application } from "../../lib/types";
+
+type DashboardStatsProps = {
+    activePipeline: number;
+    applications: Application[];
+};
+
+export function DashboardStats({ activePipeline, applications }: DashboardStatsProps) {
+    return (
+        <section className="pipeline-stats-container">
+            <PipelineSankey applications={applications} />
+            <section className="stat-grid">
+                <div className="stat-card">
+                    <MetricIcon name="applications" />
+                    <div>
+                        <p>Total Applications</p>
+                        <strong>{applications.length}</strong>
+                        <span>All time</span>
+                    </div>
+                    <em aria-label="No trend">
+                        <AppIcon name="minus" size={14} />
+                    </em>
+                </div>
+                <div className="stat-card">
+                    <MetricIcon name="pipeline" tone="green" />
+                    <div>
+                        <p>Active Applications</p>
+                        <strong>{activePipeline}</strong>
+                        <span>In progress</span>
+                    </div>
+                    <em aria-label="No trend">
+                        <AppIcon name="minus" size={14} />
+                    </em>
+                </div>
+                <div className="stat-card">
+                    <MetricIcon name="calendar" tone="purple" />
+                    <div>
+                        <p>Interviews Scheduled</p>
+                        <strong>0</strong>
+                        <span>Upcoming</span>
+                    </div>
+                    <em aria-label="No trend">
+                        <AppIcon name="minus" size={14} />
+                    </em>
+                </div>
+                <div className="stat-card">
+                    <MetricIcon name="checklist" tone="orange" />
+                    <div>
+                        <p>Tasks Due</p>
+                        <strong>0</strong>
+                        <span>Needs attention</span>
+                    </div>
+                    <em aria-label="No trend">
+                        <AppIcon name="minus" size={14} />
+                    </em>
+                </div>
+            </section>
+        </section>
+    );
+}

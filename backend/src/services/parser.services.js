@@ -169,6 +169,7 @@ const COMPANY_LABEL_ONLY_PATTERN = /^(?:company|organization|hiring\s+organizati
 const LOCATION_LABEL_PATTERN = /^(?:locations?|job\s+location|work\s+location|based\s+in|office|offices|workplace\s+type|workplace|work\s+type)\s*[:\-]?\s*(.+)$/i;
 const LOCATION_LABEL_ONLY_PATTERN = /^(?:locations?|job\s+location|work\s+location|based\s+in|office|offices|workplace\s+type|workplace|work\s+type)$/i;
 const LINKEDIN_HIRING_TITLE_PATTERN = /^(.+?)\s+hiring\s+(.+?)(?:\s+in\s+(.+?))?(?:\s+\|\s+LinkedIn)?$/i;
+const APPLICATION_TITLE_COMPANY_PATTERN = /^job application for\s+(.+?)\s+at\s+(.+?)$/i;
 const IGNORED_LINE_PATTERN = /^(?:apply now|apply|save|share this job|sign in|cookie policy|privacy policy|sign in to save|save job|easy apply|back to jobs|skip to main content|expand search|clear text|join now|people|learning|show|forgot password\?|email or phone|password|or|report this job|use ai to assess how you fit|tailor my resume|am i a good fit for this job\?|see who .* hired|posted\b.*|reposted\b.*|promoted\b.*|actively hiring|be among the first|new)$/i;
 const NON_COMPANY_LINE_PATTERN = /^(?:remote|hybrid|onsite|on-site|location\b|department\b|team\b|employment type\b|full[- ]time|part[- ]time|contract|temporary|internship|mid[- ]senior|entry level|associate|director|executive|not applicable|posted\b.*|reposted\b.*|promoted\b.*|easy apply)$/i;
 const GENERIC_TITLE_KEYS = ["jobTitle", "job_title", "title", "positionTitle", "position_title", "positionName", "position_name", "name", "roleName", "role_name", "postingTitle", "posting_title"];
@@ -180,6 +181,7 @@ const US_STATE_NAME_PATTERN = "Alabama|Alaska|Arizona|Arkansas|California|Colora
 const CITY_REGION_COUNTRY_SOURCE = `[A-Z][a-zA-Z .'-]+,\\s?(?:(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|IA|ID|IL|IN|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY)|(?:${US_STATE_NAME_PATTERN}))(?:,\\s?(?:United States|USA|US))?`;
 const CITY_REGION_COUNTRY_PATTERN = new RegExp(`\\b(${CITY_REGION_COUNTRY_SOURCE})\\b`);
 const ROLE_LOCATION_LINE_PATTERN = new RegExp(`\\bin\\s+(${CITY_REGION_COUNTRY_SOURCE})\\b`, "i");
+const US_STATE_ABBREVIATIONS = new Set(["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"]);
 
 function normalizeOptional(value) {
   if (value === undefined || value === null) return null;
@@ -226,7 +228,8 @@ function cleanTitleCandidate(value) {
     .replace(/\s+-\s+(?:LinkedIn|Indeed|Glassdoor|ZipRecruiter).*$/i, "")
     .trim();
   const linkedInHiringMatch = candidate?.match(LINKEDIN_HIRING_TITLE_PATTERN);
-  const cleaned = linkedInHiringMatch ? cleanCandidate(linkedInHiringMatch[2]) : candidate;
+  const applicationMatch = value && String(value).match(APPLICATION_TITLE_COMPANY_PATTERN);
+  const cleaned = linkedInHiringMatch ? cleanCandidate(linkedInHiringMatch[2]) : applicationMatch ? cleanCandidate(applicationMatch[1]) : candidate;
   return cleaned || null;
 }
 
@@ -280,6 +283,15 @@ function arrayify(value) {
 
 function splitTitleParts(value) {
   return cleanTitleCandidate(value)?.split(TITLE_SEPARATOR_PATTERN).map(cleanTitleCandidate).filter(Boolean) ?? [];
+}
+
+function isOpaqueUrlSegment(value) {
+  const segment = String(value ?? "").trim();
+  return /^[a-f0-9]{24,}$/i.test(segment) || /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(segment);
+}
+
+function titleSlugFromValue(value) {
+  return cleanTitleCandidate(value)?.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") ?? null;
 }
 
 function normalizeFetchUrl(url) {
@@ -830,7 +842,7 @@ function titleCandidateFromUrl(sourceUrl) {
     const ignored = new Set(["jobs", "job", "careers", "view", "posting", "boards", "apply", "jobdetails"]);
     const slug = [...parts]
       .reverse()
-      .find((part) => !ignored.has(part.toLowerCase()) && !/^\d+$/.test(part) && part.length > 3);
+      .find((part) => !ignored.has(part.toLowerCase()) && !/^\d+$/.test(part) && !isOpaqueUrlSegment(part) && part.length > 3);
     return slug ? cleanTitleCandidate(titleCaseSlug(decodeURIComponent(slug))) : null;
   } catch {
     return null;
@@ -964,6 +976,18 @@ function companyAdjacentToTitle(rawText, parsedTitle) {
     .find((line, index) => isCompanyLineCandidate(line, { allowRoleKeyword: index === 0 })) ?? null;
 }
 
+function companyFromApplicationLine(rawText, parsedTitle) {
+  const lines = getMeaningfulLines(rawText, 30);
+  for (const line of lines) {
+    const match = line.match(APPLICATION_TITLE_COMPANY_PATTERN);
+    if (!match) continue;
+    if (cleanTitleCandidate(match[1])?.toLowerCase() === parsedTitle?.toLowerCase()) {
+      return cleanCompanyName(match[2]);
+    }
+  }
+  return null;
+}
+
 function companyFromRawText(rawText, parsedTitle, markersOnly = false) {
   const lines = getMeaningfulLines(rawText, 20);
 
@@ -994,6 +1018,9 @@ export function extractCompany({ pageTitle, rawText, sourceUrl, source, parsedTi
 
   const labeledCompany = companyFromRawText(rawText, parsedTitle, true);
   if (labeledCompany) return labeledCompany;
+
+  const applicationLineCompany = companyFromApplicationLine(rawText, parsedTitle);
+  if (applicationLineCompany) return applicationLineCompany;
 
   const adjacentCompany = companyAdjacentToTitle(rawText, parsedTitle);
   if (adjacentCompany) return adjacentCompany;
@@ -1046,7 +1073,55 @@ function locationAdjacentToTitleCompany(lines, parsedTitle, parsedCompany) {
   return null;
 }
 
-export function extractLocation(rawText, { parsedTitle, parsedCompany } = {}) {
+function formatUrlLocationSlug(value) {
+  const parts = String(value ?? "").split(/[-_]+/).filter(Boolean);
+  if (!parts.length) return null;
+
+  const normalizedParts = parts.map((part) => {
+    const upper = part.toUpperCase();
+    if (upper === "US") return "USA";
+    if (upper === "USA") return "USA";
+    if (US_STATE_ABBREVIATIONS.has(upper)) return upper;
+    return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+  });
+
+  if (/^(remote|virtual)$/i.test(parts[0]) && normalizedParts.length > 1) {
+    return `${normalizedParts[0]} - ${normalizedParts.slice(1).join(" ")}`;
+  }
+  if (normalizedParts.length === 2 && US_STATE_ABBREVIATIONS.has(normalizedParts[1])) {
+    return `${normalizedParts[0]}, ${normalizedParts[1]}`;
+  }
+  return normalizedParts.join(" ");
+}
+
+function looksLikeLocationSlug(value) {
+  const parts = String(value ?? "").split(/[-_]+/).filter(Boolean);
+  if (!parts.length || isOpaqueUrlSegment(value)) return false;
+  const lowerParts = parts.map((part) => part.toLowerCase());
+  const lastUpper = parts.at(-1)?.toUpperCase();
+  return (
+    lowerParts.some((part) => ["remote", "virtual", "usa", "us", "united", "states", "canada"].includes(part)) ||
+    US_STATE_ABBREVIATIONS.has(lastUpper)
+  );
+}
+
+function locationFromUrl(sourceUrl, parsedTitle) {
+  if (!sourceUrl || !parsedTitle) return null;
+  try {
+    const parsed = new URL(sourceUrl);
+    const parts = parsed.pathname.split("/").filter(Boolean).map((part) => decodeURIComponent(part));
+    const titleSlug = titleSlugFromValue(parsedTitle);
+    const titleIndex = parts.findIndex((part) => titleSlugFromValue(titleCaseSlug(part)) === titleSlug);
+    if (titleIndex <= 0) return null;
+
+    const locationSlug = [...parts.slice(0, titleIndex)].reverse().find(looksLikeLocationSlug);
+    return cleanLocationCandidate(formatUrlLocationSlug(locationSlug));
+  } catch {
+    return null;
+  }
+}
+
+export function extractLocation(rawText, { parsedTitle, parsedCompany, sourceUrl } = {}) {
   const text = normalizeOptional(rawText);
   if (!text) return null;
 
@@ -1081,7 +1156,7 @@ export function extractLocation(rawText, { parsedTitle, parsedCompany } = {}) {
   );
   if (remoteLine) return remoteLine;
 
-  return cityStateFromText(text);
+  return cityStateFromText(text) ?? locationFromUrl(sourceUrl, parsedTitle);
 }
 
 function isHourlyContext(text) {
@@ -1269,7 +1344,7 @@ export function parseJobDescription(input = {}) {
     source: sourceInfo.source,
     parsedTitle,
   });
-  const parsedLocation = extractLocation(cleanedText, { parsedTitle, parsedCompany });
+  const parsedLocation = extractLocation(cleanedText, { parsedTitle, parsedCompany, sourceUrl });
   const salary = extractSalaryRange(cleanedText);
 
   const parsed = {
