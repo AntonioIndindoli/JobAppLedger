@@ -136,11 +136,29 @@ export function AppIcon({
                 </>
             );
             break;
+        case "dots-vertical":
+            icon = (
+                <>
+                    <circle cx="12" cy="5" r="1" fill="currentColor" stroke="none" />
+                    <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+                    <circle cx="12" cy="19" r="1" fill="currentColor" stroke="none" />
+                </>
+            );
+            break;
         case "edit":
             icon = (
                 <>
                     <path d="M5 19h4.5L19 9.5 14.5 5 5 14.5Z" />
                     <path d="m13.5 6 4.5 4.5" />
+                </>
+            );
+            break;
+        case "external-link":
+            icon = (
+                <>
+                    <path d="M14 5h5v5" />
+                    <path d="m13 11 6-6" />
+                    <path d="M19 14.5V18a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h3.5" />
                 </>
             );
             break;
@@ -188,6 +206,14 @@ export function AppIcon({
                     <path d="M8 19.5A3.5 3.5 0 0 1 8 12h11.5" />
                     <path d="M9 8h6" />
                     <path d="M9 10.5h4" />
+                </>
+            );
+            break;
+        case "location":
+            icon = (
+                <>
+                    <path d="M19 10c0 5-7 10-7 10S5 15 5 10a7 7 0 1 1 14 0Z" />
+                    <circle cx="12" cy="10" r="2.25" />
                 </>
             );
             break;
@@ -265,6 +291,15 @@ export function AppIcon({
                 <>
                     <path d="M4 17 9 12l3 3 7-8" />
                     <path d="M15 7h4v4" />
+                </>
+            );
+            break;
+        case "warning":
+            icon = (
+                <>
+                    <path d="M12 4 21 20H3Z" />
+                    <path d="M12 9v5" />
+                    <circle cx="12" cy="17" r=".75" fill="currentColor" stroke="none" />
                 </>
             );
             break;

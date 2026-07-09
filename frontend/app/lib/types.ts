@@ -145,12 +145,15 @@ export type AppIconName =
     | "contacts"
     | "dashboard"
     | "document"
+    | "dots-vertical"
     | "edit"
+    | "external-link"
     | "filter"
     | "history"
     | "import"
     | "info"
     | "ledger"
+    | "location"
     | "logout"
     | "minus"
     | "pipeline"
@@ -159,6 +162,7 @@ export type AppIconName =
     | "settings"
     | "source"
     | "trash"
-    | "trend";
+    | "trend"
+    | "warning";
 
 export type IconTone = "blue" | "green" | "purple" | "orange";
