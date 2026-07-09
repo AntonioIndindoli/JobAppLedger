@@ -28,6 +28,9 @@ type InterviewFilters = {
     outcome: string;
 };
 
+type SortKey = "scheduledAt" | "applicationTitle" | "companyName" | "type" | "outcome";
+type SortDirection = "asc" | "desc";
+
 const INITIAL_FILTERS: InterviewFilters = {
     query: "",
     type: "",
@@ -99,6 +102,13 @@ function hasInterviewLocation(interview: Interview) {
     return Boolean(interview.location?.trim() || interview.meetingUrl?.trim());
 }
 
+function getInterviewLocationLabel(interview: Interview) {
+    const location = interview.location?.trim();
+    if (location) return location;
+    if (interview.meetingUrl?.trim()) return "Meeting link saved";
+    return "Not set";
+}
+
 function getPrepIssues(interview: Interview) {
     const issues: string[] = [];
 
@@ -106,6 +116,15 @@ function getPrepIssues(interview: Interview) {
     if (!hasInterviewLocation(interview)) issues.push("Missing location");
 
     return issues;
+}
+
+function getSortValue(interview: Interview, sortKey: SortKey) {
+    if (sortKey === "scheduledAt") return getInterviewTimestamp(interview);
+    if (sortKey === "type") return getInterviewTypeLabel(interview.type).toLowerCase();
+    if (sortKey === "outcome")
+        return getInterviewOutcomeLabel(interview.outcome).toLowerCase();
+
+    return (interview[sortKey] ?? "").toString().toLowerCase();
 }
 
 export function InterviewsView({
@@ -116,7 +135,11 @@ export function InterviewsView({
     onStartEdit,
 }: InterviewsViewProps) {
     const [filters, setFilters] = useState<InterviewFilters>(INITIAL_FILTERS);
-    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const [sortKey, setSortKey] = useState<SortKey>("scheduledAt");
+    const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+    const [selectedInterviewId, setSelectedInterviewId] = useState<string | null>(
+        null,
+    );
     const [nowTime] = useState(() => Date.now());
     const canCreateInterview = applications.length > 0;
 
@@ -133,10 +156,27 @@ export function InterviewsView({
         });
     }, [filters, interviews]);
 
-    const sortedInterviews = useMemo(
-        () => sortInterviewsBySchedule(filteredInterviews, "asc"),
-        [filteredInterviews],
-    );
+    const sortedInterviews = useMemo(() => {
+        return [...filteredInterviews].sort((left, right) => {
+            const leftValue = getSortValue(left, sortKey);
+            const rightValue = getSortValue(right, sortKey);
+            const directionMultiplier = sortDirection === "asc" ? 1 : -1;
+
+            if (typeof leftValue === "number" && typeof rightValue === "number") {
+                return (leftValue - rightValue) * directionMultiplier;
+            }
+
+            return String(leftValue).localeCompare(String(rightValue)) * directionMultiplier;
+        });
+    }, [filteredInterviews, sortDirection, sortKey]);
+
+    const selectedInterview =
+        sortedInterviews.find((interview) => interview.id === selectedInterviewId) ??
+        sortedInterviews[0] ??
+        null;
+    const selectedPrepIssues = selectedInterview
+        ? getPrepIssues(selectedInterview)
+        : [];
 
     const upcomingInterviews = useMemo(
         () =>
@@ -150,8 +190,6 @@ export function InterviewsView({
             ),
         [interviews, nowTime],
     );
-
-    const nextInterview = upcomingInterviews[0] ?? null;
 
     const upcomingNextSevenDaysCount = useMemo(() => {
         const sevenDaysFromNow = nowTime + 7 * 24 * 60 * 60 * 1000;
@@ -184,12 +222,44 @@ export function InterviewsView({
 
     const hasActiveFilters = Object.values(filters).some(Boolean);
 
+    function updateSort(nextSortKey: SortKey) {
+        if (nextSortKey === sortKey) {
+            setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+            return;
+        }
+
+        setSortKey(nextSortKey);
+        setSortDirection("asc");
+    }
+
+    function renderSortButton(label: string, nextSortKey: SortKey) {
+        const isActive = sortKey === nextSortKey;
+
+        return (
+            <button
+                type="button"
+                className={isActive ? "table-sort-button active" : "table-sort-button"}
+                onClick={() => updateSort(nextSortKey)}
+            >
+                <span>{label}</span>
+                <AppIcon
+                    name="chevron-down"
+                    size={14}
+                    className={
+                        isActive && sortDirection === "asc"
+                            ? "sort-icon ascending"
+                            : "sort-icon"
+                    }
+                />
+            </button>
+        );
+    }
+
     return (
         <section className="applications-page interviews-page">
             <header className="applications-header">
                 <div>
                     <p>Interviews</p>
-                    <h1>All interviews</h1>
                     <span className="interviews-header-meta">
                         {upcomingInterviews.length}{" "}
                         {pluralize(
@@ -315,228 +385,82 @@ export function InterviewsView({
                 </button>
             </div>
 
-            <div className="interviews-content-grid">
-                <div className="applications-table-panel interviews-table-panel">
-                    <div className="interviews-panel-title">
-                        <h2>Interviews</h2>
+            <div className="applications-split-panel interviews-split-panel">
+                <aside className="application-list-panel interviews-list-panel">
+                    <div className="application-list-header">
+                        <div>
+                            <h2>Interviews</h2>
+                            <span>
+                                {sortedInterviews.length} shown from {interviews.length}{" "}
+                                total
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="application-list-sort" aria-label="Sort interviews">
+                        <span>Sort</span>
+                        {renderSortButton("When", "scheduledAt")}
+                        {renderSortButton("Role", "applicationTitle")}
+                        {renderSortButton("Company", "companyName")}
+                        {renderSortButton("Stage", "type")}
+                        {renderSortButton("Status", "outcome")}
                     </div>
 
                     {sortedInterviews.length > 0 ? (
-                        <>
-                            <div className="applications-table-scroll">
-                                <table className="applications-table interviews-table">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">When</th>
-                                            <th scope="col">Role</th>
-                                            <th scope="col">Stage</th>
-                                            <th scope="col">Status</th>
-                                            <th scope="col">Prep</th>
-                                            <th scope="col" aria-label="Actions" />
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {sortedInterviews.map((interview) => {
-                                            const prepIssues = getPrepIssues(interview);
+                        <div className="application-list" role="list">
+                            {sortedInterviews.map((interview) => {
+                                const isSelected =
+                                    selectedInterview?.id === interview.id;
 
-                                            return (
-                                                <tr key={interview.id}>
-                                                    <td>
-                                                        <div className="interview-when-cell">
-                                                            <span className="interview-date-icon">
-                                                                <AppIcon
-                                                                    name="calendar"
-                                                                    size={21}
-                                                                />
-                                                            </span>
-                                                            <span className="interview-when-copy">
-                                                                <strong>
-                                                                    {formatInterviewDateLabel(
-                                                                        interview.scheduledAt,
-                                                                    )}
-                                                                </strong>
-                                                                <span>
-                                                                    {formatInterviewTimeLabel(
-                                                                        interview.scheduledAt,
-                                                                    )}
-                                                                </span>
-                                                                <span>
-                                                                    {formatInterviewDuration(
-                                                                        interview.durationMinutes,
-                                                                    )}
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div className="interview-role-cell">
-                                                            <strong>
-                                                                {interview.applicationTitle ??
-                                                                    "Unknown role"}
-                                                            </strong>
-                                                            <span className="company-line">
-                                                                {interview.companyName ??
-                                                                    "Unknown company"}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        {getInterviewTypeLabel(
-                                                            interview.type,
-                                                        )}
-                                                    </td>
-                                                    <td>
-                                                        <span
-                                                            className={`status-pill ${interview.outcome.toLowerCase()}`}
-                                                        >
-                                                            {getInterviewOutcomeLabel(
-                                                                interview.outcome,
-                                                            )}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <div className="prep-list">
-                                                            {prepIssues.length > 0 ? (
-                                                                <>
-                                                                    {prepIssues.map((issue) => (
-                                                                        <span
-                                                                            className="prep-warning"
-                                                                            key={issue}
-                                                                        >
-                                                                            <AppIcon
-                                                                                name="warning"
-                                                                                size={16}
-                                                                            />
-                                                                            {issue}
-                                                                        </span>
-                                                                    ))}
-                                                                    <button
-                                                                        type="button"
-                                                                        className="prep-action"
-                                                                        onClick={() =>
-                                                                            onStartEdit(interview)
-                                                                        }
-                                                                    >
-                                                                        Add details
-                                                                    </button>
-                                                                </>
-                                                            ) : (
-                                                                <span className="prep-ready">
-                                                                    <AppIcon
-                                                                        name="check"
-                                                                        size={16}
-                                                                    />
-                                                                    Ready
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="interview-actions-cell">
-                                                        <div
-                                                            className="interview-row-menu"
-                                                            onBlur={(event) => {
-                                                                if (
-                                                                    !event.currentTarget.contains(
-                                                                        event.relatedTarget as Node | null,
-                                                                    )
-                                                                ) {
-                                                                    setOpenMenuId(null);
-                                                                }
-                                                            }}
-                                                        >
-                                                            <button
-                                                                type="button"
-                                                                className="interview-menu-trigger"
-                                                                aria-haspopup="menu"
-                                                                aria-expanded={
-                                                                    openMenuId === interview.id
-                                                                }
-                                                                onClick={() =>
-                                                                    setOpenMenuId((current) =>
-                                                                        current === interview.id
-                                                                            ? null
-                                                                            : interview.id,
-                                                                    )
-                                                                }
-                                                            >
-                                                                <AppIcon
-                                                                    name="dots-vertical"
-                                                                    size={18}
-                                                                />
-                                                            </button>
-                                                            {openMenuId === interview.id && (
-                                                                <div
-                                                                    className="interview-menu"
-                                                                    role="menu"
-                                                                >
-                                                                    <button
-                                                                        type="button"
-                                                                        role="menuitem"
-                                                                        onClick={() => {
-                                                                            setOpenMenuId(null);
-                                                                            onStartEdit(interview);
-                                                                        }}
-                                                                    >
-                                                                        <AppIcon
-                                                                            name="edit"
-                                                                            size={14}
-                                                                        />
-                                                                        Edit
-                                                                    </button>
-                                                                    <button
-                                                                        type="button"
-                                                                        role="menuitem"
-                                                                        onClick={() => {
-                                                                            setOpenMenuId(null);
-                                                                            onRemoveInterview(
-                                                                                interview.id,
-                                                                            );
-                                                                        }}
-                                                                    >
-                                                                        <AppIcon
-                                                                            name="trash"
-                                                                            size={14}
-                                                                        />
-                                                                        Delete
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div className="interviews-table-footer">
-                                <span>
-                                    Showing {sortedInterviews.length} of{" "}
-                                    {interviews.length}{" "}
-                                    {pluralize(interviews.length, "interview")}
-                                </span>
-                                <div
-                                    className="interviews-pagination"
-                                    aria-label="Interview pagination"
-                                >
-                                    <button type="button" disabled aria-label="Previous page">
-                                        <AppIcon name="arrow-left" size={16} />
-                                    </button>
+                                return (
                                     <button
+                                        key={interview.id}
                                         type="button"
-                                        className="active"
-                                        aria-current="page"
+                                        className={
+                                            isSelected
+                                                ? "application-list-item interview-list-item active"
+                                                : "application-list-item interview-list-item"
+                                        }
+                                        aria-current={isSelected ? "true" : undefined}
+                                        onClick={() =>
+                                            setSelectedInterviewId(interview.id)
+                                        }
                                     >
-                                        1
+                                        <span className="application-list-icon interview-list-icon">
+                                            <AppIcon name="calendar" size={19} />
+                                        </span>
+                                        <span className="application-list-copy">
+                                            <strong>
+                                                {interview.applicationTitle ??
+                                                    "Unknown role"}
+                                            </strong>
+                                            <span>
+                                                {interview.companyName ??
+                                                    "Unknown company"}
+                                            </span>
+                                            <em>
+                                                {formatInterviewDateLabel(
+                                                    interview.scheduledAt,
+                                                )}
+                                                {" at "}
+                                                {formatInterviewTimeLabel(
+                                                    interview.scheduledAt,
+                                                )}
+                                                {" - "}
+                                                {getInterviewTypeLabel(interview.type)}
+                                            </em>
+                                        </span>
+                                        <span
+                                            className={`status-pill ${interview.outcome.toLowerCase()}`}
+                                        >
+                                            {getInterviewOutcomeLabel(interview.outcome)}
+                                        </span>
                                     </button>
-                                    <button type="button" disabled aria-label="Next page">
-                                        <AppIcon name="arrow-right" size={16} />
-                                    </button>
-                                </div>
-                            </div>
-                        </>
+                                );
+                            })}
+                        </div>
                     ) : (
-                        <div className="applications-empty interviews-empty">
+                        <div className="applications-empty application-list-empty interviews-empty">
                             <span className="empty-illustration">
                                 <AppIcon name="calendar" size={31} />
                             </span>
@@ -557,93 +481,221 @@ export function InterviewsView({
                             />
                         </div>
                     )}
-                </div>
 
-                <aside className="next-interview-card" aria-label="Next interview">
-                    <div className="next-interview-header">
-                        <h2>Next interview</h2>
-                        <span>
-                            <AppIcon name="calendar" size={21} />
-                        </span>
-                    </div>
-                    {nextInterview ? (
-                        <div className="next-interview-body">
-                            <div>
-                                <h3>
-                                    {nextInterview.applicationTitle ?? "Unknown role"}
-                                </h3>
-                                <span className="company-line">
-                                    {nextInterview.companyName ?? "Unknown company"}
-                                </span>
-                            </div>
-
-                            <div className="next-detail-list">
-                                <span>
-                                    <AppIcon name="calendar" size={17} />
-                                    {formatInterviewDateLabel(
-                                        nextInterview.scheduledAt,
-                                        true,
-                                    )}
-                                </span>
-                                <span>
-                                    <AppIcon name="clock" size={17} />
-                                    {formatInterviewTimeLabel(nextInterview.scheduledAt)} (
-                                    {formatInterviewDuration(
-                                        nextInterview.durationMinutes,
-                                    )}
-                                    )
-                                </span>
-                                <span
-                                    className={
-                                        nextInterview.interviewerName
-                                            ? undefined
-                                            : "attention"
-                                    }
-                                >
-                                    <AppIcon name="account" size={17} />
-                                    {nextInterview.interviewerName ?? "Add interviewer"}
-                                </span>
-                                <span
-                                    className={
-                                        hasInterviewLocation(nextInterview)
-                                            ? undefined
-                                            : "attention"
-                                    }
-                                >
-                                    <AppIcon name="location" size={17} />
-                                    {nextInterview.location ??
-                                        (nextInterview.meetingUrl
-                                            ? "Meeting link added"
-                                            : "Add meeting location")}
-                                </span>
-                            </div>
-
-                            <div className="next-actions">
-                                <button
-                                    type="button"
-                                    className="secondary"
-                                    onClick={() => onStartEdit(nextInterview)}
-                                >
-                                    Open details
-                                    <AppIcon name="external-link" size={15} />
-                                </button>
-                                <button
-                                    type="button"
-                                    className="primary"
-                                    onClick={() => onStartEdit(nextInterview)}
-                                >
-                                    <AppIcon name="edit" size={17} />
-                                    Prepare
-                                </button>
-                            </div>
+                    {sortedInterviews.length > 0 && (
+                        <div className="interviews-list-footer">
+                            Showing {sortedInterviews.length} of {interviews.length}{" "}
+                            {pluralize(interviews.length, "interview")}
                         </div>
+                    )}
+                </aside>
+
+                <aside
+                    className="application-detail-panel interview-detail-panel"
+                    aria-label="Selected interview"
+                >
+                    {selectedInterview ? (
+                        <>
+                            <header className="application-detail-header">
+                                <div className="application-detail-top-row">
+                                    <span className="application-detail-kicker">
+                                        <AppIcon name="calendar" size={16} />
+                                        Interview details
+                                    </span>
+                                    <div
+                                        className="application-detail-header-actions"
+                                        aria-label="Interview actions"
+                                    >
+                                        <button
+                                            type="button"
+                                            className="secondary"
+                                            onClick={() => onStartEdit(selectedInterview)}
+                                        >
+                                            <AppIcon name="edit" size={15} />
+                                            Edit
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="danger application-detail-delete"
+                                            onClick={() =>
+                                                onRemoveInterview(selectedInterview.id)
+                                            }
+                                        >
+                                            <AppIcon name="trash" size={15} />
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="application-detail-title-row">
+                                    <div className="application-detail-title-block">
+                                        <div className="application-detail-title-line">
+                                            <h2>
+                                                {selectedInterview.applicationTitle ??
+                                                    "Unknown role"}
+                                            </h2>
+                                            <span
+                                                className={`status-pill ${selectedInterview.outcome.toLowerCase()}`}
+                                            >
+                                                {getInterviewOutcomeLabel(
+                                                    selectedInterview.outcome,
+                                                )}
+                                            </span>
+                                        </div>
+                                        <div className="application-detail-subline">
+                                            <span className="company-line">
+                                                {selectedInterview.companyName ??
+                                                    "Unknown company"}
+                                            </span>
+                                            <span className="interview-stage-line">
+                                                {getInterviewTypeLabel(
+                                                    selectedInterview.type,
+                                                )}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </header>
+
+                            <div className="application-detail-layout">
+                                <div className="application-detail-main">
+                                    <section className="application-detail-section interview-prep-section">
+                                        <div className="application-detail-section-heading">
+                                            <div>
+                                                <h3>Prep status</h3>
+                                                <span>
+                                                    {selectedPrepIssues.length > 0
+                                                        ? `${selectedPrepIssues.length} ${pluralize(
+                                                              selectedPrepIssues.length,
+                                                              "missing detail",
+                                                          )}`
+                                                        : "Ready"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {selectedPrepIssues.length > 0 ? (
+                                            <div className="prep-list interview-detail-prep-list">
+                                                {selectedPrepIssues.map((issue) => (
+                                                    <span
+                                                        className="prep-warning"
+                                                        key={issue}
+                                                    >
+                                                        <AppIcon name="warning" size={16} />
+                                                        {issue}
+                                                    </span>
+                                                ))}
+                                                <button
+                                                    type="button"
+                                                    className="prep-action"
+                                                    onClick={() =>
+                                                        onStartEdit(selectedInterview)
+                                                    }
+                                                >
+                                                    Add details
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <span className="prep-ready interview-detail-ready">
+                                                <AppIcon name="check" size={16} />
+                                                Ready for prep
+                                            </span>
+                                        )}
+                                    </section>
+
+                                    <section className="application-detail-section">
+                                        <h3>Notes</h3>
+                                        <p>
+                                            {selectedInterview.notes?.trim() ||
+                                                "No notes saved for this interview."}
+                                        </p>
+                                    </section>
+                                </div>
+
+                                <aside
+                                    className="application-detail-meta"
+                                    aria-label="Interview details"
+                                >
+                                    <h3>Schedule</h3>
+                                    <dl className="application-detail-meta-list">
+                                        <div className="application-detail-meta-item">
+                                            <dt>
+                                                <AppIcon name="calendar" size={15} />
+                                                Date
+                                            </dt>
+                                            <dd>
+                                                {formatInterviewDateLabel(
+                                                    selectedInterview.scheduledAt,
+                                                    true,
+                                                )}
+                                            </dd>
+                                        </div>
+                                        <div className="application-detail-meta-item">
+                                            <dt>
+                                                <AppIcon name="clock" size={15} />
+                                                Time
+                                            </dt>
+                                            <dd>
+                                                {formatInterviewTimeLabel(
+                                                    selectedInterview.scheduledAt,
+                                                )}
+                                                {" - "}
+                                                {formatInterviewDuration(
+                                                    selectedInterview.durationMinutes,
+                                                )}
+                                            </dd>
+                                        </div>
+                                        <div className="application-detail-meta-item">
+                                            <dt>
+                                                <AppIcon name="account" size={15} />
+                                                Interviewer
+                                            </dt>
+                                            <dd>
+                                                {selectedInterview.interviewerName ||
+                                                    "Not set"}
+                                            </dd>
+                                        </div>
+                                        <div className="application-detail-meta-item">
+                                            <dt>
+                                                <AppIcon name="location" size={15} />
+                                                Location
+                                            </dt>
+                                            <dd>
+                                                {getInterviewLocationLabel(
+                                                    selectedInterview,
+                                                )}
+                                            </dd>
+                                        </div>
+                                        {selectedInterview.meetingUrl && (
+                                            <div className="application-detail-meta-item">
+                                                <dt>
+                                                    <AppIcon
+                                                        name="external-link"
+                                                        size={15}
+                                                    />
+                                                    Meeting
+                                                </dt>
+                                                <dd>
+                                                    <a
+                                                        className="interview-detail-link"
+                                                        href={selectedInterview.meetingUrl}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                    >
+                                                        Open link
+                                                    </a>
+                                                </dd>
+                                            </div>
+                                        )}
+                                    </dl>
+                                </aside>
+                            </div>
+                        </>
                     ) : (
-                        <div className="next-interview-empty">
+                        <div className="applications-empty application-detail-empty">
                             <span className="empty-illustration">
                                 <AppIcon name="calendar" size={31} />
                             </span>
-                            <h3>No upcoming interviews</h3>
-                            <p>Schedule the next conversation to keep prep visible.</p>
+                            <h2>Select an interview</h2>
+                            <p>Choose an interview from the list to review its details.</p>
                         </div>
                     )}
                 </aside>

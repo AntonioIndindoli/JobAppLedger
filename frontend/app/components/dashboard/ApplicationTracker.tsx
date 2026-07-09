@@ -28,12 +28,12 @@ type ApplicationTrackerProps = {
     onApplyFilters: () => void;
     onImportOpen: () => void;
     onCreateApplication: () => void;
-    onCreateInterview: (applicationId?: string) => void;
     onFiltersChange: (filters: ApplicationFilters) => void;
     onRemoveApplication: (id: string) => void;
     onStartEdit: (application: Application) => void;
     onToggleTimeline: (id: string) => void | Promise<void>;
     onTransitionStatus: (id: string, nextStatus: string) => void | Promise<void>;
+    onViewApplication: (id: string) => void;
 };
 
 function formatAppliedDate(dateApplied: string | null) {
@@ -86,12 +86,12 @@ export function ApplicationTracker({
     onApplyFilters,
     onImportOpen,
     onCreateApplication,
-    onCreateInterview,
     onFiltersChange,
     onRemoveApplication,
     onStartEdit,
     onToggleTimeline,
     onTransitionStatus,
+    onViewApplication,
 }: ApplicationTrackerProps) {
     const [openCardMenuId, setOpenCardMenuId] = useState<string | null>(null);
     const interviewByApplicationId = useMemo(() => {
@@ -282,7 +282,7 @@ export function ApplicationTracker({
                                                                 role="menuitem"
                                                                 onClick={() => {
                                                                     setOpenCardMenuId(null);
-                                                                    onToggleTimeline(
+                                                                    onViewApplication(
                                                                         application.id,
                                                                     );
                                                                 }}
@@ -291,7 +291,23 @@ export function ApplicationTracker({
                                                                     name="view"
                                                                     size={14}
                                                                 />
-                                                                View
+                                                                View application
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                role="menuitem"
+                                                                onClick={() => {
+                                                                    setOpenCardMenuId(null);
+                                                                    onToggleTimeline(
+                                                                        application.id,
+                                                                    );
+                                                                }}
+                                                            >
+                                                                <AppIcon
+                                                                    name="history"
+                                                                    size={14}
+                                                                />
+                                                                View history
                                                             </button>
                                                             <button
                                                                 type="button"
@@ -306,22 +322,6 @@ export function ApplicationTracker({
                                                                     size={14}
                                                                 />
                                                                 Edit
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                role="menuitem"
-                                                                onClick={() => {
-                                                                    setOpenCardMenuId(null);
-                                                                    onCreateInterview(
-                                                                        application.id,
-                                                                    );
-                                                                }}
-                                                            >
-                                                                <AppIcon
-                                                                    name="calendar"
-                                                                    size={14}
-                                                                />
-                                                                Interview
                                                             </button>
                                                             <button
                                                                 type="button"

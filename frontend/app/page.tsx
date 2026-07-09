@@ -93,6 +93,9 @@ export default function MainPage() {
         useState<WeeklyRangeWeeks>(DEFAULT_WEEKLY_RANGE);
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const [currentView, setCurrentView] = useState<DashboardView>("dashboard");
+    const [focusedApplicationId, setFocusedApplicationId] = useState<string | null>(
+        null,
+    );
 
     const firstName = useMemo(() => {
         const name = (userEmail || email).split("@")[0]?.split(/[._-]/)[0];
@@ -338,6 +341,11 @@ export default function MainPage() {
         setIsApplicationFormOpen(false);
         setIsImportDrawerOpen(false);
         setIsInterviewFormOpen(true);
+    }
+
+    function viewApplication(applicationId: string) {
+        setFocusedApplicationId(applicationId);
+        setCurrentView("applications");
     }
 
     function closeInterviewForm() {
@@ -768,6 +776,7 @@ export default function MainPage() {
             ) : currentView === "applications" ? (
                 <ApplicationsView
                     applications={applications}
+                    focusedApplicationId={focusedApplicationId}
                     interviews={interviews}
                     onCreateApplication={openCreateApplication}
                     onCreateInterview={openCreateInterview}
@@ -802,6 +811,7 @@ export default function MainPage() {
                     onStartEdit={startEdit}
                     onToggleTimeline={toggleTimeline}
                     onTransitionStatus={transitionStatus}
+                    onViewApplication={viewApplication}
                     onViewInterviews={() => setCurrentView("interviews")}
                     onWeeklyRangeChange={setWeeklyRangeWeeks}
                 />

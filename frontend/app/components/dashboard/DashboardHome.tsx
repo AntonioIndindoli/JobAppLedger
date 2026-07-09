@@ -41,6 +41,7 @@ type DashboardHomeProps = {
     onStartEdit: (application: Application) => void;
     onToggleTimeline: (id: string) => void | Promise<void>;
     onTransitionStatus: (id: string, nextStatus: string) => void | Promise<void>;
+    onViewApplication: (id: string) => void;
     onViewInterviews: () => void;
     onWeeklyRangeChange: (weeks: WeeklyRangeWeeks) => void;
 };
@@ -63,6 +64,7 @@ export function DashboardHome({
     onStartEdit,
     onToggleTimeline,
     onTransitionStatus,
+    onViewApplication,
     onViewInterviews,
     onWeeklyRangeChange,
 }: DashboardHomeProps) {
@@ -108,12 +110,12 @@ export function DashboardHome({
                 onApplyFilters={onApplyTrackerFilters}
                 onImportOpen={onImportOpen}
                 onCreateApplication={onCreateApplication}
-                onCreateInterview={onCreateInterview}
                 onFiltersChange={onFiltersChange}
                 onRemoveApplication={onRemoveApplication}
                 onStartEdit={onStartEdit}
                 onToggleTimeline={onToggleTimeline}
                 onTransitionStatus={onTransitionStatus}
+                onViewApplication={onViewApplication}
             />
             <DashboardCards
                 canCreateInterview={applications.length > 0}

@@ -19,6 +19,7 @@ import { AppIcon } from "./AppIcon";
 
 type ApplicationsViewProps = {
     applications: Application[];
+    focusedApplicationId?: string | null;
     interviews: Interview[];
     onCreateApplication: () => void;
     onCreateInterview: (applicationId?: string) => void;
@@ -117,6 +118,7 @@ function getInterviewLocationLabel(interview: Interview) {
 
 export function ApplicationsView({
     applications,
+    focusedApplicationId,
     interviews,
     onCreateApplication,
     onCreateInterview,
@@ -130,7 +132,7 @@ export function ApplicationsView({
     const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
     const [selectedApplicationId, setSelectedApplicationId] = useState<
         string | null
-    >(null);
+    >(focusedApplicationId ?? null);
     const [expandedDescriptionId, setExpandedDescriptionId] = useState<
         string | null
     >(null);
@@ -254,7 +256,6 @@ export function ApplicationsView({
             <header className="applications-header">
                 <div>
                     <p>Applications</p>
-                    <h1>All applications</h1>
                     <span>
                         {sortedApplications.length} of {applications.length} applications shown
                     </span>
@@ -460,29 +461,36 @@ export function ApplicationsView({
                                     </div>
                                 </div>
                                 <div className="application-detail-title-row">
-                                    <div>
-                                        <h2>{selectedApplication.title}</h2>
-                                        <span className="company-line">
-                                            {selectedApplication.companyName ||
-                                                "Unknown company"}
-                                        </span>
-                                        {selectedApplication.sourceUrl && (
-                                            <a
-                                                className="application-detail-posting-link"
-                                                href={selectedApplication.sourceUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
+                                    <div className="application-detail-title-block">
+                                        <div className="application-detail-title-line">
+                                            <h2>{selectedApplication.title}</h2>
+                                            <span
+                                                className={`status-pill ${selectedApplication.status.toLowerCase()}`}
                                             >
-                                                <AppIcon name="external-link" size={15} />
-                                                View posting
-                                            </a>
-                                        )}
+                                                {getStatusLabel(selectedApplication.status)}
+                                            </span>
+                                        </div>
+                                        <div className="application-detail-subline">
+                                            <span className="company-line">
+                                                {selectedApplication.companyName ||
+                                                    "Unknown company"}
+                                            </span>
+                                            {selectedApplication.sourceUrl && (
+                                                <a
+                                                    className="application-detail-posting-link"
+                                                    href={selectedApplication.sourceUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    <AppIcon
+                                                        name="external-link"
+                                                        size={15}
+                                                    />
+                                                    View posting
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
-                                    <span
-                                        className={`status-pill ${selectedApplication.status.toLowerCase()}`}
-                                    >
-                                        {getStatusLabel(selectedApplication.status)}
-                                    </span>
                                 </div>
                             </header>
 
