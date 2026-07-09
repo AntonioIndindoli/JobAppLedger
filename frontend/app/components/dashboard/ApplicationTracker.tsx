@@ -217,20 +217,21 @@ export function ApplicationTracker({
             </div>
             {trackerApplications.length === 0 && (
                 <div className="empty-tracker">
-                    <h3>
-                        {applications.length === 0
-                            ? "Your pipeline is empty"
-                            : "No applications match these filters"}
-                    </h3>
-                    <p>
-                        {applications.length === 0
-                            ? "Import jobs or add applications to start tracking."
-                            : "Adjust the Application Tracker filters to see more applications."}
-                    </p>
-                    <button className="secondary" onClick={onCreateApplication}>
-                        <AppIcon name="plus" size={18} />
-                        Add Application
-                    </button>
+                    <span className="empty-tracker-icon" aria-hidden="true">
+                        <AppIcon name="check" size={25} />
+                    </span>
+                    <div className="empty-tracker-copy">
+                        <h3>
+                            {applications.length === 0
+                                ? "Your pipeline is empty"
+                                : "No applications match these filters"}
+                        </h3>
+                        <p>
+                            {applications.length === 0
+                                ? "Add your first application to start tracking your job search."
+                                : "Adjust the Application Tracker filters to see more applications."}
+                        </p>
+                    </div>
                 </div>
             )}
         </section>

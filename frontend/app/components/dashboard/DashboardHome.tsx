@@ -115,6 +115,7 @@ export function DashboardHome({
                 onTransitionStatus={onTransitionStatus}
             />
             <DashboardCards
+                canCreateInterview={applications.length > 0}
                 upcomingInterviews={upcomingInterviews}
                 onCreateInterview={() => onCreateInterview()}
                 onImportOpen={onImportOpen}

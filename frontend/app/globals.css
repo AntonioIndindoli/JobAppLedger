@@ -254,6 +254,73 @@ button {
     box-shadow: none;
 }
 
+.add-interview-action {
+    position: relative;
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+}
+
+.add-interview-action.is-disabled {
+    cursor: not-allowed;
+}
+
+.add-interview-action.is-disabled button {
+    pointer-events: none;
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+    color: #94a3b8;
+    opacity: 1;
+    box-shadow: none;
+}
+
+.add-interview-action:focus-visible {
+    border-radius: 8px;
+    outline: 2px solid #0b6bff;
+    outline-offset: 3px;
+}
+
+.add-interview-hint {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 9px);
+    z-index: 20;
+    width: max-content;
+    max-width: min(260px, 80vw);
+    padding: 8px 10px;
+    border-radius: 7px;
+    background: #14213d;
+    color: white;
+    box-shadow: 0 12px 24px rgba(20, 33, 61, .18);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 4px);
+    transition: opacity .15s ease, transform .15s ease;
+}
+
+.add-interview-hint::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+    border-top-color: #14213d;
+    transform: translateX(-50%);
+}
+
+.add-interview-action.is-disabled:hover .add-interview-hint,
+.add-interview-action.is-disabled:focus .add-interview-hint,
+.add-interview-action.is-disabled:focus-visible .add-interview-hint {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
 .secondary.small {
     padding: 8px 14px;
     font-size: 12px;
@@ -686,10 +753,38 @@ button {
 .empty-tracker {
     position: absolute;
     left: 50%;
-    top: 52%;
-    transform: translate(-50%, 30%);
-    text-align: center;
+    right: auto;
+    top: min(70%, 600px);
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    display: grid;
+    grid-template-columns: auto minmax(220px, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    width: min(50%, 500px);
+    min-height: 98px;
+    padding: 20px 52px 20px 25px;
+    border: 1px dashed #b8c7da;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 14px 34px rgba(31, 60, 100, .06);
     pointer-events: none;
+}
+
+.empty-tracker-icon {
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    border: 1px solid #9ec7ff;
+    border-radius: 7px;
+    color: #07958b;
+    background: linear-gradient(145deg, #ffffff, #f5fbff);
+    box-shadow: 0 8px 18px rgba(11, 107, 255, .08);
+}
+
+.empty-tracker-copy {
+    min-width: 0;
 }
 
 .empty-illustration {
@@ -712,7 +807,19 @@ button {
     font-size: 15px;
 }
 
+.empty-tracker h3 {
+    margin-top: 0;
+    color: var(--text);
+    font-size: 16px;
+}
+
+.empty-tracker p {
+    margin: 0;
+}
+
 .empty-tracker .secondary {
+    justify-self: end;
+    min-width: 154px;
     pointer-events: auto;
 }
 
@@ -1384,6 +1491,18 @@ button {
     .kanban,
     .filter-row {
         grid-template-columns: 1fr;
+    }
+
+    .empty-tracker {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        width: calc(100% - 40px);
+        padding: 18px;
+        text-align: center;
+    }
+
+    .empty-tracker .secondary {
+        justify-self: center;
     }
 
     .weekly h2 {

@@ -12,6 +12,7 @@ import {
 } from "../lib/interview-utils";
 import { INTERVIEW_OUTCOMES, INTERVIEW_TYPES } from "../lib/constants";
 import type { Application, Interview } from "../lib/types";
+import { AddInterviewButton } from "./AddInterviewButton";
 import { AppIcon } from "./AppIcon";
 
 type InterviewsViewProps = {
@@ -62,6 +63,7 @@ export function InterviewsView({
     onStartEdit,
 }: InterviewsViewProps) {
     const [filters, setFilters] = useState<InterviewFilters>(INITIAL_FILTERS);
+    const canCreateInterview = applications.length > 0;
 
     const filteredInterviews = useMemo(() => {
         const query = filters.query.trim().toLowerCase();
@@ -102,15 +104,11 @@ export function InterviewsView({
                     </span>
                 </div>
                 <div className="applications-actions">
-                    <button
-                        type="button"
+                    <AddInterviewButton
                         className="primary"
                         onClick={onCreateInterview}
-                        disabled={applications.length === 0}
-                    >
-                        <AppIcon name="calendar" size={18} />
-                        Add Interview
-                    </button>
+                        disabled={!canCreateInterview}
+                    />
                 </div>
             </header>
 
@@ -275,15 +273,11 @@ export function InterviewsView({
                                 ? "Schedule interviews from an application to track next steps."
                                 : "Clear filters or adjust the search terms to expand the table."}
                         </p>
-                        <button
-                            type="button"
+                        <AddInterviewButton
                             className="secondary"
                             onClick={onCreateInterview}
-                            disabled={applications.length === 0}
-                        >
-                            <AppIcon name="calendar" size={18} />
-                            Add Interview
-                        </button>
+                            disabled={!canCreateInterview}
+                        />
                     </div>
                 )}
             </div>

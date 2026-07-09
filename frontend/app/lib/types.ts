@@ -138,6 +138,7 @@ export type AppIconName =
     | "arrow-right"
     | "bell"
     | "calendar"
+    | "check"
     | "checklist"
     | "chevron-down"
     | "clock"

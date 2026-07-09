@@ -9,26 +9,41 @@ type SourceBreakdownProps = {
     applications: Application[];
 };
 
+const OTHER_SOURCE = "Other";
+const OTHER_SOURCE_COLOR = "#64748b";
+const SOURCE_COLORS = [...SOURCE_DOTS, OTHER_SOURCE_COLOR];
+const BREAKDOWN_SOURCES = [...SOURCES, OTHER_SOURCE];
+
 export function SourceBreakdown({ applications }: SourceBreakdownProps) {
-    const sourceCounts = SOURCES.map(
-        (source) =>
-            applications.filter(
-                (app) => normalizeSource(app.source)?.toLowerCase() === source.toLowerCase(),
-            ).length,
-    );
-    const totalSourceCount = sourceCounts.reduce((sum, count) => sum + count, 0);
-    const sourceSegments = sourceCounts.map((count, index) => {
-        const start = sourceCounts
+    const sourceLookup = new Map(SOURCES.map((source) => [source.toLowerCase(), source]));
+    const sourceCounts = new Map(BREAKDOWN_SOURCES.map((source) => [source, 0]));
+
+    applications.forEach((app) => {
+        const normalizedSource = normalizeSource(app.source);
+        const source = normalizedSource
+            ? sourceLookup.get(normalizedSource.toLowerCase()) ?? OTHER_SOURCE
+            : OTHER_SOURCE;
+        sourceCounts.set(source, (sourceCounts.get(source) ?? 0) + 1);
+    });
+
+    const sourceRows = BREAKDOWN_SOURCES.map((source, index) => ({
+        source,
+        color: SOURCE_COLORS[index],
+        count: sourceCounts.get(source) ?? 0,
+    })).filter((row) => row.count > 0);
+
+    const totalSourceCount = sourceRows.reduce((sum, row) => sum + row.count, 0);
+    const sourceSegments = sourceRows.map((row, index) => {
+        const start = sourceRows
             .slice(0, index)
-            .reduce((sum, sourceCount) => sum + sourceCount, 0);
-        const end = start + count;
+            .reduce((sum, sourceRow) => sum + sourceRow.count, 0);
+        const end = start + row.count;
         return {
-            count,
-            color: SOURCE_DOTS[index],
+            ...row,
             startPercent: totalSourceCount ? (start / totalSourceCount) * 100 : 0,
             endPercent: totalSourceCount ? (end / totalSourceCount) * 100 : 0,
             percentage: totalSourceCount
-                ? Math.round((count / totalSourceCount) * 100)
+                ? Math.round((row.count / totalSourceCount) * 100)
                 : 0,
         };
     });
@@ -54,18 +69,18 @@ export function SourceBreakdown({ applications }: SourceBreakdownProps) {
                 <div
                     className={`donut${totalSourceCount ? " has-data" : ""}`}
                     style={donutBackground ? { background: donutBackground } : undefined}
-                    aria-label={`${totalSourceCount} applications with tracked sources`}
+                    aria-label={`${totalSourceCount} applications by source`}
                 >
                     <strong>{totalSourceCount}</strong>
                     <span>{totalSourceCount === 1 ? "source" : "sources"}</span>
                 </div>
                 <div className="source-list">
-                    {SOURCES.map((source, index) => (
-                        <span key={source}>
-                            <b style={{ background: SOURCE_DOTS[index] }} />
-                            {source}
+                    {sourceSegments.map((segment) => (
+                        <span key={segment.source}>
+                            <b style={{ background: segment.color }} />
+                            {segment.source}
                             <em>
-                                {sourceCounts[index]} ({sourceSegments[index].percentage}%)
+                                {segment.count} ({segment.percentage}%)
                             </em>
                         </span>
                     ))}

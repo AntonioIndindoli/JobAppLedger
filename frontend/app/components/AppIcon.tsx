@@ -81,6 +81,9 @@ export function AppIcon({
                 </>
             );
             break;
+        case "check":
+            icon = <path d="m6.5 12.5 3.5 3.5 7.5-8" />;
+            break;
         case "checklist":
             icon = (
                 <>

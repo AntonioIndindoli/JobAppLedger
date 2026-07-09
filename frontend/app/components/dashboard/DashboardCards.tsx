@@ -5,9 +5,11 @@ import {
     getInterviewTypeLabel,
 } from "../../lib/interview-utils";
 import type { Interview } from "../../lib/types";
+import { AddInterviewButton } from "../AddInterviewButton";
 import { AppIcon } from "../AppIcon";
 
 type DashboardCardsProps = {
+    canCreateInterview: boolean;
     upcomingInterviews: Interview[];
     onCreateInterview: () => void;
     onImportOpen: () => void;
@@ -15,6 +17,7 @@ type DashboardCardsProps = {
 };
 
 export function DashboardCards({
+    canCreateInterview,
     upcomingInterviews,
     onCreateInterview,
     onImportOpen,
@@ -63,14 +66,12 @@ export function DashboardCards({
                                 <em>{getInterviewTypeLabel(interview.type)}</em>
                             </article>
                         ))}
-                        <button
-                            type="button"
+                        <AddInterviewButton
                             className="secondary small"
                             onClick={onCreateInterview}
-                        >
-                            <AppIcon name="calendar" size={15} />
-                            Add Interview
-                        </button>
+                            disabled={!canCreateInterview}
+                            iconSize={15}
+                        />
                     </div>
                 ) : (
                     <>
@@ -79,14 +80,12 @@ export function DashboardCards({
                         </div>
                         <h3>No interviews scheduled yet</h3>
                         <p>When you schedule interviews, they&apos;ll appear here.</p>
-                        <button
-                            type="button"
+                        <AddInterviewButton
                             className="secondary small"
                             onClick={onCreateInterview}
-                        >
-                            <AppIcon name="calendar" size={15} />
-                            Add Interview
-                        </button>
+                            disabled={!canCreateInterview}
+                            iconSize={15}
+                        />
                     </>
                 )}
             </div>
