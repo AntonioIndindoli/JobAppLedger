@@ -1,15 +1,6 @@
 import { getPrismaAsync } from "../db/prisma.js";
 import { normalizeUrl } from "../utils/url.js";
-
-async function findOrCreateCompany(userId, companyName) {
-  if (!companyName) return null;
-  const prisma = await getPrismaAsync();
-  return prisma.company.upsert({
-    where: { userId_name: { userId, name: companyName } },
-    create: { userId, name: companyName },
-    update: {},
-  });
-}
+import { maybeCreateAppliedFollowUpTask } from "./tasks.services.js";
 
 async function logActivity(prisma, userId, applicationId, type, message, metadata = null) {
   await prisma.activityLog.create({
@@ -100,31 +91,45 @@ export async function createApplication(userId, payload) {
   const duplicates = await detectDuplicates(prisma, userId, payload);
   if (duplicates.length) return { duplicateCandidates: duplicates.map(withCompany) };
 
-  const company = await findOrCreateCompany(userId, payload.companyName);
-  const application = await prisma.application.create({
-    data: {
-      userId,
-      companyId: company?.id,
-      title: payload.title,
-      status: payload.status,
-      source: payload.source,
-      sourceUrl: normalizeUrl(payload.sourceUrl),
-      location: payload.location,
-      salaryMin: payload.salaryMin,
-      salaryMax: payload.salaryMax,
-      description: payload.description,
-      notes: payload.notes,
-      dateApplied: payload.dateApplied,
-    },
-    include: { company: { select: { name: true } } },
-  });
+  return prisma.$transaction(async (tx) => {
+    const company = payload.companyName
+      ? await tx.company.upsert({
+          where: { userId_name: { userId, name: payload.companyName } },
+          create: { userId, name: payload.companyName },
+          update: {},
+        })
+      : null;
+    const application = await tx.application.create({
+      data: {
+        userId,
+        companyId: company?.id,
+        title: payload.title,
+        status: payload.status,
+        source: payload.source,
+        sourceUrl: normalizeUrl(payload.sourceUrl),
+        location: payload.location,
+        salaryMin: payload.salaryMin,
+        salaryMax: payload.salaryMax,
+        description: payload.description,
+        notes: payload.notes,
+        dateApplied: payload.dateApplied,
+      },
+      include: { company: { select: { name: true } } },
+    });
 
-  await logActivity(prisma, userId, application.id, "APPLICATION_CREATED", `Application created for ${application.title}`, {
-    title: application.title,
-    status: application.status,
-  });
+    await logActivity(tx, userId, application.id, "APPLICATION_CREATED", `Application created for ${application.title}`, {
+      title: application.title,
+      status: application.status,
+    });
 
-  return { application: withCompany(application) };
+    const createdTasks = [];
+    if (application.status === "APPLIED") {
+      const task = await maybeCreateAppliedFollowUpTask(tx, userId, application);
+      if (task) createdTasks.push(task);
+    }
+
+    return { application: withCompany(application), createdTasks };
+  });
 }
 
 export async function updateApplication(userId, id, payload) {
@@ -135,38 +140,51 @@ export async function updateApplication(userId, id, payload) {
   const duplicates = await detectDuplicates(prisma, userId, payload, id);
   if (duplicates.length) return { duplicateCandidates: duplicates.map(withCompany) };
 
-  const company = await findOrCreateCompany(userId, payload.companyName);
-  const updated = await prisma.application.update({
-    where: { id },
-    data: {
-      companyId: company?.id ?? null,
-      title: payload.title,
-      status: payload.status,
-      source: payload.source,
-      sourceUrl: normalizeUrl(payload.sourceUrl),
-      location: payload.location,
-      salaryMin: payload.salaryMin,
-      salaryMax: payload.salaryMax,
-      description: payload.description,
-      notes: payload.notes,
-      dateApplied: payload.dateApplied,
-    },
-    include: { company: { select: { name: true } } },
-  });
-
-  await logActivity(prisma, userId, id, "APPLICATION_UPDATED", `Application updated: ${updated.title}`, {
-    previous: { title: existing.title, status: existing.status, companyName: existing.company?.name ?? null },
-    next: { title: updated.title, status: updated.status, companyName: updated.company?.name ?? null },
-  });
-
-  if (existing.status !== updated.status) {
-    await logActivity(prisma, userId, id, "STATUS_CHANGED", `Status changed from ${existing.status} to ${updated.status}`, {
-      from: existing.status,
-      to: updated.status,
+  return prisma.$transaction(async (tx) => {
+    const company = payload.companyName
+      ? await tx.company.upsert({
+          where: { userId_name: { userId, name: payload.companyName } },
+          create: { userId, name: payload.companyName },
+          update: {},
+        })
+      : null;
+    const updated = await tx.application.update({
+      where: { id },
+      data: {
+        companyId: company?.id ?? null,
+        title: payload.title,
+        status: payload.status,
+        source: payload.source,
+        sourceUrl: normalizeUrl(payload.sourceUrl),
+        location: payload.location,
+        salaryMin: payload.salaryMin,
+        salaryMax: payload.salaryMax,
+        description: payload.description,
+        notes: payload.notes,
+        dateApplied: payload.dateApplied ?? (payload.status === "APPLIED" && !existing.dateApplied ? new Date() : existing.dateApplied),
+      },
+      include: { company: { select: { name: true } } },
     });
-  }
 
-  return { application: withCompany(updated) };
+    await logActivity(tx, userId, id, "APPLICATION_UPDATED", `Application updated: ${updated.title}`, {
+      previous: { title: existing.title, status: existing.status, companyName: existing.company?.name ?? null },
+      next: { title: updated.title, status: updated.status, companyName: updated.company?.name ?? null },
+    });
+
+    const createdTasks = [];
+    if (existing.status !== updated.status) {
+      await logActivity(tx, userId, id, "STATUS_CHANGED", `Status changed from ${existing.status} to ${updated.status}`, {
+        from: existing.status,
+        to: updated.status,
+      });
+      if (updated.status === "APPLIED") {
+        const task = await maybeCreateAppliedFollowUpTask(tx, userId, updated);
+        if (task) createdTasks.push(task);
+      }
+    }
+
+    return { application: withCompany(updated), createdTasks };
+  });
 }
 
 export async function transitionApplicationStatus(userId, id, status) {
@@ -176,13 +194,25 @@ export async function transitionApplicationStatus(userId, id, status) {
 
   if (existing.status === status) return { application: withCompany(existing) };
 
-  const updated = await prisma.application.update({ where: { id }, data: { status }, include: { company: { select: { name: true } } } });
-  await logActivity(prisma, userId, id, "STATUS_CHANGED", `Status changed from ${existing.status} to ${status}`, {
-    from: existing.status,
-    to: status,
-  });
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.application.update({
+      where: { id },
+      data: { status, dateApplied: status === "APPLIED" && !existing.dateApplied ? new Date() : existing.dateApplied },
+      include: { company: { select: { name: true } } },
+    });
+    await logActivity(tx, userId, id, "STATUS_CHANGED", `Status changed from ${existing.status} to ${status}`, {
+      from: existing.status,
+      to: status,
+    });
 
-  return { application: withCompany(updated) };
+    const createdTasks = [];
+    if (status === "APPLIED") {
+      const task = await maybeCreateAppliedFollowUpTask(tx, userId, updated);
+      if (task) createdTasks.push(task);
+    }
+
+    return { application: withCompany(updated), createdTasks };
+  });
 }
 
 export async function deleteApplication(userId, id) {

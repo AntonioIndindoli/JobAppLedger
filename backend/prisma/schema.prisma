@@ -92,6 +92,8 @@ model User {
   contacts       Contact[]
   interviews     Interview[]
   tasks          Task[]
+  autoCreateFollowUpTasks Boolean @default(false)
+  autoCreateThankYouTasks Boolean @default(false)
   resumeVersions ResumeVersion[]
   importDrafts   ImportDraft[]
   activityLogs   ActivityLog[]

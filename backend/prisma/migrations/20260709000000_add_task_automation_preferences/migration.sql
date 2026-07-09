@@ -1,0 +1,2 @@
+ALTER TABLE "User" ADD COLUMN "autoCreateFollowUpTasks" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "User" ADD COLUMN "autoCreateThankYouTasks" BOOLEAN NOT NULL DEFAULT false;

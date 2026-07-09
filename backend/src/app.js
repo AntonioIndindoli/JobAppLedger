@@ -4,6 +4,7 @@ import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import applicationRoutes from "./routes/applications.routes.js";
 import interviewRoutes from "./routes/interviews.routes.js";
+import taskRoutes from "./routes/tasks.routes.js";
 import importRoutes from "./routes/imports.routes.js";
 import parserRoutes from "./routes/parser.routes.js";
 import { env } from "./config/env.js";
@@ -19,6 +20,7 @@ export function createApp() {
   app.use("/auth", authRoutes);
   app.use("/applications", applicationRoutes);
   app.use("/interviews", interviewRoutes);
+  app.use("/tasks", taskRoutes);
   app.use("/imports", importRoutes);
   app.use("/parser", parserRoutes);
 

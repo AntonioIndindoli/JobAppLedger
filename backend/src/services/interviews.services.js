@@ -1,4 +1,5 @@
 import { getPrismaAsync } from "../db/prisma.js";
+import { maybeCreateInterviewThankYouTask } from "./tasks.services.js";
 
 const INTERVIEW_INCLUDE = {
   application: {
@@ -124,9 +125,14 @@ export async function createInterview(userId, payload) {
       updatedApplication = withCompany(updated);
     }
 
+    const createdTasks = [];
+    const thankYouTask = await maybeCreateInterviewThankYouTask(tx, userId, interview);
+    if (thankYouTask) createdTasks.push(thankYouTask);
+
     return {
       interview: withApplication(interview),
       application: updatedApplication,
+      createdTasks,
     };
   });
 }
