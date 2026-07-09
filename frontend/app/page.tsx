@@ -411,6 +411,20 @@ export default function MainPage() {
         }
         if (!STATUSES.includes(form.status as (typeof STATUSES)[number]))
             errors.status = "Choose a valid status.";
+        const salaryMin = form.salaryMin.trim() ? Number(form.salaryMin) : null;
+        const salaryMax = form.salaryMax.trim() ? Number(form.salaryMax) : null;
+        if (salaryMin !== null && !Number.isInteger(salaryMin))
+            errors.salaryMin = "Use whole dollars.";
+        if (salaryMax !== null && !Number.isInteger(salaryMax))
+            errors.salaryMax = "Use whole dollars.";
+        if (
+            salaryMin !== null &&
+            salaryMax !== null &&
+            Number.isInteger(salaryMin) &&
+            Number.isInteger(salaryMax) &&
+            salaryMin > salaryMax
+        )
+            errors.salaryMax = "Max must be greater than min.";
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     }
@@ -618,7 +632,12 @@ export default function MainPage() {
         const wasEditing = Boolean(editingId);
         const method = editingId ? "PUT" : "POST";
         const url = editingId ? `/applications/${editingId}` : "/applications";
-        const payload = { ...form, dateApplied: form.dateApplied || null };
+        const payload = {
+            ...form,
+            salaryMin: form.salaryMin.trim() ? Number(form.salaryMin) : null,
+            salaryMax: form.salaryMax.trim() ? Number(form.salaryMax) : null,
+            dateApplied: form.dateApplied || null,
+        };
         const res = await authedFetch(url, {
             method,
             body: JSON.stringify(payload),
@@ -699,6 +718,9 @@ export default function MainPage() {
             source: app.source ?? "",
             sourceUrl: app.sourceUrl ?? "",
             location: app.location ?? "",
+            salaryMin: app.salaryMin === null ? "" : String(app.salaryMin),
+            salaryMax: app.salaryMax === null ? "" : String(app.salaryMax),
+            description: app.description ?? "",
             notes: app.notes ?? "",
             dateApplied: app.dateApplied ? app.dateApplied.slice(0, 10) : "",
         });

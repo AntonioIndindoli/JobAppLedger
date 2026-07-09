@@ -177,6 +177,14 @@ export function InterviewsView({
     const selectedPrepIssues = selectedInterview
         ? getPrepIssues(selectedInterview)
         : [];
+    const selectedInterviewerName =
+        selectedInterview?.interviewerName?.trim() ?? "";
+    const selectedMeetingUrl = selectedInterview?.meetingUrl?.trim() ?? "";
+    const selectedNotes = selectedInterview?.notes?.trim() ?? "";
+    const selectedHasInterviewer = Boolean(selectedInterviewerName);
+    const selectedHasLocation = selectedInterview
+        ? hasInterviewLocation(selectedInterview)
+        : false;
 
     const upcomingInterviews = useMemo(
         () =>
@@ -327,6 +335,7 @@ export function InterviewsView({
                 <label className="interviews-search-field">
                     <AppIcon name="search" size={18} />
                     <input
+                        aria-label="Search interviews"
                         value={filters.query}
                         onChange={(event) =>
                             setFilters({ ...filters, query: event.target.value })
@@ -366,14 +375,6 @@ export function InterviewsView({
                         ))}
                     </select>
                 </label>
-                <button
-                    type="button"
-                    className="secondary interview-filter-button"
-                    aria-label="Show interview filters"
-                >
-                    <AppIcon name="filter" size={16} />
-                    Filters
-                </button>
                 <button
                     type="button"
                     className="interviews-reset-button"
@@ -496,7 +497,7 @@ export function InterviewsView({
                 >
                     {selectedInterview ? (
                         <>
-                            <header className="application-detail-header">
+                            <header className="application-detail-header interview-detail-header">
                                 <div className="application-detail-top-row">
                                     <span className="application-detail-kicker">
                                         <AppIcon name="calendar" size={16} />
@@ -556,84 +557,26 @@ export function InterviewsView({
                                 </div>
                             </header>
 
-                            <div className="application-detail-layout">
-                                <div className="application-detail-main">
-                                    <section className="application-detail-section interview-prep-section">
-                                        <div className="application-detail-section-heading">
-                                            <div>
-                                                <h3>Prep status</h3>
-                                                <span>
-                                                    {selectedPrepIssues.length > 0
-                                                        ? `${selectedPrepIssues.length} ${pluralize(
-                                                              selectedPrepIssues.length,
-                                                              "missing detail",
-                                                          )}`
-                                                        : "Ready"}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        {selectedPrepIssues.length > 0 ? (
-                                            <div className="prep-list interview-detail-prep-list">
-                                                {selectedPrepIssues.map((issue) => (
-                                                    <span
-                                                        className="prep-warning"
-                                                        key={issue}
-                                                    >
-                                                        <AppIcon name="warning" size={16} />
-                                                        {issue}
-                                                    </span>
-                                                ))}
-                                                <button
-                                                    type="button"
-                                                    className="prep-action"
-                                                    onClick={() =>
-                                                        onStartEdit(selectedInterview)
-                                                    }
-                                                >
-                                                    Add details
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <span className="prep-ready interview-detail-ready">
-                                                <AppIcon name="check" size={16} />
-                                                Ready for prep
-                                            </span>
-                                        )}
-                                    </section>
-
-                                    <section className="application-detail-section">
-                                        <h3>Notes</h3>
-                                        <p>
-                                            {selectedInterview.notes?.trim() ||
-                                                "No notes saved for this interview."}
-                                        </p>
-                                    </section>
-                                </div>
-
-                                <aside
-                                    className="application-detail-meta"
-                                    aria-label="Interview details"
+                            <div className="interview-detail-body">
+                                <dl
+                                    className="interview-detail-facts"
+                                    aria-label="Interview schedule and logistics"
                                 >
-                                    <h3>Schedule</h3>
-                                    <dl className="application-detail-meta-list">
-                                        <div className="application-detail-meta-item">
-                                            <dt>
-                                                <AppIcon name="calendar" size={15} />
-                                                Date
-                                            </dt>
-                                            <dd>
+                                    <div className="interview-detail-fact interview-detail-fact-primary">
+                                        <dt>
+                                            <span className="interview-detail-fact-icon">
+                                                <AppIcon name="calendar" size={18} />
+                                            </span>
+                                            Date
+                                        </dt>
+                                        <dd>
+                                            <strong>
                                                 {formatInterviewDateLabel(
                                                     selectedInterview.scheduledAt,
                                                     true,
                                                 )}
-                                            </dd>
-                                        </div>
-                                        <div className="application-detail-meta-item">
-                                            <dt>
-                                                <AppIcon name="clock" size={15} />
-                                                Time
-                                            </dt>
-                                            <dd>
+                                            </strong>
+                                            <span>
                                                 {formatInterviewTimeLabel(
                                                     selectedInterview.scheduledAt,
                                                 )}
@@ -641,52 +584,95 @@ export function InterviewsView({
                                                 {formatInterviewDuration(
                                                     selectedInterview.durationMinutes,
                                                 )}
-                                            </dd>
-                                        </div>
-                                        <div className="application-detail-meta-item">
-                                            <dt>
-                                                <AppIcon name="account" size={15} />
-                                                Interviewer
-                                            </dt>
-                                            <dd>
-                                                {selectedInterview.interviewerName ||
-                                                    "Not set"}
-                                            </dd>
-                                        </div>
-                                        <div className="application-detail-meta-item">
-                                            <dt>
-                                                <AppIcon name="location" size={15} />
-                                                Location
-                                            </dt>
-                                            <dd>
+                                            </span>
+                                        </dd>
+                                    </div>
+
+                                    <div
+                                        className={
+                                            selectedHasInterviewer
+                                                ? "interview-detail-fact"
+                                                : "interview-detail-fact is-missing"
+                                        }
+                                    >
+                                        <dt>
+                                            <span className="interview-detail-fact-icon">
+                                                <AppIcon name="account" size={18} />
+                                            </span>
+                                            Interviewer
+                                        </dt>
+                                        <dd>
+                                            <strong>
+                                                {selectedInterviewerName || "Not set"}
+                                            </strong>
+                                            <span>
+                                                {selectedHasInterviewer
+                                                    ? "Contact saved"
+                                                    : "Needs a name"}
+                                            </span>
+                                        </dd>
+                                    </div>
+
+                                    <div
+                                        className={
+                                            selectedHasLocation
+                                                ? "interview-detail-fact"
+                                                : "interview-detail-fact is-missing"
+                                        }
+                                    >
+                                        <dt>
+                                            <span className="interview-detail-fact-icon">
+                                                <AppIcon name="location" size={18} />
+                                            </span>
+                                            Location
+                                        </dt>
+                                        <dd>
+                                            <strong>
                                                 {getInterviewLocationLabel(
                                                     selectedInterview,
                                                 )}
-                                            </dd>
-                                        </div>
-                                        {selectedInterview.meetingUrl && (
-                                            <div className="application-detail-meta-item">
-                                                <dt>
-                                                    <AppIcon
-                                                        name="external-link"
-                                                        size={15}
-                                                    />
-                                                    Meeting
-                                                </dt>
-                                                <dd>
-                                                    <a
-                                                        className="interview-detail-link"
-                                                        href={selectedInterview.meetingUrl}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                    >
-                                                        Open link
-                                                    </a>
-                                                </dd>
+                                            </strong>
+                                            {selectedMeetingUrl ? (
+                                                <a
+                                                    className="interview-detail-link"
+                                                    href={selectedMeetingUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    Open meeting link
+                                                </a>
+                                            ) : (
+                                                <span>
+                                                    {selectedHasLocation
+                                                        ? "Location saved"
+                                                        : "Needs a location or link"}
+                                                </span>
+                                            )}
+                                        </dd>
+                                    </div>
+                                </dl>
+
+                                <div className="interview-detail-content-grid">
+                                    <section className="interview-detail-section-card interview-notes-card">
+                                        <div className="interview-detail-section-title">
+                                            <span className="interview-detail-section-icon">
+                                                <AppIcon name="document" size={18} />
+                                            </span>
+                                            <div>
+                                                <h3>Notes</h3>
+                                                <span>
+                                                    {selectedNotes
+                                                        ? "Saved notes"
+                                                        : "No notes yet"}
+                                                </span>
                                             </div>
-                                        )}
-                                    </dl>
-                                </aside>
+                                        </div>
+                                        <p className={selectedNotes ? "" : "is-empty"}>
+                                            {selectedNotes ||
+                                                "No notes saved for this interview."}
+                                        </p>
+                                    </section>
+                                </div>
                             </div>
                         </>
                     ) : (

@@ -171,6 +171,45 @@ export function ApplicationDrawer({
                         )}
                     </section>
                     <section className="form-section">
+                        <h3>Compensation</h3>
+                        <div className="form-grid-two">
+                            <label>
+                                Salary min
+                                <input
+                                    inputMode="numeric"
+                                    value={form.salaryMin}
+                                    onChange={(event) =>
+                                        onFormChange({
+                                            ...form,
+                                            salaryMin: event.target.value,
+                                        })
+                                    }
+                                    placeholder="120000"
+                                />
+                            </label>
+                            <label>
+                                Salary max
+                                <input
+                                    inputMode="numeric"
+                                    value={form.salaryMax}
+                                    onChange={(event) =>
+                                        onFormChange({
+                                            ...form,
+                                            salaryMax: event.target.value,
+                                        })
+                                    }
+                                    placeholder="160000"
+                                />
+                            </label>
+                        </div>
+                        {formErrors.salaryMin && (
+                            <span className="field-error">{formErrors.salaryMin}</span>
+                        )}
+                        {formErrors.salaryMax && (
+                            <span className="field-error">{formErrors.salaryMax}</span>
+                        )}
+                    </section>
+                    <section className="form-section">
                         <h3>Notes</h3>
                         <label>
                             Notes

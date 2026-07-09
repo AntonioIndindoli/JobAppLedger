@@ -85,6 +85,9 @@ export type ApplicationFormValues = {
     source: string;
     sourceUrl: string;
     location: string;
+    salaryMin: string;
+    salaryMax: string;
+    description: string;
     notes: string;
     dateApplied: string;
 };

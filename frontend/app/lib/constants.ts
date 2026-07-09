@@ -135,6 +135,9 @@ export const EMPTY_APPLICATION_FORM: ApplicationFormValues = {
     source: "",
     sourceUrl: "",
     location: "",
+    salaryMin: "",
+    salaryMax: "",
+    description: "",
     notes: "",
     dateApplied: "",
 };

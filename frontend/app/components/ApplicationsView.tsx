@@ -54,9 +54,6 @@ const INITIAL_FILTERS: ApplicationsTableFilters = {
     endDate: "",
 };
 
-const DESCRIPTION_PREVIEW_CHARACTER_LIMIT = 260;
-const DESCRIPTION_PREVIEW_LINE_LIMIT = 4;
-
 function formatDisplayDate(value: string | null) {
     if (!value) return "Not set";
 
@@ -102,13 +99,6 @@ function getStatusLabel(status: string) {
     return isApplicationStatus(status) ? STATUS_LABELS[status] : status;
 }
 
-function isLongDescription(description: string) {
-    return (
-        description.length > DESCRIPTION_PREVIEW_CHARACTER_LIMIT ||
-        description.split(/\r?\n/).length > DESCRIPTION_PREVIEW_LINE_LIMIT
-    );
-}
-
 function getInterviewLocationLabel(interview: Interview) {
     const location = interview.location?.trim();
     if (location) return location;
@@ -133,10 +123,6 @@ export function ApplicationsView({
     const [selectedApplicationId, setSelectedApplicationId] = useState<
         string | null
     >(focusedApplicationId ?? null);
-    const [expandedDescriptionId, setExpandedDescriptionId] = useState<
-        string | null
-    >(null);
-
     const sourceOptions = useMemo(() => {
         const sources = new Set<string>(SOURCES);
         applications.forEach((application) => {
@@ -211,13 +197,6 @@ export function ApplicationsView({
             "asc",
         )
         : [];
-    const descriptionText = selectedApplication?.description?.trim() ?? "";
-    const canToggleDescription = descriptionText
-        ? isLongDescription(descriptionText)
-        : false;
-    const isDescriptionExpanded =
-        selectedApplication?.id === expandedDescriptionId;
-
     function updateSort(nextSortKey: SortKey) {
         if (nextSortKey === sortKey) {
             setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
@@ -277,13 +256,17 @@ export function ApplicationsView({
             </header>
 
             <div className="applications-toolbar" aria-label="Application table filters">
-                <input
-                    value={filters.query}
-                    onChange={(event) =>
-                        setFilters({ ...filters, query: event.target.value })
-                    }
-                    placeholder="Search title, company, location, source"
-                />
+                <label className="applications-search-field">
+                    <AppIcon name="search" size={18} />
+                    <input
+                        aria-label="Search applications"
+                        value={filters.query}
+                        onChange={(event) =>
+                            setFilters({ ...filters, query: event.target.value })
+                        }
+                        placeholder="Search title, company, location, source"
+                    />
+                </label>
                 <select
                     value={filters.status}
                     onChange={(event) =>
@@ -328,10 +311,10 @@ export function ApplicationsView({
                 />
                 <button
                     type="button"
-                    className="secondary"
+                    className="interviews-reset-button"
                     onClick={() => setFilters(INITIAL_FILTERS)}
                 >
-                    <AppIcon name="filter" size={16} />
+                    <AppIcon name="history" size={15} />
                     Reset
                 </button>
             </div>
@@ -578,58 +561,6 @@ export function ApplicationsView({
                                                 </div>
                                             </div>
                                         )}
-                                    </section>
-
-                                    <section className="application-detail-section application-detail-description-section">
-                                        <h3>Description</h3>
-                                        <div
-                                            className={
-                                                canToggleDescription &&
-                                                !isDescriptionExpanded
-                                                    ? "application-description-frame is-collapsed"
-                                                    : "application-description-frame"
-                                            }
-                                        >
-                                            <p
-                                                className={
-                                                    canToggleDescription &&
-                                                    !isDescriptionExpanded
-                                                        ? "application-description collapsed"
-                                                        : "application-description"
-                                                }
-                                            >
-                                                {descriptionText ||
-                                                    "No job description saved."}
-                                            </p>
-                                            {canToggleDescription && (
-                                                <button
-                                                    type="button"
-                                                    className="application-description-toggle"
-                                                    onClick={() =>
-                                                        setExpandedDescriptionId(
-                                                            (current) =>
-                                                                current ===
-                                                                selectedApplication.id
-                                                                    ? null
-                                                                    : selectedApplication.id,
-                                                        )
-                                                    }
-                                                >
-                                                    {isDescriptionExpanded
-                                                        ? "Show less"
-                                                        : "Show more"}
-                                                    <AppIcon
-                                                        name="chevron-down"
-                                                        size={15}
-                                                        className={
-                                                            isDescriptionExpanded
-                                                                ? "application-description-toggle-icon expanded"
-                                                                : "application-description-toggle-icon"
-                                                        }
-                                                    />
-                                                </button>
-                                            )}
-                                        </div>
                                     </section>
                                 </div>
 

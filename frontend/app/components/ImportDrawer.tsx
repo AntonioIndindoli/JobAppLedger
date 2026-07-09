@@ -346,20 +346,7 @@ export function ImportDrawer({
                             )}
                         </section>
                         <section className="form-section">
-                            <h3>Description</h3>
-                            <label>
-                                Job description
-                                <textarea
-                                    value={importReview.description}
-                                    onChange={(event) =>
-                                        onReviewChange({
-                                            ...importReview,
-                                            description: event.target.value,
-                                        })
-                                    }
-                                    rows={8}
-                                />
-                            </label>
+                            <h3>Notes</h3>
                             <label>
                                 Notes
                                 <textarea
@@ -370,7 +357,7 @@ export function ImportDrawer({
                                             notes: event.target.value,
                                         })
                                     }
-                                    rows={4}
+                                    rows={6}
                                 />
                             </label>
                         </section>
