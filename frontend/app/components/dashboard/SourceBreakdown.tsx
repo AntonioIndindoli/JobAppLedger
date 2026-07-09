@@ -4,6 +4,7 @@ import { SOURCES, SOURCE_DOTS } from "../../lib/constants";
 import { normalizeSource } from "../../lib/application-analytics";
 import type { Application } from "../../lib/types";
 import { AppIcon } from "../AppIcon";
+import { InfoTooltip } from "./InfoTooltip";
 
 type SourceBreakdownProps = {
     applications: Application[];
@@ -61,9 +62,10 @@ export function SourceBreakdown({ applications }: SourceBreakdownProps) {
                     <AppIcon name="source" size={16} />
                 </span>
                 Application Sources
-                <span className="info-icon" aria-label="Application sources information">
-                    <AppIcon name="info" size={14} />
-                </span>
+                <InfoTooltip
+                    label="Application sources information"
+                    tooltip="Shows where your applications came from based on each saved source."
+                />
             </h2>
             <div className="sources-chart">
                 <div

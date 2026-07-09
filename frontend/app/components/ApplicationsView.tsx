@@ -6,12 +6,20 @@ import {
     getApplicationTimestamp,
     isApplicationStatus,
 } from "../lib/application-analytics";
+import {
+    formatInterviewDateTime,
+    formatInterviewDuration,
+    getInterviewOutcomeLabel,
+    getInterviewTypeLabel,
+    sortInterviewsBySchedule,
+} from "../lib/interview-utils";
 import { SOURCES, STATUSES, STATUS_LABELS } from "../lib/constants";
-import type { Application } from "../lib/types";
+import type { Application, Interview } from "../lib/types";
 import { AppIcon } from "./AppIcon";
 
 type ApplicationsViewProps = {
     applications: Application[];
+    interviews: Interview[];
     onCreateApplication: () => void;
     onCreateInterview: (applicationId?: string) => void;
     onImportOpen: () => void;
@@ -45,6 +53,9 @@ const INITIAL_FILTERS: ApplicationsTableFilters = {
     endDate: "",
 };
 
+const DESCRIPTION_PREVIEW_CHARACTER_LIMIT = 260;
+const DESCRIPTION_PREVIEW_LINE_LIMIT = 4;
+
 function formatDisplayDate(value: string | null) {
     if (!value) return "Not set";
 
@@ -59,6 +70,26 @@ function formatDisplayDate(value: string | null) {
     }).format(date);
 }
 
+function formatSalaryRange(application: Application) {
+    const { salaryMin, salaryMax } = application;
+    const moneyFormatter = new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+    });
+
+    if (salaryMin !== null && salaryMax !== null) {
+        return `${moneyFormatter.format(salaryMin)} - ${moneyFormatter.format(
+            salaryMax,
+        )}`;
+    }
+
+    if (salaryMin !== null) return `From ${moneyFormatter.format(salaryMin)}`;
+    if (salaryMax !== null) return `Up to ${moneyFormatter.format(salaryMax)}`;
+
+    return "Not set";
+}
+
 function getSortValue(application: Application, sortKey: SortKey) {
     if (sortKey === "dateApplied") return getApplicationTimestamp(application);
     if (sortKey === "status") return getStatusLabel(application.status);
@@ -70,8 +101,23 @@ function getStatusLabel(status: string) {
     return isApplicationStatus(status) ? STATUS_LABELS[status] : status;
 }
 
+function isLongDescription(description: string) {
+    return (
+        description.length > DESCRIPTION_PREVIEW_CHARACTER_LIMIT ||
+        description.split(/\r?\n/).length > DESCRIPTION_PREVIEW_LINE_LIMIT
+    );
+}
+
+function getInterviewLocationLabel(interview: Interview) {
+    const location = interview.location?.trim();
+    if (location) return location;
+    if (interview.meetingUrl?.trim()) return "Meeting link saved";
+    return "Location not set";
+}
+
 export function ApplicationsView({
     applications,
+    interviews,
     onCreateApplication,
     onCreateInterview,
     onImportOpen,
@@ -82,6 +128,12 @@ export function ApplicationsView({
         useState<ApplicationsTableFilters>(INITIAL_FILTERS);
     const [sortKey, setSortKey] = useState<SortKey>("dateApplied");
     const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+    const [selectedApplicationId, setSelectedApplicationId] = useState<
+        string | null
+    >(null);
+    const [expandedDescriptionId, setExpandedDescriptionId] = useState<
+        string | null
+    >(null);
 
     const sourceOptions = useMemo(() => {
         const sources = new Set<string>(SOURCES);
@@ -141,6 +193,29 @@ export function ApplicationsView({
         });
     }, [filteredApplications, sortDirection, sortKey]);
 
+    const selectedApplication =
+        sortedApplications.find(
+            (application) => application.id === selectedApplicationId,
+        ) ??
+        sortedApplications[0] ??
+        null;
+    const selectedApplicationIdForInterviews = selectedApplication?.id ?? null;
+    const selectedInterviews = selectedApplicationIdForInterviews
+        ? sortInterviewsBySchedule(
+            interviews.filter(
+                (interview) =>
+                    interview.applicationId === selectedApplicationIdForInterviews,
+            ),
+            "asc",
+        )
+        : [];
+    const descriptionText = selectedApplication?.description?.trim() ?? "";
+    const canToggleDescription = descriptionText
+        ? isLongDescription(descriptionText)
+        : false;
+    const isDescriptionExpanded =
+        selectedApplication?.id === expandedDescriptionId;
+
     function updateSort(nextSortKey: SortKey) {
         if (nextSortKey === sortKey) {
             setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
@@ -157,7 +232,7 @@ export function ApplicationsView({
         return (
             <button
                 type="button"
-                className="table-sort-button"
+                className={isActive ? "table-sort-button active" : "table-sort-button"}
                 onClick={() => updateSort(nextSortKey)}
             >
                 <span>{label}</span>
@@ -260,172 +335,363 @@ export function ApplicationsView({
                 </button>
             </div>
 
-            <div className="applications-table-panel">
-                <div className="applications-table-scroll">
-                    <table className="applications-table">
-                        <thead>
-                            <tr>
-                                <th
-                                    scope="col"
-                                    aria-sort={
-                                        sortKey === "title"
-                                            ? sortDirection === "asc"
-                                                ? "ascending"
-                                                : "descending"
-                                            : "none"
-                                    }
-                                >
-                                    {renderSortButton("Role", "title")}
-                                </th>
-                                <th
-                                    scope="col"
-                                    aria-sort={
-                                        sortKey === "companyName"
-                                            ? sortDirection === "asc"
-                                                ? "ascending"
-                                                : "descending"
-                                            : "none"
-                                    }
-                                >
-                                    {renderSortButton("Company", "companyName")}
-                                </th>
-                                <th
-                                    scope="col"
-                                    aria-sort={
-                                        sortKey === "status"
-                                            ? sortDirection === "asc"
-                                                ? "ascending"
-                                                : "descending"
-                                            : "none"
-                                    }
-                                >
-                                    {renderSortButton("Status", "status")}
-                                </th>
-                                <th
-                                    scope="col"
-                                    aria-sort={
-                                        sortKey === "source"
-                                            ? sortDirection === "asc"
-                                                ? "ascending"
-                                                : "descending"
-                                            : "none"
-                                    }
-                                >
-                                    {renderSortButton("Source", "source")}
-                                </th>
-                                <th
-                                    scope="col"
-                                    aria-sort={
-                                        sortKey === "location"
-                                            ? sortDirection === "asc"
-                                                ? "ascending"
-                                                : "descending"
-                                            : "none"
-                                    }
-                                >
-                                    {renderSortButton("Location", "location")}
-                                </th>
-                                <th
-                                    scope="col"
-                                    aria-sort={
-                                        sortKey === "dateApplied"
-                                            ? sortDirection === "asc"
-                                                ? "ascending"
-                                                : "descending"
-                                            : "none"
-                                    }
-                                >
-                                    {renderSortButton("Applied", "dateApplied")}
-                                </th>
-                                <th scope="col">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sortedApplications.map((application) => (
-                                <tr key={application.id}>
-                                    <td>
-                                        <strong>{application.title}</strong>
-                                        {application.sourceUrl && (
-                                            <a
-                                                href={application.sourceUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                View posting
-                                            </a>
-                                        )}
-                                    </td>
-                                    <td>{application.companyName || "Unknown"}</td>
-                                    <td>
+            <div className="applications-split-panel">
+                <aside className="application-list-panel">
+                    <div className="application-list-header">
+                        <div>
+                            <h2>Applications</h2>
+                            <span>
+                                {sortedApplications.length} shown from{" "}
+                                {applications.length} total
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="application-list-sort" aria-label="Sort applications">
+                        <span>Sort</span>
+                        {renderSortButton("Role", "title")}
+                        {renderSortButton("Company", "companyName")}
+                        {renderSortButton("Status", "status")}
+                        {renderSortButton("Applied", "dateApplied")}
+                    </div>
+
+                    {sortedApplications.length > 0 ? (
+                        <div className="application-list" role="list">
+                            {sortedApplications.map((application) => {
+                                const isSelected =
+                                    selectedApplication?.id === application.id;
+
+                                return (
+                                    <button
+                                        key={application.id}
+                                        type="button"
+                                        className={
+                                            isSelected
+                                                ? "application-list-item active"
+                                                : "application-list-item"
+                                        }
+                                        aria-current={isSelected ? "true" : undefined}
+                                        onClick={() =>
+                                            setSelectedApplicationId(application.id)
+                                        }
+                                    >
+                                        <span className="application-list-icon">
+                                            <AppIcon name="applications" size={19} />
+                                        </span>
+                                        <span className="application-list-copy">
+                                            <strong>{application.title}</strong>
+                                            <span>
+                                                {application.companyName ||
+                                                    "Unknown company"}
+                                            </span>
+                                            <em>
+                                                {formatDisplayDate(
+                                                    application.dateApplied,
+                                                )}
+                                            </em>
+                                        </span>
                                         <span
                                             className={`status-pill ${application.status.toLowerCase()}`}
                                         >
                                             {getStatusLabel(application.status)}
                                         </span>
-                                    </td>
-                                    <td>{application.source || "No source"}</td>
-                                    <td>{application.location || "Not set"}</td>
-                                    <td>{formatDisplayDate(application.dateApplied)}</td>
-                                    <td>
-                                        <div className="applications-row-actions">
-                                            <button
-                                                type="button"
-                                                onClick={() => onStartEdit(application)}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="applications-empty application-list-empty">
+                            <span className="empty-illustration">
+                                <AppIcon name="applications" size={31} />
+                            </span>
+                            <h2>
+                                {applications.length === 0
+                                    ? "No applications yet"
+                                    : "No applications match these filters"}
+                            </h2>
+                            <p>
+                                {applications.length === 0
+                                    ? "Add or import a role to start tracking your search."
+                                    : "Clear filters or adjust the search terms to expand the list."}
+                            </p>
+                            <button
+                                type="button"
+                                className="secondary"
+                                onClick={onCreateApplication}
+                            >
+                                <AppIcon name="plus" size={18} />
+                                Add Application
+                            </button>
+                        </div>
+                    )}
+                </aside>
+
+                <aside className="application-detail-panel">
+                    {selectedApplication ? (
+                        <>
+                            <header className="application-detail-header">
+                                <div className="application-detail-top-row">
+                                    <span className="application-detail-kicker">
+                                        <AppIcon name="document" size={16} />
+                                        Application details
+                                    </span>
+                                    <div
+                                        className="application-detail-header-actions"
+                                        aria-label="Application actions"
+                                    >
+                                        <button
+                                            type="button"
+                                            className="secondary"
+                                            onClick={() => onStartEdit(selectedApplication)}
+                                        >
+                                            <AppIcon name="edit" size={15} />
+                                            Edit
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="danger application-detail-delete"
+                                            onClick={() =>
+                                                onRemoveApplication(selectedApplication.id)
+                                            }
+                                        >
+                                            <AppIcon name="trash" size={15} />
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="application-detail-title-row">
+                                    <div>
+                                        <h2>{selectedApplication.title}</h2>
+                                        <span className="company-line">
+                                            {selectedApplication.companyName ||
+                                                "Unknown company"}
+                                        </span>
+                                        {selectedApplication.sourceUrl && (
+                                            <a
+                                                className="application-detail-posting-link"
+                                                href={selectedApplication.sourceUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
                                             >
-                                                <AppIcon name="edit" size={14} />
-                                                Edit
-                                            </button>
+                                                <AppIcon name="external-link" size={15} />
+                                                View posting
+                                            </a>
+                                        )}
+                                    </div>
+                                    <span
+                                        className={`status-pill ${selectedApplication.status.toLowerCase()}`}
+                                    >
+                                        {getStatusLabel(selectedApplication.status)}
+                                    </span>
+                                </div>
+                            </header>
+
+                            <div className="application-detail-layout">
+                                <div className="application-detail-main">
+                                    <section className="application-detail-section application-detail-interviews-section">
+                                        <div className="application-detail-section-heading">
+                                            <div>
+                                                <h3>Interviews</h3>
+                                                <span>
+                                                    {selectedInterviews.length === 1
+                                                        ? "1 interview"
+                                                        : `${selectedInterviews.length} interviews`}
+                                                </span>
+                                            </div>
                                             <button
                                                 type="button"
+                                                className="secondary application-interviews-add"
                                                 onClick={() =>
-                                                    onCreateInterview(application.id)
+                                                    onCreateInterview(selectedApplication.id)
                                                 }
                                             >
-                                                <AppIcon name="calendar" size={14} />
-                                                Interview
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    onRemoveApplication(application.id)
-                                                }
-                                            >
-                                                <AppIcon name="trash" size={14} />
-                                                Delete
+                                                <AppIcon name="plus" size={15} />
+                                                Add interview
                                             </button>
                                         </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                        {selectedInterviews.length > 0 ? (
+                                            <div className="application-interview-list">
+                                                {selectedInterviews.map((interview) => (
+                                                    <article
+                                                        key={interview.id}
+                                                        className="application-interview-item"
+                                                    >
+                                                        <span className="application-interview-icon">
+                                                            <AppIcon
+                                                                name="calendar"
+                                                                size={18}
+                                                            />
+                                                        </span>
+                                                        <div className="application-interview-copy">
+                                                            <strong>
+                                                                {getInterviewTypeLabel(
+                                                                    interview.type,
+                                                                )}
+                                                            </strong>
+                                                            <span>
+                                                                {formatInterviewDateTime(
+                                                                    interview.scheduledAt,
+                                                                )}
+                                                            </span>
+                                                            <small>
+                                                                {formatInterviewDuration(
+                                                                    interview.durationMinutes,
+                                                                )}
+                                                                {" - "}
+                                                                {interview.interviewerName ||
+                                                                    "Interviewer not set"}
+                                                                {" - "}
+                                                                {getInterviewLocationLabel(
+                                                                    interview,
+                                                                )}
+                                                            </small>
+                                                        </div>
+                                                        <span
+                                                            className={`status-pill ${interview.outcome.toLowerCase()}`}
+                                                        >
+                                                            {getInterviewOutcomeLabel(
+                                                                interview.outcome,
+                                                            )}
+                                                        </span>
+                                                    </article>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="application-interviews-empty">
+                                                <span>
+                                                    <AppIcon name="calendar" size={19} />
+                                                </span>
+                                                <div>
+                                                    <strong>No interviews added</strong>
+                                                    <p>
+                                                        Add interview details when this
+                                                        application moves forward.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </section>
 
-                {sortedApplications.length === 0 && (
-                    <div className="applications-empty">
-                        <span className="empty-illustration">
-                            <AppIcon name="applications" size={31} />
-                        </span>
-                        <h2>
-                            {applications.length === 0
-                                ? "No applications yet"
-                                : "No applications match these filters"}
-                        </h2>
-                        <p>
-                            {applications.length === 0
-                                ? "Add or import a role to start tracking your search."
-                                : "Clear filters or adjust the search terms to expand the table."}
-                        </p>
-                        <button
-                            type="button"
-                            className="secondary"
-                            onClick={onCreateApplication}
-                        >
-                            <AppIcon name="plus" size={18} />
-                            Add Application
-                        </button>
-                    </div>
-                )}
+                                    <section className="application-detail-section application-detail-description-section">
+                                        <h3>Description</h3>
+                                        <div
+                                            className={
+                                                canToggleDescription &&
+                                                !isDescriptionExpanded
+                                                    ? "application-description-frame is-collapsed"
+                                                    : "application-description-frame"
+                                            }
+                                        >
+                                            <p
+                                                className={
+                                                    canToggleDescription &&
+                                                    !isDescriptionExpanded
+                                                        ? "application-description collapsed"
+                                                        : "application-description"
+                                                }
+                                            >
+                                                {descriptionText ||
+                                                    "No job description saved."}
+                                            </p>
+                                            {canToggleDescription && (
+                                                <button
+                                                    type="button"
+                                                    className="application-description-toggle"
+                                                    onClick={() =>
+                                                        setExpandedDescriptionId(
+                                                            (current) =>
+                                                                current ===
+                                                                selectedApplication.id
+                                                                    ? null
+                                                                    : selectedApplication.id,
+                                                        )
+                                                    }
+                                                >
+                                                    {isDescriptionExpanded
+                                                        ? "Show less"
+                                                        : "Show more"}
+                                                    <AppIcon
+                                                        name="chevron-down"
+                                                        size={15}
+                                                        className={
+                                                            isDescriptionExpanded
+                                                                ? "application-description-toggle-icon expanded"
+                                                                : "application-description-toggle-icon"
+                                                        }
+                                                    />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </section>
+                                </div>
+
+                                <aside
+                                    className="application-detail-meta"
+                                    aria-label="Application details"
+                                >
+                                    <h3>Details</h3>
+                                    <dl className="application-detail-meta-list">
+                                        <div className="application-detail-meta-item">
+                                            <dt>
+                                                <AppIcon name="calendar" size={15} />
+                                                Applied
+                                            </dt>
+                                            <dd>
+                                                {formatDisplayDate(
+                                                    selectedApplication.dateApplied,
+                                                )}
+                                            </dd>
+                                        </div>
+                                        <div className="application-detail-meta-item">
+                                            <dt>
+                                                <AppIcon name="location" size={15} />
+                                                Location
+                                            </dt>
+                                            <dd>
+                                                {selectedApplication.location || "Not set"}
+                                            </dd>
+                                        </div>
+                                        <div className="application-detail-meta-item">
+                                            <dt>
+                                                <AppIcon name="source" size={15} />
+                                                Source
+                                            </dt>
+                                            <dd>
+                                                {selectedApplication.source || "No source"}
+                                            </dd>
+                                        </div>
+                                        <div className="application-detail-meta-item">
+                                            <dt>
+                                                <AppIcon name="analytics" size={15} />
+                                                Salary
+                                            </dt>
+                                            <dd>{formatSalaryRange(selectedApplication)}</dd>
+                                        </div>
+                                    </dl>
+                                </aside>
+                            </div>
+
+                            <section className="application-detail-section">
+                                <h3>Notes</h3>
+                                <p>
+                                    {selectedApplication.notes?.trim() ||
+                                        "No notes saved for this application."}
+                                </p>
+                            </section>
+                        </>
+                    ) : (
+                        <div className="applications-empty application-detail-empty">
+                            <span className="empty-illustration">
+                                <AppIcon name="applications" size={31} />
+                            </span>
+                            <h2>Select an application</h2>
+                            <p>
+                                Choose an application from the list to review its
+                                details.
+                            </p>
+                        </div>
+                    )}
+                </aside>
             </div>
         </section>
     );

@@ -102,6 +102,7 @@ export function DashboardHome({
                 filters={filters}
                 groupedApplications={groupedApplications}
                 historyByApp={historyByApp}
+                interviews={interviews}
                 openTimelineId={openTimelineId}
                 trackerApplications={trackerApplications}
                 onApplyFilters={onApplyTrackerFilters}

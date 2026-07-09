@@ -768,6 +768,7 @@ export default function MainPage() {
             ) : currentView === "applications" ? (
                 <ApplicationsView
                     applications={applications}
+                    interviews={interviews}
                     onCreateApplication={openCreateApplication}
                     onCreateInterview={openCreateInterview}
                     onImportOpen={openImportDrawer}

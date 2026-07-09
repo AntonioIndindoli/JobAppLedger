@@ -10,6 +10,7 @@ import {
 import { buildWeeklyApplications } from "../../lib/application-analytics";
 import type { Application, WeeklyRangeWeeks } from "../../lib/types";
 import { AppIcon } from "../AppIcon";
+import { InfoTooltip } from "./InfoTooltip";
 
 type WeeklyApplicationsProps = {
     applications: Application[];
@@ -55,9 +56,10 @@ export function WeeklyApplications({
                     <AppIcon name="trend" size={16} />
                 </span>
                 Weekly Applications
-                <span className="info-icon" aria-label="Weekly applications information">
-                    <AppIcon name="info" size={14} />
-                </span>
+                <InfoTooltip
+                    label="Weekly applications information"
+                    tooltip="Counts applications by applied date, or created date when no applied date is set."
+                />
                 <select
                     aria-label="Weekly applications timeframe"
                     value={weeklyRangeWeeks}

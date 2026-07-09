@@ -294,6 +294,14 @@ export function AppIcon({
                 </>
             );
             break;
+        case "view":
+            icon = (
+                <>
+                    <path d="M3.5 12s3.2-5.5 8.5-5.5S20.5 12 20.5 12s-3.2 5.5-8.5 5.5S3.5 12 3.5 12Z" />
+                    <circle cx="12" cy="12" r="2.25" />
+                </>
+            );
+            break;
         case "warning":
             icon = (
                 <>

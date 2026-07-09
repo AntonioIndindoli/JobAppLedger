@@ -1,19 +1,28 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 import { DASHBOARD_STATUSES, SOURCES, STATUSES, STATUS_LABELS } from "../../lib/constants";
+import {
+    getInterviewTimestamp,
+    getInterviewTypeLabel,
+} from "../../lib/interview-utils";
 import type {
     ActivityLog,
     Application,
     ApplicationFilters,
     DashboardStatus,
+    Interview,
 } from "../../lib/types";
 import { AppIcon } from "../AppIcon";
+import { InfoTooltip } from "./InfoTooltip";
 
 type ApplicationTrackerProps = {
     applications: Application[];
     filters: ApplicationFilters;
     groupedApplications: Record<DashboardStatus, Application[]>;
     historyByApp: Record<string, ActivityLog[]>;
+    interviews: Interview[];
     openTimelineId: string | null;
     trackerApplications: Application[];
     onApplyFilters: () => void;
@@ -41,11 +50,37 @@ function formatAppliedDate(dateApplied: string | null) {
     }).format(date);
 }
 
+function getDisplayInterview(interviews: Interview[]) {
+    const now = Date.now();
+    const validInterviews = interviews.filter(
+        (interview) => getInterviewTimestamp(interview) > 0,
+    );
+    const sourceInterviews = validInterviews.length ? validInterviews : interviews;
+    const upcomingInterview = sourceInterviews
+        .filter(
+            (interview) =>
+                interview.outcome === "SCHEDULED" &&
+                getInterviewTimestamp(interview) >= now,
+        )
+        .sort(
+            (left, right) =>
+                getInterviewTimestamp(left) - getInterviewTimestamp(right),
+        )[0];
+
+    if (upcomingInterview) return upcomingInterview;
+
+    return [...sourceInterviews].sort(
+        (left, right) =>
+            getInterviewTimestamp(right) - getInterviewTimestamp(left),
+    )[0];
+}
+
 export function ApplicationTracker({
     applications,
     filters,
     groupedApplications,
     historyByApp,
+    interviews,
     openTimelineId,
     trackerApplications,
     onApplyFilters,
@@ -58,6 +93,24 @@ export function ApplicationTracker({
     onToggleTimeline,
     onTransitionStatus,
 }: ApplicationTrackerProps) {
+    const [openCardMenuId, setOpenCardMenuId] = useState<string | null>(null);
+    const interviewByApplicationId = useMemo(() => {
+        const groupedInterviews = new Map<string, Interview[]>();
+
+        interviews.forEach((interview) => {
+            const existing = groupedInterviews.get(interview.applicationId) ?? [];
+            groupedInterviews.set(interview.applicationId, [...existing, interview]);
+        });
+
+        const selectedInterviews = new Map<string, Interview>();
+        groupedInterviews.forEach((applicationInterviews, applicationId) => {
+            const interview = getDisplayInterview(applicationInterviews);
+            if (interview) selectedInterviews.set(applicationId, interview);
+        });
+
+        return selectedInterviews;
+    }, [interviews]);
+
     return (
         <section className="panel tracker-panel">
             <div className="panel-title">
@@ -67,12 +120,10 @@ export function ApplicationTracker({
                             <AppIcon name="applications" size={17} />
                         </span>
                         Application Tracker
-                        <span
-                            className="info-icon"
-                            aria-label="Application tracker information"
-                        >
-                            <AppIcon name="info" size={14} />
-                        </span>
+                        <InfoTooltip
+                            label="Application tracker information"
+                            tooltip="Filter applications and move cards between stages to keep your pipeline current."
+                        />
                     </h2>
                 </div>
                 <div className="panel-title">
@@ -158,58 +209,175 @@ export function ApplicationTracker({
                             <strong>{groupedApplications[status].length}</strong>
                         </h3>
                         <div className={`dropzone ${status.toLowerCase()}`}>
+                            {groupedApplications[status].length === 0 &&
+                                trackerApplications.length > 0 && (
+                                    <p className="lane-empty">No applications</p>
+                                )}
                             {groupedApplications[status].map((application) => (
-                                <article
-                                    key={application.id}
-                                    className="job-card"
-                                    draggable
-                                    onDragStart={(event) =>
-                                        event.dataTransfer.setData(
-                                            "text/plain",
-                                            application.id,
-                                        )
-                                    }
-                                >
-                                    <b>{application.title}</b>
-                                    <span>{application.companyName ?? "Unknown"}</span>
-                                    <small className="applied-date">
-                                        <AppIcon name="calendar" size={12} />
-                                        {formatAppliedDate(application.dateApplied)}
-                                    </small>
-                                    <div>
-                                        <button onClick={() => onStartEdit(application)}>
-                                            <AppIcon name="edit" size={13} />
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => onRemoveApplication(application.id)}
-                                        >
-                                            <AppIcon name="trash" size={13} />
-                                            Delete
-                                        </button>
-                                        <button
-                                            onClick={() =>
-                                                onCreateInterview(application.id)
+                                (() => {
+                                    const interview = interviewByApplicationId.get(
+                                        application.id,
+                                    );
+                                    const history = historyByApp[application.id] ?? [];
+
+                                    return (
+                                        <article
+                                            key={application.id}
+                                            className="job-card"
+                                            draggable
+                                            onDragStart={(event) =>
+                                                event.dataTransfer.setData(
+                                                    "text/plain",
+                                                    application.id,
+                                                )
                                             }
                                         >
-                                            <AppIcon name="calendar" size={13} />
-                                            Interview
-                                        </button>
-                                        <button
-                                            onClick={() => onToggleTimeline(application.id)}
-                                        >
-                                            <AppIcon name="history" size={13} />
-                                            History
-                                        </button>
-                                    </div>
-                                    {openTimelineId === application.id && (
-                                        <ul>
-                                            {(historyByApp[application.id] ?? []).map((entry) => (
-                                                <li key={entry.id}>{entry.message}</li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </article>
+                                            <div className="job-card-header">
+                                                <div className="job-card-title-group">
+                                                    <b>{application.title}</b>
+                                                    <span className="job-card-company">
+                                                        {application.companyName ?? "Unknown"}
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    className="job-card-menu"
+                                                    onBlur={(event) => {
+                                                        if (
+                                                            !event.currentTarget.contains(
+                                                                event.relatedTarget as Node | null,
+                                                            )
+                                                        ) {
+                                                            setOpenCardMenuId(null);
+                                                        }
+                                                    }}
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        className="job-card-menu-trigger"
+                                                        aria-label={`Open actions for ${application.title}`}
+                                                        aria-haspopup="menu"
+                                                        aria-expanded={
+                                                            openCardMenuId === application.id
+                                                        }
+                                                        onClick={() =>
+                                                            setOpenCardMenuId((current) =>
+                                                                current === application.id
+                                                                    ? null
+                                                                    : application.id,
+                                                            )
+                                                        }
+                                                    >
+                                                        <AppIcon
+                                                            name="dots-vertical"
+                                                            size={17}
+                                                        />
+                                                    </button>
+                                                    {openCardMenuId === application.id && (
+                                                        <div
+                                                            className="job-card-menu-popover"
+                                                            role="menu"
+                                                        >
+                                                            <button
+                                                                type="button"
+                                                                role="menuitem"
+                                                                onClick={() => {
+                                                                    setOpenCardMenuId(null);
+                                                                    onToggleTimeline(
+                                                                        application.id,
+                                                                    );
+                                                                }}
+                                                            >
+                                                                <AppIcon
+                                                                    name="view"
+                                                                    size={14}
+                                                                />
+                                                                View
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                role="menuitem"
+                                                                onClick={() => {
+                                                                    setOpenCardMenuId(null);
+                                                                    onStartEdit(application);
+                                                                }}
+                                                            >
+                                                                <AppIcon
+                                                                    name="edit"
+                                                                    size={14}
+                                                                />
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                role="menuitem"
+                                                                onClick={() => {
+                                                                    setOpenCardMenuId(null);
+                                                                    onCreateInterview(
+                                                                        application.id,
+                                                                    );
+                                                                }}
+                                                            >
+                                                                <AppIcon
+                                                                    name="calendar"
+                                                                    size={14}
+                                                                />
+                                                                Interview
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                role="menuitem"
+                                                                onClick={() => {
+                                                                    setOpenCardMenuId(null);
+                                                                    onRemoveApplication(
+                                                                        application.id,
+                                                                    );
+                                                                }}
+                                                            >
+                                                                <AppIcon
+                                                                    name="trash"
+                                                                    size={14}
+                                                                />
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div
+                                                className={`job-card-footer${
+                                                    interview ? " has-interview" : ""
+                                                }`}
+                                            >
+                                                {interview && (
+                                                    <span className="job-card-interview-type">
+                                                        {getInterviewTypeLabel(
+                                                            interview.type,
+                                                        )}
+                                                    </span>
+                                                )}
+                                                <small className="applied-date">
+                                                    <AppIcon name="calendar" size={12} />
+                                                    {formatAppliedDate(
+                                                        application.dateApplied,
+                                                    )}
+                                                </small>
+                                            </div>
+                                            {openTimelineId === application.id && (
+                                                <ul className="job-card-history">
+                                                    {history.length ? (
+                                                        history.map((entry) => (
+                                                            <li key={entry.id}>
+                                                                {entry.message}
+                                                            </li>
+                                                        ))
+                                                    ) : (
+                                                        <li>No history yet.</li>
+                                                    )}
+                                                </ul>
+                                            )}
+                                        </article>
+                                    );
+                                })()
                             ))}
                         </div>
                     </section>
