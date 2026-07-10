@@ -14,6 +14,7 @@ import type {
     ActivityLog,
     Application,
     ApplicationFilters,
+    ApplicationGoalSettings,
     Interview,
     Task,
 } from "../../lib/types";
@@ -23,6 +24,7 @@ import { DashboardStats } from "./DashboardStats";
 
 type DashboardHomeProps = {
     activePipeline: number;
+    applicationGoal: ApplicationGoalSettings;
     applications: Application[];
     appliedTrackerFilters: ApplicationFilters;
     filters: ApplicationFilters;
@@ -31,6 +33,7 @@ type DashboardHomeProps = {
     openTimelineId: string | null;
     tasks: Task[];
     onApplyTrackerFilters: () => void;
+    onApplicationGoalChange: (goal: ApplicationGoalSettings) => void;
     onCreateApplication: () => void;
     onCreateInterview: (applicationId?: string) => void;
     onCreateTask: () => void;
@@ -52,6 +55,7 @@ type DashboardHomeProps = {
 
 export function DashboardHome({
     activePipeline,
+    applicationGoal,
     applications,
     appliedTrackerFilters,
     filters,
@@ -60,6 +64,7 @@ export function DashboardHome({
     openTimelineId,
     tasks,
     onApplyTrackerFilters,
+    onApplicationGoalChange,
     onCreateApplication,
     onCreateInterview,
     onCreateTask,
@@ -102,9 +107,11 @@ export function DashboardHome({
             </section>
             <DashboardStats
                 activePipeline={activePipeline}
+                applicationGoal={applicationGoal}
                 applications={applications}
                 historyByApp={historyByApp}
                 interviews={interviews}
+                onApplicationGoalChange={onApplicationGoalChange}
                 tasks={tasks}
             />
             <ApplicationTracker

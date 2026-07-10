@@ -1,29 +1,60 @@
 "use client";
 
+import { useState } from "react";
+
 import { getApplicationTimestamp } from "../../lib/application-analytics";
-import { MetricIcon } from "../AppIcon";
+import { APPLICATION_GOAL_PERIOD_OPTIONS } from "../../lib/constants";
+import { AppIcon, MetricIcon } from "../AppIcon";
 import { PipelineSankey } from "./PipelineSankey";
 import { isUpcomingInterview } from "../../lib/interview-utils";
 import { isTaskNeedingAttention } from "../../lib/task-utils";
 import type {
     ActivityLog,
     Application,
+    ApplicationGoalPeriod,
+    ApplicationGoalSettings,
     AppIconName,
     IconTone,
     Interview,
     Task,
 } from "../../lib/types";
 
-const WEEKLY_APPLICATION_GOAL_TARGET = 5;
 const RESPONSE_STATUSES = new Set(["INTERVIEWING", "OFFER", "REJECTED", "WITHDRAWN"]);
 const INTERVIEW_STATUSES = new Set(["INTERVIEWING", "OFFER"]);
+const GOAL_PERIOD_COPY: Record<
+    ApplicationGoalPeriod,
+    { ariaLabel: string; countLabel: string; title: string }
+> = {
+    daily: {
+        ariaLabel: "Daily application goal progress",
+        countLabel: "today",
+        title: "Daily Application Goal",
+    },
+    weekly: {
+        ariaLabel: "Weekly application goal progress",
+        countLabel: "this week",
+        title: "Weekly Application Goal",
+    },
+    monthly: {
+        ariaLabel: "Monthly application goal progress",
+        countLabel: "this month",
+        title: "Monthly Application Goal",
+    },
+};
 
 type DashboardStatsProps = {
     activePipeline: number;
+    applicationGoal: ApplicationGoalSettings;
     applications: Application[];
     historyByApp: Record<string, ActivityLog[]>;
     interviews: Interview[];
+    onApplicationGoalChange: (goal: ApplicationGoalSettings) => void;
     tasks: Task[];
+};
+
+type ApplicationGoalControlsProps = {
+    applicationGoal: ApplicationGoalSettings;
+    onApplicationGoalChange: (goal: ApplicationGoalSettings) => void;
 };
 
 function getMetadataObject(metadata: ActivityLog["metadata"]) {
@@ -49,29 +80,115 @@ function getPercent(value: number, total: number) {
     return Math.round((value / total) * 100);
 }
 
-function isThisWeek(application: Application) {
+function getGoalTarget(target: number) {
+    return Number.isFinite(target) ? Math.max(1, Math.floor(target)) : 1;
+}
+
+function getGoalPeriodRange(period: ApplicationGoalPeriod) {
     const now = new Date();
-    const weekStart = new Date(now);
-    weekStart.setHours(0, 0, 0, 0);
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
 
-    const nextWeekStart = new Date(weekStart);
-    nextWeekStart.setDate(weekStart.getDate() + 7);
+    if (period === "weekly") {
+        start.setDate(start.getDate() - start.getDay());
+    }
 
-    const applicationTime = getApplicationTimestamp(application);
+    if (period === "monthly") {
+        start.setDate(1);
+    }
+
+    const end = new Date(start);
+    if (period === "daily") end.setDate(start.getDate() + 1);
+    if (period === "weekly") end.setDate(start.getDate() + 7);
+    if (period === "monthly") end.setMonth(start.getMonth() + 1);
+
+    return { end: end.getTime(), start: start.getTime() };
+}
+
+function ApplicationGoalControls({
+    applicationGoal,
+    onApplicationGoalChange,
+}: ApplicationGoalControlsProps) {
+    const goalTarget = getGoalTarget(applicationGoal.target);
+    const [goalTargetDraft, setGoalTargetDraft] = useState(String(goalTarget));
+
+    function updateGoalTarget(nextValue: string) {
+        setGoalTargetDraft(nextValue);
+
+        const parsedTarget = Number(nextValue);
+        if (!Number.isFinite(parsedTarget) || parsedTarget < 1) return;
+
+        onApplicationGoalChange({
+            ...applicationGoal,
+            target: Math.floor(parsedTarget),
+        });
+    }
+
+    function commitGoalTarget() {
+        const parsedTarget = Number(goalTargetDraft);
+        if (!Number.isFinite(parsedTarget) || parsedTarget < 1) {
+            setGoalTargetDraft(String(goalTarget));
+            return;
+        }
+
+        const nextTarget = Math.floor(parsedTarget);
+        setGoalTargetDraft(String(nextTarget));
+        if (nextTarget === applicationGoal.target) return;
+
+        onApplicationGoalChange({ ...applicationGoal, target: nextTarget });
+    }
+
+    function updateGoalPeriod(nextPeriod: ApplicationGoalPeriod) {
+        onApplicationGoalChange({ ...applicationGoal, period: nextPeriod });
+    }
+
     return (
-        applicationTime >= weekStart.getTime() &&
-        applicationTime < nextWeekStart.getTime()
+        <div
+            className="application-goal-controls"
+            aria-label="Application goal controls"
+        >
+            <label className="application-goal-field">
+                <span>Goal</span>
+                <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={goalTargetDraft}
+                    aria-label="Application goal target"
+                    onBlur={commitGoalTarget}
+                    onChange={(event) => updateGoalTarget(event.target.value)}
+                />
+            </label>
+            <label className="application-goal-field">
+                <span>Period</span>
+                <select
+                    value={applicationGoal.period}
+                    aria-label="Application goal period"
+                    onChange={(event) =>
+                        updateGoalPeriod(event.target.value as ApplicationGoalPeriod)
+                    }
+                >
+                    {APPLICATION_GOAL_PERIOD_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
+            </label>
+        </div>
     );
 }
 
 export function DashboardStats({
     activePipeline,
+    applicationGoal,
     applications,
     historyByApp,
     interviews,
+    onApplicationGoalChange,
     tasks,
 }: DashboardStatsProps) {
+    const [isGoalEditorOpen, setIsGoalEditorOpen] = useState(false);
     const upcomingInterviewCount = interviews.filter(isUpcomingInterview).length;
     const dueTaskCount = tasks.filter(isTaskNeedingAttention).length;
     const responseCount = applications.filter(
@@ -92,11 +209,20 @@ export function DashboardStats({
     ).length;
     const responseRate = getPercent(responseCount, applications.length);
     const interviewRate = getPercent(interviewCount, applications.length);
-    const weeklyApplications = applications.filter(isThisWeek).length;
-    const weeklyGoalProgress = Math.min(
+    const goalPeriodRange = getGoalPeriodRange(applicationGoal.period);
+    const goalTarget = getGoalTarget(applicationGoal.target);
+    const goalApplications = applications.filter((application) => {
+        const applicationTime = getApplicationTimestamp(application);
+        return (
+            applicationTime >= goalPeriodRange.start &&
+            applicationTime < goalPeriodRange.end
+        );
+    }).length;
+    const goalProgress = Math.min(
         100,
-        getPercent(weeklyApplications, WEEKLY_APPLICATION_GOAL_TARGET),
+        getPercent(goalApplications, goalTarget),
     );
+    const goalCopy = GOAL_PERIOD_COPY[applicationGoal.period];
     const stats: Array<{
         label: string;
         value: string | number;
@@ -159,26 +285,40 @@ export function DashboardStats({
                     ))}
                 </div>
                 <footer className="weekly-goal-summary">
-                    <h3>Weekly Application Goal</h3>
+                    <div className="weekly-goal-header">
+                        <h3>{goalCopy.title}</h3>
+                        <button
+                            type="button"
+                            className="goal-edit-button"
+                            aria-label="Edit application goal"
+                            aria-expanded={isGoalEditorOpen}
+                            onClick={() => setIsGoalEditorOpen((isOpen) => !isOpen)}
+                        >
+                            <AppIcon name="edit" size={16} />
+                        </button>
+                    </div>
+                    {isGoalEditorOpen && (
+                        <ApplicationGoalControls
+                            applicationGoal={applicationGoal}
+                            onApplicationGoalChange={onApplicationGoalChange}
+                        />
+                    )}
                     <div className="weekly-goal-copy">
                         <span>
-                            {weeklyApplications} of {WEEKLY_APPLICATION_GOAL_TARGET}{" "}
-                            applications this week
+                            {goalApplications} of {goalTarget} applications{" "}
+                            {goalCopy.countLabel}
                         </span>
-                        <strong>{weeklyGoalProgress}% complete</strong>
+                        <strong>{goalProgress}% complete</strong>
                     </div>
                     <div
                         className="weekly-goal-bar"
                         role="progressbar"
-                        aria-label="Weekly application goal progress"
+                        aria-label={goalCopy.ariaLabel}
                         aria-valuemin={0}
-                        aria-valuemax={WEEKLY_APPLICATION_GOAL_TARGET}
-                        aria-valuenow={Math.min(
-                            weeklyApplications,
-                            WEEKLY_APPLICATION_GOAL_TARGET,
-                        )}
+                        aria-valuemax={goalTarget}
+                        aria-valuenow={Math.min(goalApplications, goalTarget)}
                     >
-                        <span style={{ width: `${weeklyGoalProgress}%` }} />
+                        <span style={{ width: `${goalProgress}%` }} />
                     </div>
                 </footer>
             </section>

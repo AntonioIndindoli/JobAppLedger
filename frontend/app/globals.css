@@ -380,11 +380,17 @@ button {
 .sankey-frame {
     width: 100%;
     min-height: 250px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #b7c8df transparent;
+    -webkit-overflow-scrolling: touch;
 }
 
 .sankey-canvas {
     display: block;
     width: 100%;
+    min-width: 820px;
     height: auto;
     min-height: 250px;
 }
@@ -618,12 +624,84 @@ button {
     border-top: 1px solid var(--border);
 }
 
+.weekly-goal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
 .weekly-goal-summary h3 {
     margin: 0;
     color: #14213d;
     font-size: 15px;
     line-height: 1.2;
     font-weight: 800;
+}
+
+.goal-edit-button {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #dce8f7;
+    border-radius: 8px;
+    color: #0b56c7;
+    background: #f4f8ff;
+}
+
+.goal-edit-button:hover,
+.goal-edit-button:focus-visible,
+.goal-edit-button[aria-expanded="true"] {
+    border-color: #b7d3ff;
+    background: #eaf3ff;
+    outline: none;
+}
+
+.application-goal-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.application-goal-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #53617b;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.application-goal-field input,
+.application-goal-field select {
+    height: 34px;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 0 9px;
+    color: #14213d;
+    background: #fbfdff;
+    font: inherit;
+    font-weight: 700;
+}
+
+.application-goal-field input {
+    width: 72px;
+}
+
+.application-goal-field select {
+    width: 110px;
+}
+
+.application-goal-field input:focus,
+.application-goal-field select:focus {
+    border-color: #9fc6ff;
+    outline: 2px solid rgba(11, 107, 255, .14);
+    outline-offset: 1px;
 }
 
 .weekly-goal-copy {
@@ -1981,6 +2059,24 @@ padding: 4px;
 
     .weekly aside em {
         grid-column: 1 / -1;
+    }
+
+    .application-goal-controls,
+    .application-goal-field,
+    .application-goal-field input,
+    .application-goal-field select {
+        width: 100%;
+    }
+
+    .application-goal-field {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .weekly-goal-copy {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
     }
 
     .drawer-backdrop {

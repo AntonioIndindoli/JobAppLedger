@@ -136,6 +136,16 @@ export const WEEKLY_RANGE_OPTIONS = [
 ] as const;
 
 export const DEFAULT_WEEKLY_RANGE: WeeklyRangeWeeks = 6;
+export const APPLICATION_GOAL_STORAGE_KEY = "jobappledger_application_goal";
+export const APPLICATION_GOAL_PERIOD_OPTIONS = [
+    { label: "Daily", value: "daily" },
+    { label: "Weekly", value: "weekly" },
+    { label: "Monthly", value: "monthly" },
+] as const;
+export const DEFAULT_APPLICATION_GOAL = {
+    target: 5,
+    period: "weekly",
+} as const;
 
 export const NAV_ITEMS: Array<{ label: string; icon: AppIconName }> = [
     { label: "Dashboard", icon: "dashboard" },

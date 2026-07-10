@@ -19,7 +19,10 @@ import { toLocalDateTimeInputs } from "./lib/interview-utils";
 import { toTaskDueDateInput, toTaskDueDatePayload } from "./lib/task-utils";
 import {
     ACCESS_TOKEN_KEY,
+    APPLICATION_GOAL_PERIOD_OPTIONS,
+    APPLICATION_GOAL_STORAGE_KEY,
     API_BASE_URL,
+    DEFAULT_APPLICATION_GOAL,
     DEFAULT_WEEKLY_RANGE,
     EMPTY_APPLICATION_FORM,
     EMPTY_IMPORT_CAPTURE,
@@ -36,6 +39,8 @@ import type {
     ActivityLog,
     Application,
     ApplicationFilters,
+    ApplicationGoalPeriod,
+    ApplicationGoalSettings,
     ApplicationFormValues,
     AuthStatus,
     DashboardView,
@@ -58,6 +63,51 @@ const INITIAL_FILTERS: ApplicationFilters = {
     startDate: "",
     endDate: "",
 };
+
+function isApplicationGoalPeriod(value: unknown): value is ApplicationGoalPeriod {
+    return APPLICATION_GOAL_PERIOD_OPTIONS.some((option) => option.value === value);
+}
+
+function normalizeApplicationGoalSettings(value: unknown): ApplicationGoalSettings {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return { ...DEFAULT_APPLICATION_GOAL };
+    }
+
+    const candidate = value as { period?: unknown; target?: unknown };
+    const target =
+        typeof candidate.target === "number" && Number.isFinite(candidate.target)
+            ? Math.max(1, Math.floor(candidate.target))
+            : DEFAULT_APPLICATION_GOAL.target;
+    const period = isApplicationGoalPeriod(candidate.period)
+        ? candidate.period
+        : DEFAULT_APPLICATION_GOAL.period;
+
+    return { target, period };
+}
+
+function parseStoredApplicationGoal(rawGoal: string | null) {
+    if (!rawGoal) return null;
+
+    try {
+        return normalizeApplicationGoalSettings(JSON.parse(rawGoal));
+    } catch {
+        return null;
+    }
+}
+
+function getInitialApplicationGoal(): ApplicationGoalSettings {
+    if (typeof window === "undefined") return { ...DEFAULT_APPLICATION_GOAL };
+
+    try {
+        return (
+            parseStoredApplicationGoal(
+                localStorage.getItem(APPLICATION_GOAL_STORAGE_KEY),
+            ) ?? { ...DEFAULT_APPLICATION_GOAL }
+        );
+    } catch {
+        return { ...DEFAULT_APPLICATION_GOAL };
+    }
+}
 
 export default function MainPage() {
     const [mode, setMode] = useState<Mode>("signup");
@@ -110,6 +160,8 @@ export default function MainPage() {
     const [openTimelineId, setOpenTimelineId] = useState<string | null>(null);
     const [weeklyRangeWeeks, setWeeklyRangeWeeks] =
         useState<WeeklyRangeWeeks>(DEFAULT_WEEKLY_RANGE);
+    const [applicationGoal, setApplicationGoal] =
+        useState<ApplicationGoalSettings>(getInitialApplicationGoal);
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const [currentView, setCurrentView] = useState<DashboardView>("dashboard");
     const [focusedApplicationId, setFocusedApplicationId] = useState<string | null>(
@@ -455,6 +507,20 @@ export default function MainPage() {
     function changeCurrentView(view: DashboardView) {
         if (view === "interviews") setFocusedInterviewId(null);
         setCurrentView(view);
+    }
+
+    function updateApplicationGoal(nextGoal: ApplicationGoalSettings) {
+        const normalizedGoal = normalizeApplicationGoalSettings(nextGoal);
+        setApplicationGoal(normalizedGoal);
+
+        try {
+            localStorage.setItem(
+                APPLICATION_GOAL_STORAGE_KEY,
+                JSON.stringify(normalizedGoal),
+            );
+        } catch {
+            // The UI should still update if browser storage is unavailable.
+        }
     }
 
     function closeInterviewForm() {
@@ -1076,6 +1142,7 @@ export default function MainPage() {
             ) : (
                 <DashboardHome
                     activePipeline={activePipeline}
+                    applicationGoal={applicationGoal}
                     applications={applications}
                     appliedTrackerFilters={appliedTrackerFilters}
                     filters={filters}
@@ -1084,6 +1151,7 @@ export default function MainPage() {
                     openTimelineId={openTimelineId}
                     tasks={tasks}
                     onApplyTrackerFilters={() => setAppliedTrackerFilters(filters)}
+                    onApplicationGoalChange={updateApplicationGoal}
                     onCreateApplication={openCreateApplication}
                     onCreateInterview={openCreateInterview}
                     onCreateTask={() => openCreateTask()}

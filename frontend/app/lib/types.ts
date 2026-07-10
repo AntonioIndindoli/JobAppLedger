@@ -2,6 +2,7 @@ import type {
     DASHBOARD_STATUSES,
     INTERVIEW_OUTCOMES,
     INTERVIEW_TYPES,
+    APPLICATION_GOAL_PERIOD_OPTIONS,
     STATUSES,
     TASK_TYPES,
     WEEKLY_RANGE_OPTIONS,
@@ -13,6 +14,12 @@ export type InterviewType = (typeof INTERVIEW_TYPES)[number];
 export type InterviewOutcome = (typeof INTERVIEW_OUTCOMES)[number];
 export type TaskType = (typeof TASK_TYPES)[number];
 export type WeeklyRangeWeeks = (typeof WEEKLY_RANGE_OPTIONS)[number]["weeks"];
+export type ApplicationGoalPeriod =
+    (typeof APPLICATION_GOAL_PERIOD_OPTIONS)[number]["value"];
+export type ApplicationGoalSettings = {
+    target: number;
+    period: ApplicationGoalPeriod;
+};
 
 export type Mode = "signup" | "login";
 export type AuthStatus = "checking" | "signedOut" | "signedIn";
