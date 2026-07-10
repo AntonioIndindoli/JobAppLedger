@@ -4,26 +4,40 @@ import {
     formatInterviewDateTime,
     getInterviewTypeLabel,
 } from "../../lib/interview-utils";
-import type { Interview } from "../../lib/types";
+import {
+    formatTaskDueDate,
+    getTaskDueState,
+    getTaskTypeLabel,
+    isOpenTask,
+    sortTasksByDueDate,
+} from "../../lib/task-utils";
+import type { Interview, Task } from "../../lib/types";
 import { AddInterviewButton } from "../AddInterviewButton";
 import { AppIcon } from "../AppIcon";
 
 type DashboardCardsProps = {
     canCreateInterview: boolean;
+    tasks: Task[];
     upcomingInterviews: Interview[];
     onCreateInterview: () => void;
+    onCreateTask: () => void;
     onImportOpen: () => void;
     onViewInterviews: () => void;
+    onViewTasks: () => void;
 };
 
 export function DashboardCards({
     canCreateInterview,
+    tasks,
     upcomingInterviews,
     onCreateInterview,
+    onCreateTask,
     onImportOpen,
     onViewInterviews,
+    onViewTasks,
 }: DashboardCardsProps) {
     const visibleInterviews = upcomingInterviews.slice(0, 3);
+    const visibleTasks = sortTasksByDueDate(tasks.filter(isOpenTask)).slice(0, 3);
 
     return (
         <section className="mini-grid">
@@ -59,11 +73,13 @@ export function DashboardCards({
                                 <span>
                                     {interview.companyName ?? "Unknown company"}
                                 </span>
-                                <small>
-                                    <AppIcon name="clock" size={13} />
-                                    {formatInterviewDateTime(interview.scheduledAt)}
-                                </small>
-                                <em>{getInterviewTypeLabel(interview.type)}</em>
+                                <div className="interview-card-item-container">
+                                    <small>
+                                        <AppIcon name="clock" size={13} />
+                                        {formatInterviewDateTime(interview.scheduledAt)}
+                                    </small>
+                                    <em>{getInterviewTypeLabel(interview.type)}</em>
+                                </div>
                             </article>
                         ))}
                         <AddInterviewButton
@@ -89,7 +105,13 @@ export function DashboardCards({
                     </>
                 )}
             </div>
-            <div className="panel empty-card">
+            <div
+                className={
+                    visibleTasks.length
+                        ? "panel empty-card upcoming-card task-card"
+                        : "panel empty-card"
+                }
+            >
                 <h2>
                     <span>
                         <span className="heading-icon">
@@ -97,19 +119,59 @@ export function DashboardCards({
                         </span>
                         Tasks & Follow-Ups
                     </span>
-                    <button type="button" className="card-link">
+                    <button type="button" className="card-link" onClick={onViewTasks}>
                         View all
                     </button>
                 </h2>
-                <div className="empty-illustration">
-                    <AppIcon name="checklist" size={38} strokeWidth={1.5} />
-                </div>
-                <h3>No tasks yet</h3>
-                <p>Create follow-up tasks and never miss a beat.</p>
-                <button className="secondary small">
-                    <AppIcon name="plus" size={15} />
-                    Create Task
-                </button>
+                {visibleTasks.length ? (
+                    <div className="interview-card-list task-card-list">
+                        {visibleTasks.map((task) => (
+                            <article key={task.id} className="interview-card-item">
+                                <strong>{task.title}</strong>
+                                <span>
+                                    {task.applicationTitle
+                                        ? `${task.applicationTitle} at ${
+                                            task.companyName ?? "Unknown company"
+                                        }`
+                                        : "No linked application"}
+                                </span>
+                                <div className="interview-card-item-container">
+                                    <small>
+                                        <AppIcon name="clock" size={13} />
+                                        {formatTaskDueDate(task.dueDate)}
+                                    </small>
+                                    <em className={getTaskDueState(task)}>
+                                        {getTaskTypeLabel(task.type)}
+                                    </em>
+                                </div>
+                            </article>
+                        ))}
+                        <button
+                            type="button"
+                            className="secondary small"
+                            onClick={onCreateTask}
+                        >
+                            <AppIcon name="plus" size={15} />
+                            Create Task
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        <div className="empty-illustration">
+                            <AppIcon name="checklist" size={38} strokeWidth={1.5} />
+                        </div>
+                        <h3>No tasks yet</h3>
+                        <p>Create follow-up tasks and never miss a beat.</p>
+                        <button
+                            type="button"
+                            className="secondary small"
+                            onClick={onCreateTask}
+                        >
+                            <AppIcon name="plus" size={15} />
+                            Create Task
+                        </button>
+                    </>
+                )}
             </div>
             <div className="panel empty-card">
                 <h2>
@@ -117,7 +179,7 @@ export function DashboardCards({
                         <span className="heading-icon">
                             <AppIcon name="import" size={16} />
                         </span>
-                        Recent Imports
+                        PLACEHOLDER TITLE
                     </span>
                     <button type="button" className="card-link">
                         View all
@@ -126,14 +188,13 @@ export function DashboardCards({
                 <div className="empty-illustration">
                     <AppIcon name="document" size={38} strokeWidth={1.5} />
                 </div>
-                <h3>No imports yet</h3>
+                <h3>PLACEHOLDER TEXT</h3>
                 <p>
-                    Import jobs from LinkedIn, Indeed, Greenhouse, Lever, Workday, and
-                    more.
+                    lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl nec
                 </p>
                 <button className="secondary small" onClick={onImportOpen}>
                     <AppIcon name="import" size={15} />
-                    Import Job
+                    Placeholder Button
                 </button>
             </div>
         </section>

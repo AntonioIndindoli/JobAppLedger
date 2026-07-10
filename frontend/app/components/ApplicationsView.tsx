@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import {
+    countApplicationsByStatus,
     getApplicationTimestamp,
     isApplicationStatus,
 } from "../lib/application-analytics";
@@ -26,6 +27,7 @@ type ApplicationsViewProps = {
     onImportOpen: () => void;
     onRemoveApplication: (id: string) => void;
     onStartEdit: (application: Application) => void;
+    onViewInterview: (interviewId: string) => void;
 };
 
 type ApplicationsTableFilters = {
@@ -115,6 +117,7 @@ export function ApplicationsView({
     onImportOpen,
     onRemoveApplication,
     onStartEdit,
+    onViewInterview,
 }: ApplicationsViewProps) {
     const [filters, setFilters] =
         useState<ApplicationsTableFilters>(INITIAL_FILTERS);
@@ -129,6 +132,18 @@ export function ApplicationsView({
             if (application.source) sources.add(application.source);
         });
         return Array.from(sources).sort((a, b) => a.localeCompare(b));
+    }, [applications]);
+    const applicationStatusSummary = useMemo(() => {
+        const counts = countApplicationsByStatus(applications);
+        const populatedStatuses = STATUSES.filter((status) => counts[status] > 0);
+        const statusesToShow =
+            populatedStatuses.length > 0 ? populatedStatuses : STATUSES;
+
+        return statusesToShow.map((status) => ({
+            status,
+            count: counts[status],
+            label: STATUS_LABELS[status].toLowerCase(),
+        }));
     }, [applications]);
 
     const filteredApplications = useMemo(() => {
@@ -187,6 +202,7 @@ export function ApplicationsView({
         ) ??
         sortedApplications[0] ??
         null;
+    const selectedNotes = selectedApplication?.notes?.trim() ?? "";
     const selectedApplicationIdForInterviews = selectedApplication?.id ?? null;
     const selectedInterviews = selectedApplicationIdForInterviews
         ? sortInterviewsBySchedule(
@@ -235,8 +251,18 @@ export function ApplicationsView({
             <header className="applications-header">
                 <div>
                     <p>Applications</p>
-                    <span>
-                        {sortedApplications.length} of {applications.length} applications shown
+                    <span
+                        className="applications-status-meta"
+                        aria-label="Application totals by status"
+                    >
+                        {applicationStatusSummary.map(({ status, count, label }) => (
+                            <strong
+                                key={status}
+                                className={`applications-status-count ${status.toLowerCase()}`}
+                            >
+                                {count} {label}
+                            </strong>
+                        ))}
                     </span>
                 </div>
                 <div className="applications-actions">
@@ -415,10 +441,14 @@ export function ApplicationsView({
                         <>
                             <header className="application-detail-header">
                                 <div className="application-detail-top-row">
-                                    <span className="application-detail-kicker">
-                                        <AppIcon name="document" size={16} />
-                                        Application details
-                                    </span>
+                                    <div className="application-detail-title-line">
+                                        <h2>{selectedApplication.title}</h2>
+                                        <span
+                                            className={`status-pill ${selectedApplication.status.toLowerCase()}`}
+                                        >
+                                            {getStatusLabel(selectedApplication.status)}
+                                        </span>
+                                    </div>
                                     <div
                                         className="application-detail-header-actions"
                                         aria-label="Application actions"
@@ -445,14 +475,7 @@ export function ApplicationsView({
                                 </div>
                                 <div className="application-detail-title-row">
                                     <div className="application-detail-title-block">
-                                        <div className="application-detail-title-line">
-                                            <h2>{selectedApplication.title}</h2>
-                                            <span
-                                                className={`status-pill ${selectedApplication.status.toLowerCase()}`}
-                                            >
-                                                {getStatusLabel(selectedApplication.status)}
-                                            </span>
-                                        </div>
+
                                         <div className="application-detail-subline">
                                             <span className="company-line">
                                                 {selectedApplication.companyName ||
@@ -482,12 +505,11 @@ export function ApplicationsView({
                                     <section className="application-detail-section application-detail-interviews-section">
                                         <div className="application-detail-section-heading">
                                             <div>
-                                                <h3>Interviews</h3>
-                                                <span>
-                                                    {selectedInterviews.length === 1
-                                                        ? "1 interview"
-                                                        : `${selectedInterviews.length} interviews`}
-                                                </span>
+                                                <div className="interview-detail-section-title">
+                                                    <div className="interview-notes-card-title">
+                                                        <h3>Interviews</h3>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <button
                                                 type="button"
@@ -507,19 +529,18 @@ export function ApplicationsView({
                                                         key={interview.id}
                                                         className="application-interview-item"
                                                     >
-                                                        <span className="application-interview-icon">
-                                                            <AppIcon
-                                                                name="calendar"
-                                                                size={18}
-                                                            />
-                                                        </span>
+
                                                         <div className="application-interview-copy">
                                                             <strong>
                                                                 {getInterviewTypeLabel(
                                                                     interview.type,
                                                                 )}
                                                             </strong>
-                                                            <span>
+                                                            <span >
+                                                                <AppIcon
+                                                                    name="calendar"
+                                                                    size={18}
+                                                                />
                                                                 {formatInterviewDateTime(
                                                                     interview.scheduledAt,
                                                                 )}
@@ -544,6 +565,21 @@ export function ApplicationsView({
                                                                 interview.outcome,
                                                             )}
                                                         </span>
+                                                        <button
+                                                            type="button"
+                                                            className="application-detail-posting-link application-interview-view-link"
+                                                            onClick={() =>
+                                                                onViewInterview(
+                                                                    interview.id,
+                                                                )
+                                                            }
+                                                        >
+                                                            <AppIcon
+                                                                name="view"
+                                                                size={15}
+                                                            />
+                                                            View interview
+                                                        </button>
                                                     </article>
                                                 ))}
                                             </div>
@@ -561,6 +597,16 @@ export function ApplicationsView({
                                                 </div>
                                             </div>
                                         )}
+                                    </section>                            <section className="application-notes-card interview-notes-card">
+                                        <div className="interview-detail-section-title">
+                                            <div className="interview-notes-card-title">
+                                                <h3>Notes</h3>
+                                            </div>
+                                        </div>
+                                        <p className={selectedNotes ? "" : "is-empty"}>
+                                            {selectedNotes ||
+                                                "No notes saved for this application."}
+                                        </p>
                                     </section>
                                 </div>
 
@@ -568,7 +614,6 @@ export function ApplicationsView({
                                     className="application-detail-meta"
                                     aria-label="Application details"
                                 >
-                                    <h3>Details</h3>
                                     <dl className="application-detail-meta-list">
                                         <div className="application-detail-meta-item">
                                             <dt>
@@ -610,13 +655,7 @@ export function ApplicationsView({
                                 </aside>
                             </div>
 
-                            <section className="application-detail-section">
-                                <h3>Notes</h3>
-                                <p>
-                                    {selectedApplication.notes?.trim() ||
-                                        "No notes saved for this application."}
-                                </p>
-                            </section>
+
                         </>
                     ) : (
                         <div className="applications-empty application-detail-empty">

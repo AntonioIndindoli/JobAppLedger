@@ -7,6 +7,8 @@ import type {
     InterviewFormValues,
     InterviewOutcome,
     InterviewType,
+    TaskFormValues,
+    TaskType,
     WeeklyRangeWeeks,
 } from "./types";
 
@@ -76,6 +78,22 @@ export const INTERVIEW_OUTCOME_LABELS: Record<InterviewOutcome, string> = {
     PASSED: "Passed",
     FAILED: "Failed",
     CANCELED: "Canceled",
+};
+
+export const TASK_TYPES = [
+    "FOLLOW_UP",
+    "PREP",
+    "THANK_YOU",
+    "REMINDER",
+    "OTHER",
+] as const;
+
+export const TASK_TYPE_LABELS: Record<TaskType, string> = {
+    FOLLOW_UP: "Follow-Up",
+    PREP: "Prep",
+    THANK_YOU: "Thank-You",
+    REMINDER: "Reminder",
+    OTHER: "Other",
 };
 
 export const SOURCES = [
@@ -153,6 +171,14 @@ export const EMPTY_INTERVIEW_FORM: InterviewFormValues = {
     interviewerName: "",
     notes: "",
     outcome: "SCHEDULED",
+};
+
+export const EMPTY_TASK_FORM: TaskFormValues = {
+    title: "",
+    description: "",
+    applicationId: "",
+    dueDate: "",
+    type: "FOLLOW_UP",
 };
 
 export const EMPTY_IMPORT_CAPTURE: ImportCaptureValues = {

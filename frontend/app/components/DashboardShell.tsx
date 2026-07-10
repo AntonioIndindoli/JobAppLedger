@@ -31,6 +31,7 @@ export function DashboardShell({
         if (label === "Dashboard") return "dashboard";
         if (label === "Applications") return "applications";
         if (label === "Interviews") return "interviews";
+        if (label === "Tasks") return "tasks";
         return null;
     }
 

@@ -31,7 +31,7 @@ export function AddInterviewButton({
         >
             <button
                 type="button"
-                className={className}
+                className={className + " add-interview-action"}
                 onClick={disabled ? undefined : onClick}
                 disabled={disabled}
             >

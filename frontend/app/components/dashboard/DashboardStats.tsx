@@ -3,13 +3,15 @@
 import { MetricIcon } from "../AppIcon";
 import { PipelineSankey } from "./PipelineSankey";
 import { isUpcomingInterview } from "../../lib/interview-utils";
-import type { ActivityLog, Application, Interview } from "../../lib/types";
+import { isTaskNeedingAttention } from "../../lib/task-utils";
+import type { ActivityLog, Application, Interview, Task } from "../../lib/types";
 
 type DashboardStatsProps = {
     activePipeline: number;
     applications: Application[];
     historyByApp: Record<string, ActivityLog[]>;
     interviews: Interview[];
+    tasks: Task[];
 };
 
 export function DashboardStats({
@@ -17,8 +19,10 @@ export function DashboardStats({
     applications,
     historyByApp,
     interviews,
+    tasks,
 }: DashboardStatsProps) {
     const upcomingInterviewCount = interviews.filter(isUpcomingInterview).length;
+    const dueTaskCount = tasks.filter(isTaskNeedingAttention).length;
 
     return (
         <section className="pipeline-stats-container">
@@ -55,7 +59,7 @@ export function DashboardStats({
                     <MetricIcon name="checklist" tone="orange" />
                     <div>
                         <p>Tasks Due</p>
-                        <strong>0</strong>
+                        <strong>{dueTaskCount}</strong>
                         <span>Needs attention</span>
                     </div>
                 </div>

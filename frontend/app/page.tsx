@@ -10,9 +10,12 @@ import { DashboardShell } from "./components/DashboardShell";
 import { ImportDrawer } from "./components/ImportDrawer";
 import { InterviewDrawer } from "./components/InterviewDrawer";
 import { InterviewsView } from "./components/InterviewsView";
+import { TaskDrawer } from "./components/TaskDrawer";
+import { TasksView } from "./components/TasksView";
 import { DashboardHome } from "./components/dashboard/DashboardHome";
 import { countActiveApplications } from "./lib/application-analytics";
 import { toLocalDateTimeInputs } from "./lib/interview-utils";
+import { toTaskDueDateInput, toTaskDueDatePayload } from "./lib/task-utils";
 import {
     ACCESS_TOKEN_KEY,
     API_BASE_URL,
@@ -21,9 +24,11 @@ import {
     EMPTY_IMPORT_CAPTURE,
     EMPTY_INTERVIEW_FORM,
     EMPTY_IMPORT_REVIEW,
+    EMPTY_TASK_FORM,
     INTERVIEW_OUTCOMES,
     INTERVIEW_TYPES,
     STATUSES,
+    TASK_TYPES,
     USER_EMAIL_KEY,
 } from "./lib/constants";
 import type {
@@ -39,6 +44,9 @@ import type {
     InterviewFormValues,
     Mode,
     ParserDebug,
+    Task,
+    TaskAutomationPreferences,
+    TaskFormValues,
     WeeklyRangeWeeks,
 } from "./lib/types";
 
@@ -60,6 +68,7 @@ export default function MainPage() {
     const [message, setMessage] = useState("");
     const [applications, setApplications] = useState<Application[]>([]);
     const [interviews, setInterviews] = useState<Interview[]>([]);
+    const [tasks, setTasks] = useState<Task[]>([]);
     const [form, setForm] = useState<ApplicationFormValues>(EMPTY_APPLICATION_FORM);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isApplicationFormOpen, setIsApplicationFormOpen] = useState(false);
@@ -73,6 +82,15 @@ export default function MainPage() {
     const [interviewErrors, setInterviewErrors] = useState<Record<string, string>>(
         {},
     );
+    const [taskForm, setTaskForm] = useState<TaskFormValues>(EMPTY_TASK_FORM);
+    const [taskEditingId, setTaskEditingId] = useState<string | null>(null);
+    const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+    const [taskErrors, setTaskErrors] = useState<Record<string, string>>({});
+    const [taskPreferences, setTaskPreferences] =
+        useState<TaskAutomationPreferences>({
+            autoCreateFollowUpTasks: false,
+            autoCreateThankYouTasks: false,
+        });
     const [isImportDrawerOpen, setIsImportDrawerOpen] = useState(false);
     const [importStep, setImportStep] = useState<"capture" | "review">("capture");
     const [importCapture, setImportCapture] = useState(EMPTY_IMPORT_CAPTURE);
@@ -94,6 +112,9 @@ export default function MainPage() {
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const [currentView, setCurrentView] = useState<DashboardView>("dashboard");
     const [focusedApplicationId, setFocusedApplicationId] = useState<string | null>(
+        null,
+    );
+    const [focusedInterviewId, setFocusedInterviewId] = useState<string | null>(
         null,
     );
 
@@ -198,6 +219,8 @@ export default function MainPage() {
         if (authStatus === "signedIn" && token) {
             loadApplications(token);
             loadInterviews(token);
+            loadTasks(token);
+            loadTaskAutomationPreferences(token);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authStatus, token]);
@@ -218,6 +241,8 @@ export default function MainPage() {
         setMessage(`Welcome ${data.user.email}`);
         loadApplications(data.accessToken);
         loadInterviews(data.accessToken);
+        loadTasks(data.accessToken);
+        loadTaskAutomationPreferences(data.accessToken);
     }
 
     async function signOut() {
@@ -230,12 +255,19 @@ export default function MainPage() {
         setPassword("");
         setApplications([]);
         setInterviews([]);
+        setTasks([]);
+        setTaskPreferences({
+            autoCreateFollowUpTasks: false,
+            autoCreateThankYouTasks: false,
+        });
         setHistoryByApp({});
         setOpenTimelineId(null);
         resetInterviewForm();
+        resetTaskForm();
         resetImportFlow();
         setIsImportDrawerOpen(false);
         setIsInterviewFormOpen(false);
+        setIsTaskFormOpen(false);
         setIsProfileMenuOpen(false);
         setCurrentView("dashboard");
         setAuthStatus("signedOut");
@@ -283,6 +315,31 @@ export default function MainPage() {
         setInterviews(data.interviews ?? []);
     }
 
+    async function loadTasks(activeToken = token) {
+        if (!activeToken) return;
+        const res = await fetch(`${API_BASE_URL}/tasks`, {
+            headers: { Authorization: `Bearer ${activeToken}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) return setMessage(data.message ?? "Failed loading tasks");
+        setTasks(data.tasks ?? []);
+    }
+
+    async function loadTaskAutomationPreferences(activeToken = token) {
+        if (!activeToken) return;
+        const res = await fetch(`${API_BASE_URL}/tasks/preferences`, {
+            headers: { Authorization: `Bearer ${activeToken}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok)
+            return setMessage(data.message ?? "Failed loading task preferences");
+        setTaskPreferences({
+            autoCreateFollowUpTasks:
+                data.preferences?.autoCreateFollowUpTasks ?? false,
+            autoCreateThankYouTasks: data.preferences?.autoCreateThankYouTasks ?? false,
+        });
+    }
+
     async function loadApplicationHistories(activeToken = token) {
         if (!activeToken) return;
         const res = await fetch(`${API_BASE_URL}/applications/history`, {
@@ -310,6 +367,7 @@ export default function MainPage() {
     function openCreateApplication() {
         resetApplicationForm();
         setIsInterviewFormOpen(false);
+        setIsTaskFormOpen(false);
         setIsImportDrawerOpen(false);
         setIsApplicationFormOpen(true);
     }
@@ -323,6 +381,12 @@ export default function MainPage() {
         setInterviewForm({ ...EMPTY_INTERVIEW_FORM, applicationId });
         setInterviewEditingId(null);
         setInterviewErrors({});
+    }
+
+    function resetTaskForm(applicationId = "") {
+        setTaskForm({ ...EMPTY_TASK_FORM, applicationId });
+        setTaskEditingId(null);
+        setTaskErrors({});
     }
 
     function openCreateInterview(applicationId = "") {
@@ -339,18 +403,49 @@ export default function MainPage() {
 
         resetInterviewForm(selectedApplicationId);
         setIsApplicationFormOpen(false);
+        setIsTaskFormOpen(false);
         setIsImportDrawerOpen(false);
         setIsInterviewFormOpen(true);
     }
 
+    function openCreateTask(applicationId = "") {
+        const selectedApplicationId = applications.some(
+            (application) => application.id === applicationId,
+        )
+            ? applicationId
+            : "";
+
+        resetTaskForm(selectedApplicationId);
+        setIsApplicationFormOpen(false);
+        setIsInterviewFormOpen(false);
+        setIsImportDrawerOpen(false);
+        setIsTaskFormOpen(true);
+    }
+
     function viewApplication(applicationId: string) {
+        setFocusedInterviewId(null);
         setFocusedApplicationId(applicationId);
         setCurrentView("applications");
+    }
+
+    function viewInterview(interviewId: string) {
+        setFocusedInterviewId(interviewId);
+        setCurrentView("interviews");
+    }
+
+    function changeCurrentView(view: DashboardView) {
+        if (view === "interviews") setFocusedInterviewId(null);
+        setCurrentView(view);
     }
 
     function closeInterviewForm() {
         resetInterviewForm();
         setIsInterviewFormOpen(false);
+    }
+
+    function closeTaskForm() {
+        resetTaskForm();
+        setIsTaskFormOpen(false);
     }
 
     function resetImportFlow() {
@@ -368,6 +463,7 @@ export default function MainPage() {
         resetImportFlow();
         setIsApplicationFormOpen(false);
         setIsInterviewFormOpen(false);
+        setIsTaskFormOpen(false);
         setIsImportDrawerOpen(true);
     }
 
@@ -491,6 +587,32 @@ export default function MainPage() {
         return Object.keys(errors).length === 0;
     }
 
+    function validateTaskForm() {
+        const errors: Record<string, string> = {};
+        if (!taskForm.title.trim()) errors.title = "Task title is required.";
+
+        if (
+            taskForm.applicationId &&
+            !applications.some(
+                (application) => application.id === taskForm.applicationId,
+            )
+        ) {
+            errors.applicationId = "Choose a valid application.";
+        }
+
+        if (!TASK_TYPES.includes(taskForm.type as (typeof TASK_TYPES)[number]))
+            errors.type = "Choose a valid task type.";
+
+        if (taskForm.dueDate) {
+            const dueDate = new Date(`${taskForm.dueDate}T12:00:00`);
+            if (Number.isNaN(dueDate.getTime()))
+                errors.dueDate = "Choose a valid due date.";
+        }
+
+        setTaskErrors(errors);
+        return Object.keys(errors).length === 0;
+    }
+
     function buildInterviewPayload() {
         const scheduledAt = new Date(
             `${interviewForm.scheduledDate}T${interviewForm.scheduledTime}:00`,
@@ -508,6 +630,16 @@ export default function MainPage() {
             interviewerName: interviewForm.interviewerName,
             notes: interviewForm.notes,
             outcome: interviewForm.outcome,
+        };
+    }
+
+    function buildTaskPayload() {
+        return {
+            title: taskForm.title,
+            description: taskForm.description,
+            applicationId: taskForm.applicationId || null,
+            dueDate: toTaskDueDatePayload(taskForm.dueDate),
+            type: taskForm.type,
         };
     }
 
@@ -624,6 +756,7 @@ export default function MainPage() {
         closeImportDrawer();
         setMessage("Imported job saved.");
         loadApplications();
+        loadTasks();
     }
 
     async function saveApplication(event: FormEvent) {
@@ -648,6 +781,7 @@ export default function MainPage() {
         setIsApplicationFormOpen(false);
         setMessage(wasEditing ? "Application updated." : "Application saved.");
         loadApplications();
+        loadTasks();
     }
 
     async function saveInterview(event: FormEvent) {
@@ -670,6 +804,60 @@ export default function MainPage() {
         setMessage(wasEditing ? "Interview updated." : "Interview saved.");
         loadInterviews();
         loadApplications();
+        loadTasks();
+    }
+
+    async function saveTask(event: FormEvent) {
+        event.preventDefault();
+        if (!validateTaskForm()) return;
+
+        const wasEditing = Boolean(taskEditingId);
+        const method = taskEditingId ? "PATCH" : "POST";
+        const url = taskEditingId ? `/tasks/${taskEditingId}` : "/tasks";
+        const res = await authedFetch(url, {
+            method,
+            body: JSON.stringify(buildTaskPayload()),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) return setMessage(data.message ?? "Task save failed");
+
+        closeTaskForm();
+        setMessage(wasEditing ? "Task updated." : "Task saved.");
+        loadTasks();
+        if (data.task?.applicationId) loadHistory(data.task.applicationId);
+    }
+
+    async function completeTask(id: string) {
+        const res = await authedFetch(`/tasks/${id}/complete`, { method: "PATCH" });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) return setMessage(data.message ?? "Task completion failed");
+
+        setTasks((prev) => prev.map((task) => (task.id === id ? data.task : task)));
+        setMessage("Task completed.");
+        if (data.task?.applicationId) loadHistory(data.task.applicationId);
+    }
+
+    async function updateTaskAutomationPreferences(
+        nextPreferences: Partial<TaskAutomationPreferences>,
+    ) {
+        const previousPreferences = taskPreferences;
+        setTaskPreferences((current) => ({ ...current, ...nextPreferences }));
+        const res = await authedFetch("/tasks/preferences", {
+            method: "PATCH",
+            body: JSON.stringify(nextPreferences),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            setTaskPreferences(previousPreferences);
+            return setMessage(data.message ?? "Task preference update failed");
+        }
+
+        setTaskPreferences({
+            autoCreateFollowUpTasks:
+                data.preferences?.autoCreateFollowUpTasks ?? false,
+            autoCreateThankYouTasks:
+                data.preferences?.autoCreateThankYouTasks ?? false,
+        });
     }
 
     async function transitionStatus(id: string, nextStatus: string) {
@@ -690,6 +878,7 @@ export default function MainPage() {
             prev.map((app) => (app.id === id ? data.application : app)),
         );
         loadHistory(id);
+        loadTasks();
     }
 
     async function removeApplication(id: string) {
@@ -698,6 +887,7 @@ export default function MainPage() {
         if (editingId === id) closeApplicationForm();
         loadApplications();
         loadInterviews();
+        loadTasks();
     }
 
     async function removeInterview(id: string) {
@@ -706,6 +896,14 @@ export default function MainPage() {
         if (interviewEditingId === id) closeInterviewForm();
         setInterviews((prev) => prev.filter((interview) => interview.id !== id));
         setMessage("Interview deleted.");
+    }
+
+    async function removeTask(id: string) {
+        const res = await authedFetch(`/tasks/${id}`, { method: "DELETE" });
+        if (!res.ok) return setMessage("Task delete failed");
+        if (taskEditingId === id) closeTaskForm();
+        setTasks((prev) => prev.filter((task) => task.id !== id));
+        setMessage("Task deleted.");
     }
 
     function startEdit(app: Application) {
@@ -725,6 +923,7 @@ export default function MainPage() {
             dateApplied: app.dateApplied ? app.dateApplied.slice(0, 10) : "",
         });
         setIsInterviewFormOpen(false);
+        setIsTaskFormOpen(false);
         setIsImportDrawerOpen(false);
         setIsApplicationFormOpen(true);
     }
@@ -751,8 +950,25 @@ export default function MainPage() {
             outcome: interview.outcome,
         });
         setIsApplicationFormOpen(false);
+        setIsTaskFormOpen(false);
         setIsImportDrawerOpen(false);
         setIsInterviewFormOpen(true);
+    }
+
+    function startEditTask(task: Task) {
+        setTaskEditingId(task.id);
+        setTaskErrors({});
+        setTaskForm({
+            title: task.title,
+            description: task.description ?? "",
+            applicationId: task.applicationId ?? "",
+            dueDate: toTaskDueDateInput(task.dueDate),
+            type: task.type,
+        });
+        setIsApplicationFormOpen(false);
+        setIsInterviewFormOpen(false);
+        setIsImportDrawerOpen(false);
+        setIsTaskFormOpen(true);
     }
 
     async function toggleTimeline(id: string) {
@@ -781,7 +997,7 @@ export default function MainPage() {
             currentView={currentView}
             firstName={firstName}
             isProfileMenuOpen={isProfileMenuOpen}
-            onCurrentViewChange={setCurrentView}
+            onCurrentViewChange={changeCurrentView}
             onImportOpen={openImportDrawer}
             onProfileMenuChange={setIsProfileMenuOpen}
             onSignOut={signOut}
@@ -805,14 +1021,30 @@ export default function MainPage() {
                     onImportOpen={openImportDrawer}
                     onRemoveApplication={removeApplication}
                     onStartEdit={startEdit}
+                    onViewInterview={viewInterview}
                 />
             ) : currentView === "interviews" ? (
                 <InterviewsView
+                    key={focusedInterviewId ?? "all-interviews"}
                     applications={applications}
+                    focusedInterviewId={focusedInterviewId}
                     interviews={interviews}
                     onCreateInterview={() => openCreateInterview()}
                     onRemoveInterview={removeInterview}
                     onStartEdit={startEditInterview}
+                    onViewApplication={viewApplication}
+                />
+            ) : currentView === "tasks" ? (
+                <TasksView
+                    applications={applications}
+                    preferences={taskPreferences}
+                    tasks={tasks}
+                    onCompleteTask={completeTask}
+                    onCreateTask={openCreateTask}
+                    onPreferenceChange={updateTaskAutomationPreferences}
+                    onRemoveTask={removeTask}
+                    onStartEdit={startEditTask}
+                    onViewApplication={viewApplication}
                 />
             ) : (
                 <DashboardHome
@@ -823,10 +1055,12 @@ export default function MainPage() {
                     historyByApp={historyByApp}
                     interviews={interviews}
                     openTimelineId={openTimelineId}
+                    tasks={tasks}
                     weeklyRangeWeeks={weeklyRangeWeeks}
                     onApplyTrackerFilters={() => setAppliedTrackerFilters(filters)}
                     onCreateApplication={openCreateApplication}
                     onCreateInterview={openCreateInterview}
+                    onCreateTask={() => openCreateTask()}
                     onFiltersChange={setFilters}
                     onImportOpen={openImportDrawer}
                     onRemoveApplication={removeApplication}
@@ -834,7 +1068,8 @@ export default function MainPage() {
                     onToggleTimeline={toggleTimeline}
                     onTransitionStatus={transitionStatus}
                     onViewApplication={viewApplication}
-                    onViewInterviews={() => setCurrentView("interviews")}
+                    onViewInterviews={() => changeCurrentView("interviews")}
+                    onViewTasks={() => changeCurrentView("tasks")}
                     onWeeklyRangeChange={setWeeklyRangeWeeks}
                 />
             )}
@@ -862,6 +1097,19 @@ export default function MainPage() {
                     onFormChange={setInterviewForm}
                     onRemoveInterview={removeInterview}
                     onSubmit={saveInterview}
+                />
+            )}
+
+            {isTaskFormOpen && (
+                <TaskDrawer
+                    applications={applications}
+                    editingId={taskEditingId}
+                    form={taskForm}
+                    formErrors={taskErrors}
+                    onClose={closeTaskForm}
+                    onFormChange={setTaskForm}
+                    onRemoveTask={removeTask}
+                    onSubmit={saveTask}
                 />
             )}
 

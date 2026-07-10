@@ -15,6 +15,7 @@ import type {
     Application,
     ApplicationFilters,
     Interview,
+    Task,
     WeeklyRangeWeeks,
 } from "../../lib/types";
 import { ApplicationTracker } from "./ApplicationTracker";
@@ -31,10 +32,12 @@ type DashboardHomeProps = {
     historyByApp: Record<string, ActivityLog[]>;
     interviews: Interview[];
     openTimelineId: string | null;
+    tasks: Task[];
     weeklyRangeWeeks: WeeklyRangeWeeks;
     onApplyTrackerFilters: () => void;
     onCreateApplication: () => void;
     onCreateInterview: (applicationId?: string) => void;
+    onCreateTask: () => void;
     onFiltersChange: (filters: ApplicationFilters) => void;
     onImportOpen: () => void;
     onRemoveApplication: (id: string) => void;
@@ -43,6 +46,7 @@ type DashboardHomeProps = {
     onTransitionStatus: (id: string, nextStatus: string) => void | Promise<void>;
     onViewApplication: (id: string) => void;
     onViewInterviews: () => void;
+    onViewTasks: () => void;
     onWeeklyRangeChange: (weeks: WeeklyRangeWeeks) => void;
 };
 
@@ -54,10 +58,12 @@ export function DashboardHome({
     historyByApp,
     interviews,
     openTimelineId,
+    tasks,
     weeklyRangeWeeks,
     onApplyTrackerFilters,
     onCreateApplication,
     onCreateInterview,
+    onCreateTask,
     onFiltersChange,
     onImportOpen,
     onRemoveApplication,
@@ -66,6 +72,7 @@ export function DashboardHome({
     onTransitionStatus,
     onViewApplication,
     onViewInterviews,
+    onViewTasks,
     onWeeklyRangeChange,
 }: DashboardHomeProps) {
     const trackerApplications = useMemo(
@@ -98,6 +105,7 @@ export function DashboardHome({
                 applications={applications}
                 historyByApp={historyByApp}
                 interviews={interviews}
+                tasks={tasks}
             />
             <ApplicationTracker
                 applications={applications}
@@ -119,10 +127,13 @@ export function DashboardHome({
             />
             <DashboardCards
                 canCreateInterview={applications.length > 0}
+                tasks={tasks}
                 upcomingInterviews={upcomingInterviews}
                 onCreateInterview={() => onCreateInterview()}
+                onCreateTask={onCreateTask}
                 onImportOpen={onImportOpen}
                 onViewInterviews={onViewInterviews}
+                onViewTasks={onViewTasks}
             />
             <section className="analytics-grid">
                 <SourceBreakdown applications={applications} />

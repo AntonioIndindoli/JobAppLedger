@@ -7,7 +7,6 @@ import {
     getInterviewTimestamp,
     getInterviewTypeLabel,
     formatInterviewDuration,
-    sortInterviewsBySchedule,
 } from "../lib/interview-utils";
 import { INTERVIEW_OUTCOMES, INTERVIEW_TYPES } from "../lib/constants";
 import type { Application, Interview } from "../lib/types";
@@ -16,10 +15,12 @@ import { AppIcon } from "./AppIcon";
 
 type InterviewsViewProps = {
     applications: Application[];
+    focusedInterviewId?: string | null;
     interviews: Interview[];
     onCreateInterview: () => void;
     onRemoveInterview: (id: string) => void;
     onStartEdit: (interview: Interview) => void;
+    onViewApplication: (id: string) => void;
 };
 
 type InterviewFilters = {
@@ -53,10 +54,6 @@ function getSearchableInterviewText(interview: Interview) {
         .toLowerCase();
 }
 
-function pluralize(count: number, singular: string, plural = `${singular}s`) {
-    return count === 1 ? singular : plural;
-}
-
 function getValidInterviewDate(value: string) {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? null : date;
@@ -84,20 +81,6 @@ function formatInterviewTimeLabel(value: string) {
     }).format(date);
 }
 
-function getCurrentWeekRange(referenceTime: number) {
-    const start = new Date(referenceTime);
-    start.setHours(0, 0, 0, 0);
-    start.setDate(start.getDate() - start.getDay());
-
-    const end = new Date(start);
-    end.setDate(start.getDate() + 7);
-
-    return {
-        startTime: start.getTime(),
-        endTime: end.getTime(),
-    };
-}
-
 function hasInterviewLocation(interview: Interview) {
     return Boolean(interview.location?.trim() || interview.meetingUrl?.trim());
 }
@@ -107,15 +90,6 @@ function getInterviewLocationLabel(interview: Interview) {
     if (location) return location;
     if (interview.meetingUrl?.trim()) return "Meeting link saved";
     return "Not set";
-}
-
-function getPrepIssues(interview: Interview) {
-    const issues: string[] = [];
-
-    if (!interview.interviewerName?.trim()) issues.push("Missing interviewer");
-    if (!hasInterviewLocation(interview)) issues.push("Missing location");
-
-    return issues;
 }
 
 function getSortValue(interview: Interview, sortKey: SortKey) {
@@ -129,18 +103,19 @@ function getSortValue(interview: Interview, sortKey: SortKey) {
 
 export function InterviewsView({
     applications,
+    focusedInterviewId,
     interviews,
     onCreateInterview,
     onRemoveInterview,
     onStartEdit,
+    onViewApplication,
 }: InterviewsViewProps) {
     const [filters, setFilters] = useState<InterviewFilters>(INITIAL_FILTERS);
     const [sortKey, setSortKey] = useState<SortKey>("scheduledAt");
     const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
     const [selectedInterviewId, setSelectedInterviewId] = useState<string | null>(
-        null,
+        focusedInterviewId ?? null,
     );
-    const [nowTime] = useState(() => Date.now());
     const canCreateInterview = applications.length > 0;
 
     const filteredInterviews = useMemo(() => {
@@ -174,9 +149,6 @@ export function InterviewsView({
         sortedInterviews.find((interview) => interview.id === selectedInterviewId) ??
         sortedInterviews[0] ??
         null;
-    const selectedPrepIssues = selectedInterview
-        ? getPrepIssues(selectedInterview)
-        : [];
     const selectedInterviewerName =
         selectedInterview?.interviewerName?.trim() ?? "";
     const selectedMeetingUrl = selectedInterview?.meetingUrl?.trim() ?? "";
@@ -186,47 +158,29 @@ export function InterviewsView({
         ? hasInterviewLocation(selectedInterview)
         : false;
 
-    const upcomingInterviews = useMemo(
-        () =>
-            sortInterviewsBySchedule(
-                interviews.filter(
-                    (interview) =>
-                        interview.outcome === "SCHEDULED" &&
-                        getInterviewTimestamp(interview) >= nowTime,
-                ),
-                "asc",
-            ),
-        [interviews, nowTime],
-    );
+    const interviewStatusSummary = useMemo(() => {
+        const counts = Object.fromEntries(
+            INTERVIEW_OUTCOMES.map((outcome) => [outcome, 0]),
+        ) as Record<(typeof INTERVIEW_OUTCOMES)[number], number>;
 
-    const upcomingNextSevenDaysCount = useMemo(() => {
-        const sevenDaysFromNow = nowTime + 7 * 24 * 60 * 60 * 1000;
+        interviews.forEach((interview) => {
+            if ((INTERVIEW_OUTCOMES as readonly string[]).includes(interview.outcome)) {
+                counts[interview.outcome as keyof typeof counts] += 1;
+            }
+        });
 
-        return interviews.filter((interview) => {
-            const scheduledTime = getInterviewTimestamp(interview);
-            return (
-                interview.outcome === "SCHEDULED" &&
-                scheduledTime >= nowTime &&
-                scheduledTime <= sevenDaysFromNow
-            );
-        }).length;
-    }, [interviews, nowTime]);
+        const populatedOutcomes = INTERVIEW_OUTCOMES.filter(
+            (outcome) => counts[outcome] > 0,
+        );
+        const outcomesToShow =
+            populatedOutcomes.length > 0 ? populatedOutcomes : INTERVIEW_OUTCOMES;
 
-    const thisWeekCount = useMemo(() => {
-        const { startTime, endTime } = getCurrentWeekRange(nowTime);
-
-        return interviews.filter((interview) => {
-            const scheduledTime = getInterviewTimestamp(interview);
-            return scheduledTime >= startTime && scheduledTime < endTime;
-        }).length;
-    }, [interviews, nowTime]);
-
-    const missingDetailsCount = useMemo(
-        () =>
-            interviews.filter((interview) => getPrepIssues(interview).length > 0)
-                .length,
-        [interviews],
-    );
+        return outcomesToShow.map((outcome) => ({
+            outcome,
+            count: counts[outcome],
+            label: getInterviewOutcomeLabel(outcome).toLowerCase(),
+        }));
+    }, [interviews]);
 
     const hasActiveFilters = Object.values(filters).some(Boolean);
 
@@ -268,22 +222,18 @@ export function InterviewsView({
             <header className="applications-header">
                 <div>
                     <p>Interviews</p>
-                    <span className="interviews-header-meta">
-                        {upcomingInterviews.length}{" "}
-                        {pluralize(
-                            upcomingInterviews.length,
-                            "upcoming interview",
-                            "upcoming interviews",
-                        )}
-                        <span aria-hidden="true">&bull;</span>
-                        <strong className={missingDetailsCount ? "attention" : ""}>
-                            {missingDetailsCount}{" "}
-                            {pluralize(
-                                missingDetailsCount,
-                                "interview missing details",
-                                "interviews missing details",
-                            )}
-                        </strong>
+                    <span
+                        className="interviews-header-meta"
+                        aria-label="Interview totals by status"
+                    >
+                        {interviewStatusSummary.map(({ outcome, count, label }) => (
+                            <strong
+                                key={outcome}
+                                className={`interviews-status-count ${outcome.toLowerCase()}`}
+                            >
+                                {count} {label}
+                            </strong>
+                        ))}
                     </span>
                 </div>
                 <div className="applications-actions">
@@ -294,39 +244,6 @@ export function InterviewsView({
                     />
                 </div>
             </header>
-
-            <div className="interview-stats-grid" aria-label="Interview summary">
-                <article className="interview-stat-card">
-                    <span className="interview-stat-icon">
-                        <AppIcon name="calendar" size={30} strokeWidth={1.75} />
-                    </span>
-                    <div>
-                        <span>Upcoming</span>
-                        <strong>{upcomingNextSevenDaysCount}</strong>
-                        <em>Next 7 days</em>
-                    </div>
-                </article>
-                <article className="interview-stat-card purple">
-                    <span className="interview-stat-icon">
-                        <AppIcon name="calendar" size={30} strokeWidth={1.75} />
-                    </span>
-                    <div>
-                        <span>This week</span>
-                        <strong>{thisWeekCount}</strong>
-                        <em>Interviews this week</em>
-                    </div>
-                </article>
-                <article className="interview-stat-card orange">
-                    <span className="interview-stat-icon">
-                        <AppIcon name="warning" size={31} strokeWidth={1.75} />
-                    </span>
-                    <div>
-                        <span>Missing details</span>
-                        <strong>{missingDetailsCount}</strong>
-                        <em>Need your attention</em>
-                    </div>
-                </article>
-            </div>
 
             <div
                 className="interviews-control-panel"
@@ -379,7 +296,6 @@ export function InterviewsView({
                     type="button"
                     className="interviews-reset-button"
                     onClick={() => setFilters(INITIAL_FILTERS)}
-                    disabled={!hasActiveFilters}
                 >
                     <AppIcon name="history" size={15} />
                     Reset
@@ -482,13 +398,6 @@ export function InterviewsView({
                             />
                         </div>
                     )}
-
-                    {sortedInterviews.length > 0 && (
-                        <div className="interviews-list-footer">
-                            Showing {sortedInterviews.length} of {interviews.length}{" "}
-                            {pluralize(interviews.length, "interview")}
-                        </div>
-                    )}
                 </aside>
 
                 <aside
@@ -499,10 +408,17 @@ export function InterviewsView({
                         <>
                             <header className="application-detail-header interview-detail-header">
                                 <div className="application-detail-top-row">
-                                    <span className="application-detail-kicker">
-                                        <AppIcon name="calendar" size={16} />
-                                        Interview details
-                                    </span>
+                                    <div className="application-detail-title-line">
+                                        <h2>
+                                            {selectedInterview.applicationTitle ??
+                                                "Unknown role"}
+                                        </h2>
+                                        <span
+                                            className={`status-pill ${selectedInterview.outcome.toLowerCase()}`}
+                                        >
+                                            {getInterviewTypeLabel(selectedInterview.type,) == "Other" ? "" : getInterviewTypeLabel(selectedInterview.type,)} {getInterviewTypeLabel(selectedInterview.type,) == "Other" ? "" : "-"} {getInterviewOutcomeLabel(selectedInterview.outcome,)}
+                                        </span>
+                                    </div>
                                     <div
                                         className="application-detail-header-actions"
                                         aria-label="Interview actions"
@@ -529,29 +445,26 @@ export function InterviewsView({
                                 </div>
                                 <div className="application-detail-title-row">
                                     <div className="application-detail-title-block">
-                                        <div className="application-detail-title-line">
-                                            <h2>
-                                                {selectedInterview.applicationTitle ??
-                                                    "Unknown role"}
-                                            </h2>
-                                            <span
-                                                className={`status-pill ${selectedInterview.outcome.toLowerCase()}`}
-                                            >
-                                                {getInterviewOutcomeLabel(
-                                                    selectedInterview.outcome,
-                                                )}
-                                            </span>
-                                        </div>
                                         <div className="application-detail-subline">
                                             <span className="company-line">
                                                 {selectedInterview.companyName ??
                                                     "Unknown company"}
                                             </span>
-                                            <span className="interview-stage-line">
-                                                {getInterviewTypeLabel(
-                                                    selectedInterview.type,
-                                                )}
-                                            </span>
+                                            <button
+                                                type="button"
+                                                className="application-detail-posting-link"
+                                                onClick={() =>
+                                                    onViewApplication(
+                                                        selectedInterview.applicationId,
+                                                    )
+                                                }
+                                            >
+                                                <AppIcon
+                                                    name="applications"
+                                                    size={15}
+                                                />
+                                                View application
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -653,18 +566,10 @@ export function InterviewsView({
                                 </dl>
 
                                 <div className="interview-detail-content-grid">
-                                    <section className="interview-detail-section-card interview-notes-card">
+                                    <section className="interview-notes-card">
                                         <div className="interview-detail-section-title">
-                                            <span className="interview-detail-section-icon">
-                                                <AppIcon name="document" size={18} />
-                                            </span>
-                                            <div>
+                                            <div className="interview-notes-card-title">
                                                 <h3>Notes</h3>
-                                                <span>
-                                                    {selectedNotes
-                                                        ? "Saved notes"
-                                                        : "No notes yet"}
-                                                </span>
                                             </div>
                                         </div>
                                         <p className={selectedNotes ? "" : "is-empty"}>
