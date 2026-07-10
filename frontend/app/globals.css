@@ -464,7 +464,7 @@ button {
 
 .pipeline-stats-container .stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+    gap: 12px;
     margin: 0;
 }
 
@@ -484,6 +484,62 @@ button {
     border: 1px solid var(--border);
     border-radius: 11px;
     box-shadow: 0 10px 26px rgba(31, 60, 100, .035);
+}
+
+.stats-panel {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    overflow: hidden;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 10px 26px rgba(31, 60, 100, .035);
+}
+
+.stats-panel h2 {
+    margin: 0;
+    padding: 18px 20px 8px;
+    color: #111827;
+    font-size: 16px;
+    line-height: 1.2;
+    font-weight: 800;
+}
+
+.stats-panel .stat-grid {
+    align-content: start;
+    padding: 10px 20px 16px;
+}
+
+.stats-panel .stat-card {
+    min-height: 74px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 13px 13px 16px;
+    border-radius: 8px;
+    background: #fbfdff;
+    box-shadow: none;
+}
+
+.stats-panel .stat-card p {
+    margin: 0 0 6px;
+    color: #53617b;
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.stats-panel .stat-card strong {
+    color: #111827;
+    font-size: 21px;
+    line-height: 1;
+}
+
+.stats-panel .metric-icon {
+    width: 39px;
+    height: 39px;
+    border-radius: 9px;
 }
 
 .stat-card p {
@@ -547,6 +603,59 @@ button {
     box-shadow: inset 0 0 0 1px rgba(255, 122, 0, .12);
 }
 
+.metric-icon.slate {
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, .86), rgba(255, 255, 255, .42)),
+        #eef3f8;
+    color: #64748b;
+    box-shadow: inset 0 0 0 1px rgba(100, 116, 139, .14);
+}
+
+.weekly-goal-summary {
+    padding: 17px 20px 20px;
+    border-top: 1px solid var(--border);
+}
+
+.weekly-goal-summary h3 {
+    margin: 0;
+    color: #14213d;
+    font-size: 15px;
+    line-height: 1.2;
+    font-weight: 800;
+}
+
+.weekly-goal-copy {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 13px;
+    color: #53617b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.weekly-goal-copy strong {
+    flex: 0 0 auto;
+    color: #14213d;
+    font-size: 13px;
+}
+
+.weekly-goal-bar {
+    height: 12px;
+    margin-top: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e7edf7;
+}
+
+.weekly-goal-bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--blue);
+}
+
 .notice {
     margin: 12px 42px 0 38px;
     padding: 10px 14px;
@@ -565,6 +674,7 @@ button {
 }
 
 .tracker-panel {
+    height: 1fr;
     position: relative;
     padding: 16px;
 }

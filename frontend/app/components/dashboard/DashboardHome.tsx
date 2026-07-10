@@ -120,18 +120,6 @@ export function DashboardHome({
                 onTransitionStatus={onTransitionStatus}
                 onViewApplication={onViewApplication}
             />
-            <DashboardCards
-                applications={applications}
-                canCreateInterview={applications.length > 0}
-                tasks={tasks}
-                upcomingInterviews={upcomingInterviews}
-                onCreateApplication={onCreateApplication}
-                onCreateInterview={() => onCreateInterview()}
-                onCreateTask={onCreateTask}
-                onViewApplications={onViewApplications}
-                onViewInterviews={onViewInterviews}
-                onViewTasks={onViewTasks}
-            />
         </>
     );
 }

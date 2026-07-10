@@ -204,4 +204,4 @@ export type AppIconName =
     | "view"
     | "warning";
 
-export type IconTone = "blue" | "green" | "purple" | "orange";
+export type IconTone = "blue" | "green" | "purple" | "orange" | "slate";
