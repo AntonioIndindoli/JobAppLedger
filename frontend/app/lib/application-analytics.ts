@@ -4,12 +4,53 @@ import {
     STATUSES,
 } from "./constants";
 import type {
+    ActivityLog,
     Application,
     ApplicationFilters,
     ApplicationStatus,
+    AppIconName,
     DashboardStatus,
+    IconTone,
+    Interview,
     WeeklyRangeWeeks,
 } from "./types";
+
+const ANALYTICS_PERIOD_DAYS = 30;
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const ACTIVE_APPLICATION_STATUSES = new Set(["APPLIED", "INTERVIEWING", "OFFER"]);
+const SUBMITTED_APPLICATION_STATUSES = new Set([
+    "APPLIED",
+    "INTERVIEWING",
+    "OFFER",
+    "REJECTED",
+    "WITHDRAWN",
+]);
+const RESPONSE_STATUSES = new Set([
+    "INTERVIEWING",
+    "OFFER",
+    "REJECTED",
+    "WITHDRAWN",
+]);
+const INTERVIEW_STATUSES = new Set(["INTERVIEWING", "OFFER"]);
+const OFFER_STATUSES = new Set(["OFFER"]);
+const PIPELINE_STATUSES = [
+    "APPLIED",
+    "INTERVIEWING",
+    "OFFER",
+    "REJECTED",
+    "WITHDRAWN",
+] as const;
+
+type PipelineStatus = Exclude<ApplicationStatus, "SAVED">;
+export type ApplicationPipelineNode = PipelineStatus | "NO_RESPONSE";
+
+export type AnalyticsKpiCard = {
+    label: string;
+    value: string | number;
+    comparison: string;
+    icon: AppIconName;
+    tone?: IconTone;
+};
 
 export function normalizeSource(source: string | null) {
     if (!source) return null;
@@ -28,6 +69,362 @@ function getStartOfWeek(date: Date) {
     weekStart.setHours(0, 0, 0, 0);
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     return weekStart;
+}
+
+function getMetadataObject(metadata: ActivityLog["metadata"]) {
+    if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+        return null;
+    }
+
+    return metadata as Record<string, unknown>;
+}
+
+function sortHistoryChronologically(history: ActivityLog[]) {
+    return [...history].sort(
+        (first, second) =>
+            new Date(first.createdAt).getTime() - new Date(second.createdAt).getTime(),
+    );
+}
+
+function getStatusValue(status: unknown) {
+    return typeof status === "string" && isApplicationStatus(status) ? status : null;
+}
+
+function isPipelineStatus(status: string): status is PipelineStatus {
+    return (
+        isApplicationStatus(status) &&
+        (PIPELINE_STATUSES as readonly string[]).includes(status)
+    );
+}
+
+function appendStatus(
+    sequence: ApplicationStatus[],
+    status: ApplicationStatus | null,
+) {
+    if (!status || sequence.at(-1) === status) return;
+    sequence.push(status);
+}
+
+function getStatusChange(entry: ActivityLog) {
+    if (entry.type !== "STATUS_CHANGED") return null;
+    const metadata = getMetadataObject(entry.metadata);
+    if (!metadata) return null;
+
+    const from = getStatusValue(metadata.from);
+    const to = getStatusValue(metadata.to);
+    if (!from || !to) return null;
+
+    return { from, to };
+}
+
+function getCreatedStatus(history: ActivityLog[]) {
+    const createdEntry = history.find((entry) => entry.type === "APPLICATION_CREATED");
+    const metadata = getMetadataObject(createdEntry?.metadata ?? null);
+    return getStatusValue(metadata?.status);
+}
+
+export function buildApplicationPipelinePath(
+    application: Application,
+    history: ActivityLog[] = [],
+): ApplicationPipelineNode[] {
+    const currentStatus = getStatusValue(application.status);
+    if (!currentStatus || !isPipelineStatus(currentStatus)) return [];
+
+    const chronologicalHistory = sortHistoryChronologically(history);
+    const observedStatuses: ApplicationStatus[] = [];
+    chronologicalHistory.forEach((entry) => {
+        const statusChange = getStatusChange(entry);
+        if (!statusChange) return;
+        appendStatus(observedStatuses, statusChange.from);
+        appendStatus(observedStatuses, statusChange.to);
+    });
+
+    if (!observedStatuses.length) {
+        appendStatus(observedStatuses, getCreatedStatus(chronologicalHistory));
+    }
+    appendStatus(observedStatuses, currentStatus);
+
+    const reachedInterview =
+        currentStatus === "INTERVIEWING" ||
+        currentStatus === "OFFER" ||
+        observedStatuses.some(
+            (status) => status === "INTERVIEWING" || status === "OFFER",
+        );
+
+    if (currentStatus === "APPLIED") return ["APPLIED", "NO_RESPONSE"];
+
+    if (currentStatus === "INTERVIEWING") {
+        return ["APPLIED", "INTERVIEWING"];
+    }
+
+    if (currentStatus === "OFFER") {
+        return ["APPLIED", "INTERVIEWING", "OFFER"];
+    }
+
+    if (currentStatus === "REJECTED") {
+        return reachedInterview
+            ? ["APPLIED", "INTERVIEWING", "REJECTED"]
+            : ["APPLIED", "REJECTED"];
+    }
+
+    return reachedInterview
+        ? ["APPLIED", "INTERVIEWING", "WITHDRAWN"]
+        : ["APPLIED", "WITHDRAWN"];
+}
+
+function applicationReachedStatus(
+    application: Application,
+    history: ActivityLog[],
+    statuses: Set<string>,
+) {
+    const path = buildApplicationPipelinePath(application, history);
+    return path.some((status) => statuses.has(status));
+}
+
+function getApplicationStatusAt(
+    application: Application,
+    history: ActivityLog[],
+    timestamp: number,
+) {
+    if (new Date(application.createdAt).getTime() > timestamp) return null;
+
+    const chronologicalHistory = sortHistoryChronologically(history);
+    const createdEntry = chronologicalHistory.find(
+        (entry) => entry.type === "APPLICATION_CREATED",
+    );
+    const createdMetadata = getMetadataObject(createdEntry?.metadata ?? null);
+    let status = getStatusValue(createdMetadata?.status) ?? application.status;
+
+    chronologicalHistory.forEach((entry) => {
+        const entryTime = new Date(entry.createdAt).getTime();
+        if (entryTime > timestamp || entry.type !== "STATUS_CHANGED") return;
+
+        const metadata = getMetadataObject(entry.metadata);
+        status = getStatusValue(metadata?.to) ?? status;
+    });
+
+    return status;
+}
+
+function countActiveApplicationsAt(
+    applications: Application[],
+    historyByApp: Record<string, ActivityLog[]>,
+    date: Date,
+) {
+    const timestamp = date.getTime();
+
+    return applications.filter((application) => {
+        const status = getApplicationStatusAt(
+            application,
+            historyByApp[application.id] ?? [],
+            timestamp,
+        );
+        return Boolean(status && ACTIVE_APPLICATION_STATUSES.has(status));
+    }).length;
+}
+
+function getDateRange(end: Date, days: number) {
+    const rangeEnd = new Date(end);
+    const rangeStart = new Date(rangeEnd);
+    rangeStart.setDate(rangeStart.getDate() - days);
+    return { start: rangeStart, end: rangeEnd };
+}
+
+function isTimestampInRange(timestamp: number, start: Date, end: Date) {
+    return timestamp >= start.getTime() && timestamp < end.getTime();
+}
+
+function getApplicationsInRange(
+    applications: Application[],
+    start: Date,
+    end: Date,
+) {
+    return applications.filter((application) =>
+        isTimestampInRange(getApplicationTimestamp(application), start, end),
+    );
+}
+
+function calculateRate(count: number, total: number) {
+    if (!total) return 0;
+    return Math.round((count / total) * 100);
+}
+
+function formatComparison(
+    current: number,
+    previous: number,
+    label: string,
+    valueFormatter: (value: number) => string = (value) => String(value),
+) {
+    if (!previous) {
+        return current ? `Up from ${valueFormatter(0)} ${label}` : `No change ${label}`;
+    }
+
+    const percentChange = Math.round(((current - previous) / previous) * 100);
+    return `${percentChange > 0 ? "+" : ""}${percentChange}% ${label}`;
+}
+
+function getFirstStatusTimestamp(
+    application: Application,
+    history: ActivityLog[],
+    statuses: Set<string>,
+) {
+    if (!applicationReachedStatus(application, history, statuses)) return null;
+
+    const chronologicalHistory = sortHistoryChronologically(history);
+    const statusTimes: number[] = [];
+
+    chronologicalHistory.forEach((entry) => {
+        const entryTime = new Date(entry.createdAt).getTime();
+        if (Number.isNaN(entryTime)) return;
+
+        const metadata = getMetadataObject(entry.metadata);
+        if (entry.type === "APPLICATION_CREATED") {
+            const createdStatus = getStatusValue(metadata?.status);
+            if (createdStatus && statuses.has(createdStatus)) statusTimes.push(entryTime);
+            return;
+        }
+
+        if (entry.type !== "STATUS_CHANGED") return;
+
+        const nextStatus = getStatusValue(metadata?.to);
+        if (nextStatus && statuses.has(nextStatus)) statusTimes.push(entryTime);
+    });
+
+    if (statusTimes.length) return Math.min(...statusTimes);
+    return getApplicationTimestamp(application);
+}
+
+function getFirstResponseTimestamp(application: Application, history: ActivityLog[]) {
+    if (!applicationReachedStatus(application, history, RESPONSE_STATUSES)) {
+        return null;
+    }
+
+    const appliedTime = getApplicationTimestamp(application);
+    const responseTimes: number[] = [];
+
+    sortHistoryChronologically(history).forEach((entry) => {
+        const entryTime = new Date(entry.createdAt).getTime();
+        if (Number.isNaN(entryTime) || entryTime < appliedTime) return;
+
+        if (entry.type === "INTERVIEW_ADDED") {
+            responseTimes.push(entryTime);
+            return;
+        }
+
+        if (entry.type !== "STATUS_CHANGED" && entry.type !== "APPLICATION_CREATED") {
+            return;
+        }
+
+        const metadata = getMetadataObject(entry.metadata);
+        const status = getStatusValue(
+            entry.type === "APPLICATION_CREATED" ? metadata?.status : metadata?.to,
+        );
+        if (status && RESPONSE_STATUSES.has(status)) responseTimes.push(entryTime);
+    });
+
+    if (responseTimes.length) return Math.min(...responseTimes);
+    return appliedTime;
+}
+
+function getAverageDaysToResponse(
+    applications: Application[],
+    historyByApp: Record<string, ActivityLog[]>,
+) {
+    const responseDurations = applications.flatMap((application) => {
+        const appliedTime = getApplicationTimestamp(application);
+        const responseTime = getFirstResponseTimestamp(
+            application,
+            historyByApp[application.id] ?? [],
+        );
+
+        if (responseTime === null) return [];
+        return [Math.max(0, (responseTime - appliedTime) / DAY_IN_MS)];
+    });
+
+    if (!responseDurations.length) return null;
+
+    return (
+        responseDurations.reduce((sum, duration) => sum + duration, 0) /
+        responseDurations.length
+    );
+}
+
+function hasInterview(
+    application: Application,
+    history: ActivityLog[],
+    interviewsByApplicationId: Set<string>,
+) {
+    return (
+        interviewsByApplicationId.has(application.id) ||
+        applicationReachedStatus(application, history, INTERVIEW_STATUSES)
+    );
+}
+
+function getSubmittedApplications(
+    applications: Application[],
+    historyByApp: Record<string, ActivityLog[]>,
+) {
+    return applications.filter((application) =>
+        applicationReachedStatus(
+            application,
+            historyByApp[application.id] ?? [],
+            SUBMITTED_APPLICATION_STATUSES,
+        ),
+    );
+}
+
+function buildPeriodMetrics(
+    applications: Application[],
+    historyByApp: Record<string, ActivityLog[]>,
+    interviewsByApplicationId: Set<string>,
+) {
+    const submittedApplications = getSubmittedApplications(applications, historyByApp);
+    const responseCount = submittedApplications.filter((application) =>
+        applicationReachedStatus(
+            application,
+            historyByApp[application.id] ?? [],
+            RESPONSE_STATUSES,
+        ),
+    ).length;
+    const interviewCount = submittedApplications.filter((application) =>
+        hasInterview(
+            application,
+            historyByApp[application.id] ?? [],
+            interviewsByApplicationId,
+        ),
+    ).length;
+
+    return {
+        responseRate: calculateRate(responseCount, submittedApplications.length),
+        interviewRate: calculateRate(interviewCount, submittedApplications.length),
+        averageDaysToResponse: getAverageDaysToResponse(
+            submittedApplications,
+            historyByApp,
+        ),
+    };
+}
+
+function countOffersInRange(
+    applications: Application[],
+    historyByApp: Record<string, ActivityLog[]>,
+    start: Date,
+    end: Date,
+) {
+    return applications.filter((application) => {
+        const offerTime = getFirstStatusTimestamp(
+            application,
+            historyByApp[application.id] ?? [],
+            OFFER_STATUSES,
+        );
+        return offerTime !== null && isTimestampInRange(offerTime, start, end);
+    }).length;
+}
+
+function formatDays(value: number | null) {
+    if (value === null) return "N/A";
+    if (value < 1) return "<1 day";
+    const rounded = Math.round(value * 10) / 10;
+    return `${rounded} ${rounded === 1 ? "day" : "days"}`;
 }
 
 function formatWeekLabel(date: Date) {
@@ -134,4 +531,153 @@ export function countActiveApplications(applications: Application[]) {
     return applications.filter(
         (app) => !["SAVED", "REJECTED", "WITHDRAWN"].includes(app.status),
     ).length;
+}
+
+export function buildAnalyticsKpiCards(
+    applications: Application[],
+    historyByApp: Record<string, ActivityLog[]>,
+    interviews: Interview[],
+) {
+    const now = new Date();
+    const currentThirtyDays = getDateRange(now, ANALYTICS_PERIOD_DAYS);
+    const previousThirtyDays = getDateRange(
+        currentThirtyDays.start,
+        ANALYTICS_PERIOD_DAYS,
+    );
+    const thisWeekStart = getStartOfWeek(now);
+    const nextWeekStart = new Date(thisWeekStart);
+    nextWeekStart.setDate(thisWeekStart.getDate() + 7);
+    const previousWeekStart = new Date(thisWeekStart);
+    previousWeekStart.setDate(thisWeekStart.getDate() - 7);
+
+    const currentPeriodApplications = getApplicationsInRange(
+        applications,
+        currentThirtyDays.start,
+        currentThirtyDays.end,
+    );
+    const previousPeriodApplications = getApplicationsInRange(
+        applications,
+        previousThirtyDays.start,
+        previousThirtyDays.end,
+    );
+    const currentWeekApplications = getApplicationsInRange(
+        applications,
+        thisWeekStart,
+        nextWeekStart,
+    ).length;
+    const previousWeekApplications = getApplicationsInRange(
+        applications,
+        previousWeekStart,
+        thisWeekStart,
+    ).length;
+    const interviewsByApplicationId = new Set(
+        interviews.map((interview) => interview.applicationId),
+    );
+    const currentPeriodMetrics = buildPeriodMetrics(
+        currentPeriodApplications,
+        historyByApp,
+        interviewsByApplicationId,
+    );
+    const previousPeriodMetrics = buildPeriodMetrics(
+        previousPeriodApplications,
+        historyByApp,
+        interviewsByApplicationId,
+    );
+    const currentOffers = countOffersInRange(
+        applications,
+        historyByApp,
+        currentThirtyDays.start,
+        currentThirtyDays.end,
+    );
+    const previousOffers = countOffersInRange(
+        applications,
+        historyByApp,
+        previousThirtyDays.start,
+        previousThirtyDays.end,
+    );
+    const activeApplications = countActiveApplications(applications);
+    const activeApplicationsThirtyDaysAgo = countActiveApplicationsAt(
+        applications,
+        historyByApp,
+        currentThirtyDays.start,
+    );
+    const currentAverageDays = currentPeriodMetrics.averageDaysToResponse;
+    const previousAverageDays = previousPeriodMetrics.averageDaysToResponse;
+    const averageDaysComparison =
+        currentAverageDays === null && previousAverageDays === null
+            ? "No change vs prior 30 days"
+            : previousAverageDays === null
+                ? "No prior responses"
+                : formatComparison(
+                    currentAverageDays ?? 0,
+                    previousAverageDays,
+                    "vs prior 30 days",
+                    formatDays,
+                );
+
+    return [
+        {
+            label: "Active applications",
+            value: activeApplications,
+            comparison: formatComparison(
+                activeApplications,
+                activeApplicationsThirtyDaysAgo,
+                "vs 30 days ago",
+            ),
+            icon: "trend",
+            tone: "green",
+        },
+        {
+            label: "Applications this week",
+            value: currentWeekApplications,
+            comparison: formatComparison(
+                currentWeekApplications,
+                previousWeekApplications,
+                "vs prior week",
+            ),
+            icon: "applications",
+        },
+        {
+            label: "Response rate",
+            value: `${currentPeriodMetrics.responseRate}%`,
+            comparison: formatComparison(
+                currentPeriodMetrics.responseRate,
+                previousPeriodMetrics.responseRate,
+                "vs prior 30 days",
+                (value) => `${value}%`,
+            ),
+            icon: "clock",
+            tone: "orange",
+        },
+        {
+            label: "Interview rate",
+            value: `${currentPeriodMetrics.interviewRate}%`,
+            comparison: formatComparison(
+                currentPeriodMetrics.interviewRate,
+                previousPeriodMetrics.interviewRate,
+                "vs prior 30 days",
+                (value) => `${value}%`,
+            ),
+            icon: "contacts",
+            tone: "purple",
+        },
+        {
+            label: "Offers received",
+            value: currentOffers,
+            comparison: formatComparison(
+                currentOffers,
+                previousOffers,
+                "vs prior 30 days",
+            ),
+            icon: "check",
+            tone: "green",
+        },
+        {
+            label: "Average days to response",
+            value: formatDays(currentAverageDays),
+            comparison: averageDaysComparison,
+            icon: "history",
+            tone: "slate",
+        },
+    ] satisfies AnalyticsKpiCard[];
 }

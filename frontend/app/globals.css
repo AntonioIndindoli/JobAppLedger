@@ -569,6 +569,8 @@ button {
 .metric-icon {
     display: grid;
     place-items: center;
+    align-self: center;
+    align-content: center;
     width: 58px;
     height: 58px;
     border-radius: 50%;
@@ -692,6 +694,8 @@ button {
     display: inline-grid;
     place-items: center;
     flex: 0 0 auto;
+padding: 4px;
+    border-radius: 6px;
 }
 
 .heading-icon {
@@ -2163,6 +2167,84 @@ button {
 
 .analytics-page-grid .panel {
     margin-top: 0;
+}
+
+.analytics-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.analytics-kpi-card {
+    min-width: 0;
+    min-height: 118px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 10px 26px rgba(31, 60, 100, .035);
+}
+
+.analytics-kpi-card p {
+    margin: 0 0 7px;
+    color: #53617b;
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: 800;
+}
+
+.analytics-kpi-card strong {
+    display: block;
+    color: #111827;
+    font-size: 25px;
+    line-height: 1.05;
+    font-weight: 800;
+}
+
+.analytics-kpi-card span {
+    display: block;
+    margin-top: 9px;
+    color: #63708a;
+    font-size: 12px;
+    line-height: 1.25;
+    font-weight: 700;
+}
+
+.analytics-kpi-card .metric-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+}
+
+.analytics-kpi-card .metric-icon svg {
+    width: 21px;
+    height: 21px;
+}
+
+@media (max-width: 1500px) {
+    .analytics-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1050px) {
+    .analytics-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .analytics-page-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .analytics-kpi-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .applications-header {

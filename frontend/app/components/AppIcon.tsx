@@ -76,8 +76,8 @@ export function AppIcon({
                     <path d="M17 4v3" />
                     <path d="M5.5 6h13A1.5 1.5 0 0 1 20 7.5v11A1.5 1.5 0 0 1 18.5 20h-13A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6Z" />
                     <path d="M4 10h16" />
-                    <path d="M8 14h3" />
-                    <path d="M8 17h6" />
+                    <path d="M8 13.25h3" />
+                    <path d="M8 16.5h6" />
                 </>
             );
             break;
@@ -87,11 +87,11 @@ export function AppIcon({
         case "checklist":
             icon = (
                 <>
-                    <path d="m5 7 1.5 1.5L9.5 5" />
-                    <path d="M12 7h7" />
-                    <path d="m5 14 1.5 1.5L9.5 12" />
-                    <path d="M12 14h7" />
-                    <path d="M12 19h5" />
+                    <path d="m4 7 1.5 1.5L8.5 5" />
+                    <path d="M11 7h9" />
+                    <path d="m4 14 1.5 1.5L8.5 12" />
+                    <path d="M11 14h9" />
+
                 </>
             );
             break;
@@ -175,9 +175,9 @@ export function AppIcon({
             icon = (
                 <>
                     <path d="M5.5 9.5A7 7 0 1 1 5 15" />
-                    <path d="M5.5 9.5H3" />
+                    <path d="M5.5 9.5H8" />
                     <path d="M5.5 9.5V7" />
-                    <path d="M12 8.5V12l2.5 1.5" />
+                    <path d="M11 9V13l2.5 1.5" />
                 </>
             );
             break;

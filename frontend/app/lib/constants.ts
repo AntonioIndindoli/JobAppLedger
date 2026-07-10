@@ -203,6 +203,6 @@ export const EMPTY_IMPORT_REVIEW: ImportReviewValues = {
 };
 
 export const PIPELINE_WIDTH = 820;
-export const PIPELINE_HEIGHT = 210;
+export const PIPELINE_HEIGHT = 250;
 export const WEEKLY_CHART_HEIGHT = 132;
 export const WEEKLY_CHART_WIDTH = 540;

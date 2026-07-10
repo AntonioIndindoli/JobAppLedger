@@ -11,13 +11,13 @@ import { useMemo } from "react";
 
 import { PIPELINE_HEIGHT, PIPELINE_WIDTH } from "../../lib/constants";
 import {
+    buildApplicationPipelinePath,
     countApplicationsByStatus,
-    isApplicationStatus,
+    type ApplicationPipelineNode,
 } from "../../lib/application-analytics";
-import type { ActivityLog, Application, ApplicationStatus } from "../../lib/types";
+import type { ActivityLog, Application } from "../../lib/types";
 
-type PipelineStatus = Exclude<ApplicationStatus, "SAVED">;
-type PipelineNodeId = PipelineStatus | "NO_RESPONSE";
+type PipelineNodeId = ApplicationPipelineNode;
 
 type PipelineNodeDatum = {
     id: PipelineNodeId;
@@ -77,14 +77,6 @@ const LINK_ORDER: Record<PipelineNodeId, Partial<Record<PipelineNodeId, number>>
     NO_RESPONSE: {},
 };
 
-const PIPELINE_STATUSES: PipelineStatus[] = [
-    "APPLIED",
-    "INTERVIEWING",
-    "OFFER",
-    "REJECTED",
-    "WITHDRAWN",
-];
-
 const NODE_CATALOG: Record<PipelineNodeId, PipelineNodeDatum> = {
     APPLIED: { id: "APPLIED", label: "Applied", color: "#1268f3" },
     INTERVIEWING: { id: "INTERVIEWING", label: "Interview", color: "#6d5dfc" },
@@ -111,108 +103,6 @@ const ALLOWED_TRANSITIONS: Record<PipelineNodeId, PipelineNodeId[]> = {
     WITHDRAWN: [],
     NO_RESPONSE: [],
 };
-
-function isPipelineStatus(status: string): status is PipelineStatus {
-    return (
-        isApplicationStatus(status) &&
-        (PIPELINE_STATUSES as readonly string[]).includes(status)
-    );
-}
-
-function getMetadataObject(metadata: ActivityLog["metadata"]) {
-    if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
-        return null;
-    }
-    return metadata as Record<string, unknown>;
-}
-
-function getStatusValue(status: unknown): ApplicationStatus | null {
-    return typeof status === "string" && isApplicationStatus(status)
-        ? status
-        : null;
-}
-
-function appendStatus(
-    sequence: ApplicationStatus[],
-    status: ApplicationStatus | null,
-) {
-    if (!status || sequence.at(-1) === status) return;
-    sequence.push(status);
-}
-
-function getStatusChange(entry: ActivityLog) {
-    if (entry.type !== "STATUS_CHANGED") return null;
-    const metadata = getMetadataObject(entry.metadata);
-    if (!metadata) return null;
-
-    const from = getStatusValue(metadata.from);
-    const to = getStatusValue(metadata.to);
-    if (!from || !to) return null;
-
-    return { from, to };
-}
-
-function getCreatedStatus(history: ActivityLog[]) {
-    const createdEntry = history.find((entry) => entry.type === "APPLICATION_CREATED");
-    const metadata = getMetadataObject(createdEntry?.metadata ?? null);
-    return getStatusValue(metadata?.status);
-}
-
-function sortChronologically(history: ActivityLog[]) {
-    return [...history].sort(
-        (first, second) =>
-            new Date(first.createdAt).getTime() - new Date(second.createdAt).getTime(),
-    );
-}
-
-function buildApplicationPath(
-    application: Application,
-    history: ActivityLog[] = [],
-): PipelineNodeId[] {
-    const currentStatus = getStatusValue(application.status);
-    if (!currentStatus || !isPipelineStatus(currentStatus)) return [];
-
-    const chronologicalHistory = sortChronologically(history);
-    const observedStatuses: ApplicationStatus[] = [];
-    chronologicalHistory.forEach((entry) => {
-        const statusChange = getStatusChange(entry);
-        if (!statusChange) return;
-        appendStatus(observedStatuses, statusChange.from);
-        appendStatus(observedStatuses, statusChange.to);
-    });
-
-    if (!observedStatuses.length) {
-        appendStatus(observedStatuses, getCreatedStatus(chronologicalHistory));
-    }
-    appendStatus(observedStatuses, currentStatus);
-
-    const reachedInterview =
-        currentStatus === "INTERVIEWING" ||
-        currentStatus === "OFFER" ||
-        observedStatuses.some(
-            (status) => status === "INTERVIEWING" || status === "OFFER",
-        );
-
-    if (currentStatus === "APPLIED") return ["APPLIED", "NO_RESPONSE"];
-
-    if (currentStatus === "INTERVIEWING") {
-        return ["APPLIED", "INTERVIEWING"];
-    }
-
-    if (currentStatus === "OFFER") {
-        return ["APPLIED", "INTERVIEWING", "OFFER"];
-    }
-
-    if (currentStatus === "REJECTED") {
-        return reachedInterview
-            ? ["APPLIED", "INTERVIEWING", "REJECTED"]
-            : ["APPLIED", "REJECTED"];
-    }
-
-    return reachedInterview
-        ? ["APPLIED", "INTERVIEWING", "WITHDRAWN"]
-        : ["APPLIED", "WITHDRAWN"];
-}
 
 function canAddLink(source: PipelineNodeId, target: PipelineNodeId) {
     return ALLOWED_TRANSITIONS[source].includes(target);
@@ -281,7 +171,7 @@ function buildPipelineSankey(
     };
 
     applications.forEach((application) => {
-        const path = buildApplicationPath(
+        const path = buildApplicationPipelinePath(
             application,
             historyByApp[application.id] ?? [],
         );
@@ -388,7 +278,6 @@ export function PipelineSankey({
                     <p>Pipeline</p>
                     <h2 id="pipeline-heading">Application Flow</h2>
                 </div>
-                <strong>{pipeline.total}</strong>
             </header>
             {pipeline.graph ? (
                 <>
@@ -448,17 +337,6 @@ export function PipelineSankey({
                             </g>
                         </svg>
                     </div>
-                    <footer className="pipeline-insights">
-                        <span>
-                            <b>{pipeline.counts.OFFER}</b> offers
-                        </span>
-                        <span>
-                            <b>{pipeline.offerRate}%</b> offer rate
-                        </span>
-                        <span>
-                            <b>{pipeline.exitCount}</b> exits
-                        </span>
-                    </footer>
                 </>
             ) : (
                 <div className="pipeline-empty-state">

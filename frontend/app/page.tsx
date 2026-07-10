@@ -1045,6 +1045,8 @@ export default function MainPage() {
             ) : currentView === "analytics" ? (
                 <AnalyticsView
                     applications={applications}
+                    historyByApp={historyByApp}
+                    interviews={interviews}
                     weeklyRangeWeeks={weeklyRangeWeeks}
                     onWeeklyRangeChange={setWeeklyRangeWeeks}
                 />
