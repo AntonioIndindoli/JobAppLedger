@@ -52,6 +52,18 @@ export type AnalyticsKpiCard = {
     tone?: IconTone;
 };
 
+export type SourceQualityRow = {
+    source: string;
+    applications: number;
+    submittedApplications: number;
+    responses: number;
+    responseRate: number;
+    interviews: number;
+    interviewRate: number;
+    offers: number;
+    averageDaysToResponse: number | null;
+};
+
 export function normalizeSource(source: string | null) {
     if (!source) return null;
     const normalized = source.trim().toLowerCase();
@@ -404,6 +416,81 @@ function buildPeriodMetrics(
     };
 }
 
+export function buildSourceQualityRows(
+    applications: Application[],
+    historyByApp: Record<string, ActivityLog[]>,
+    interviews: Interview[],
+) {
+    const interviewsByApplicationId = new Set(
+        interviews.map((interview) => interview.applicationId),
+    );
+    const sourceGroups = applications.reduce((groups, application) => {
+        const source = normalizeSource(application.source) ?? "No source";
+        const group = groups.get(source) ?? [];
+        group.push(application);
+        groups.set(source, group);
+        return groups;
+    }, new Map<string, Application[]>());
+
+    return Array.from(sourceGroups.entries())
+        .map(([source, sourceApplications]) => {
+            const submittedApplications = getSubmittedApplications(
+                sourceApplications,
+                historyByApp,
+            );
+            const responses = submittedApplications.filter((application) =>
+                applicationReachedStatus(
+                    application,
+                    historyByApp[application.id] ?? [],
+                    RESPONSE_STATUSES,
+                ),
+            ).length;
+            const interviewsCount = submittedApplications.filter((application) =>
+                hasInterview(
+                    application,
+                    historyByApp[application.id] ?? [],
+                    interviewsByApplicationId,
+                ),
+            ).length;
+            const offers = sourceApplications.filter((application) =>
+                applicationReachedStatus(
+                    application,
+                    historyByApp[application.id] ?? [],
+                    OFFER_STATUSES,
+                ),
+            ).length;
+
+            return {
+                source,
+                applications: sourceApplications.length,
+                submittedApplications: submittedApplications.length,
+                responses,
+                responseRate: calculateRate(
+                    responses,
+                    submittedApplications.length,
+                ),
+                interviews: interviewsCount,
+                interviewRate: calculateRate(
+                    interviewsCount,
+                    submittedApplications.length,
+                ),
+                offers,
+                averageDaysToResponse: getAverageDaysToResponse(
+                    submittedApplications,
+                    historyByApp,
+                ),
+            };
+        })
+        .sort(
+            (first, second) =>
+                second.interviews - first.interviews ||
+                second.offers - first.offers ||
+                second.responseRate - first.responseRate ||
+                second.applications - first.applications ||
+                first.source.localeCompare(second.source),
+        ) satisfies SourceQualityRow[];
+}
+
 function countOffersInRange(
     applications: Application[],
     historyByApp: Record<string, ActivityLog[]>,
@@ -425,6 +512,10 @@ function formatDays(value: number | null) {
     if (value < 1) return "<1 day";
     const rounded = Math.round(value * 10) / 10;
     return `${rounded} ${rounded === 1 ? "day" : "days"}`;
+}
+
+export function formatDaysToResponse(value: number | null) {
+    return formatDays(value);
 }
 
 function formatWeekLabel(date: Date) {

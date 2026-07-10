@@ -10,7 +10,9 @@ import type {
     WeeklyRangeWeeks,
 } from "../lib/types";
 import { MetricIcon } from "./AppIcon";
+import { ApplicationMap } from "./dashboard/ApplicationMap";
 import { SourceBreakdown } from "./dashboard/SourceBreakdown";
+import { SourceQualityTable } from "./dashboard/SourceQualityTable";
 import { WeeklyApplications } from "./dashboard/WeeklyApplications";
 
 type AnalyticsViewProps = {
@@ -18,6 +20,7 @@ type AnalyticsViewProps = {
     historyByApp: Record<string, ActivityLog[]>;
     interviews: Interview[];
     weeklyRangeWeeks: WeeklyRangeWeeks;
+    onViewApplication: (applicationId: string) => void;
     onWeeklyRangeChange: (weeks: WeeklyRangeWeeks) => void;
 };
 
@@ -26,6 +29,7 @@ export function AnalyticsView({
     historyByApp,
     interviews,
     weeklyRangeWeeks,
+    onViewApplication,
     onWeeklyRangeChange,
 }: AnalyticsViewProps) {
     const kpiCards = useMemo(
@@ -63,6 +67,15 @@ export function AnalyticsView({
             </section>
 
             <section className="analytics-page-grid">
+                <SourceQualityTable
+                    applications={applications}
+                    historyByApp={historyByApp}
+                    interviews={interviews}
+                />
+                <ApplicationMap
+                    applications={applications}
+                    onViewApplication={onViewApplication}
+                />
                 <SourceBreakdown applications={applications} />
                 <WeeklyApplications
                     applications={applications}

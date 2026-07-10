@@ -1114,6 +1114,7 @@ export default function MainPage() {
                     historyByApp={historyByApp}
                     interviews={interviews}
                     weeklyRangeWeeks={weeklyRangeWeeks}
+                    onViewApplication={viewApplication}
                     onWeeklyRangeChange={setWeeklyRangeWeeks}
                 />
             ) : currentView === "interviews" ? (
