@@ -311,6 +311,14 @@ export function AppIcon({
                 </>
             );
             break;
+        case "x":
+            icon = (
+                <>
+                    <path d="M6.5 6.5 17.5 17.5" />
+                    <path d="M17.5 6.5 6.5 17.5" />
+                </>
+            );
+            break;
     }
 
     return (

@@ -1,6 +1,7 @@
 import {
   createApplication,
   deleteApplication,
+  deleteApplicationHistoryEvent,
   getApplication,
   getApplicationHistory,
   listApplicationHistories,
@@ -29,6 +30,12 @@ export async function getApplicationHistoryController(req, res) {
   const data = await getApplicationHistory(req.auth.sub, req.params.id);
   if (!data) return res.status(404).json({ message: "Application not found." });
   return res.status(200).json({ history: data });
+}
+
+export async function deleteApplicationHistoryEventController(req, res) {
+  const deleted = await deleteApplicationHistoryEvent(req.auth.sub, req.params.id, req.params.activityLogId);
+  if (!deleted) return res.status(404).json({ message: "History event not found." });
+  return res.status(204).send();
 }
 
 export async function createApplicationController(req, res) {

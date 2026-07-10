@@ -30,6 +30,10 @@ type ApplicationTrackerProps = {
     onCreateApplication: () => void;
     onFiltersChange: (filters: ApplicationFilters) => void;
     onRemoveApplication: (id: string) => void;
+    onRemoveHistoryEvent: (
+        applicationId: string,
+        activityLogId: string,
+    ) => void | Promise<void>;
     onStartEdit: (application: Application) => void;
     onToggleTimeline: (id: string) => void | Promise<void>;
     onTransitionStatus: (id: string, nextStatus: string) => void | Promise<void>;
@@ -88,6 +92,7 @@ export function ApplicationTracker({
     onCreateApplication,
     onFiltersChange,
     onRemoveApplication,
+    onRemoveHistoryEvent,
     onStartEdit,
     onToggleTimeline,
     onTransitionStatus,
@@ -366,12 +371,30 @@ export function ApplicationTracker({
                                                 <ul className="job-card-history">
                                                     {history.length ? (
                                                         history.map((entry) => (
-                                                            <li key={entry.id}>
-                                                                {entry.message}
+                                                            <li
+                                                                key={entry.id}
+                                                                className="job-card-history-event"
+                                                            >
+                                                                <span>{entry.message}</span>
+                                                                <button
+                                                                    type="button"
+                                                                    className="job-card-history-remove"
+                                                                    aria-label="Remove history event"
+                                                                    onClick={() =>
+                                                                        onRemoveHistoryEvent(
+                                                                            application.id,
+                                                                            entry.id,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <AppIcon name="x" size={12} />
+                                                                </button>
                                                             </li>
                                                         ))
                                                     ) : (
-                                                        <li>No history yet.</li>
+                                                        <li className="job-card-history-empty">
+                                                            No history yet.
+                                                        </li>
                                                     )}
                                                 </ul>
                                             )}

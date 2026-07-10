@@ -202,6 +202,7 @@ export type AppIconName =
     | "trash"
     | "trend"
     | "view"
-    | "warning";
+    | "warning"
+    | "x";
 
 export type IconTone = "blue" | "green" | "purple" | "orange" | "slate";

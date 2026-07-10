@@ -37,6 +37,10 @@ type DashboardHomeProps = {
     onFiltersChange: (filters: ApplicationFilters) => void;
     onImportOpen: () => void;
     onRemoveApplication: (id: string) => void;
+    onRemoveHistoryEvent: (
+        applicationId: string,
+        activityLogId: string,
+    ) => void | Promise<void>;
     onStartEdit: (application: Application) => void;
     onToggleTimeline: (id: string) => void | Promise<void>;
     onTransitionStatus: (id: string, nextStatus: string) => void | Promise<void>;
@@ -62,6 +66,7 @@ export function DashboardHome({
     onFiltersChange,
     onImportOpen,
     onRemoveApplication,
+    onRemoveHistoryEvent,
     onStartEdit,
     onToggleTimeline,
     onTransitionStatus,
@@ -115,6 +120,7 @@ export function DashboardHome({
                 onCreateApplication={onCreateApplication}
                 onFiltersChange={onFiltersChange}
                 onRemoveApplication={onRemoveApplication}
+                onRemoveHistoryEvent={onRemoveHistoryEvent}
                 onStartEdit={onStartEdit}
                 onToggleTimeline={onToggleTimeline}
                 onTransitionStatus={onTransitionStatus}

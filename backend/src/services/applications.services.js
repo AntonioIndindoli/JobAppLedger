@@ -50,6 +50,15 @@ export async function getApplicationHistory(userId, id) {
   return prisma.activityLog.findMany({ where: { userId, applicationId: id }, orderBy: { createdAt: "desc" } });
 }
 
+export async function deleteApplicationHistoryEvent(userId, applicationId, activityLogId) {
+  const prisma = await getPrismaAsync();
+  const result = await prisma.activityLog.deleteMany({
+    where: { id: activityLogId, userId, applicationId },
+  });
+
+  return result.count > 0;
+}
+
 export async function listApplicationHistories(userId) {
   const prisma = await getPrismaAsync();
   const logs = await prisma.activityLog.findMany({

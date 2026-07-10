@@ -359,6 +359,24 @@ export default function MainPage() {
         setHistoryByApp((prev) => ({ ...prev, [id]: data.history }));
     }
 
+    async function removeHistoryEvent(applicationId: string, activityLogId: string) {
+        const res = await authedFetch(
+            `/applications/${applicationId}/history/${activityLogId}`,
+            { method: "DELETE" },
+        );
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok)
+            return setMessage(data.message ?? "History event delete failed");
+
+        setHistoryByApp((prev) => ({
+            ...prev,
+            [applicationId]: (prev[applicationId] ?? []).filter(
+                (entry) => entry.id !== activityLogId,
+            ),
+        }));
+        setMessage("History event removed.");
+    }
+
     function resetApplicationForm() {
         setForm(EMPTY_APPLICATION_FORM);
         setEditingId(null);
@@ -1070,6 +1088,7 @@ export default function MainPage() {
                     onFiltersChange={setFilters}
                     onImportOpen={openImportDrawer}
                     onRemoveApplication={removeApplication}
+                    onRemoveHistoryEvent={removeHistoryEvent}
                     onStartEdit={startEdit}
                     onToggleTimeline={toggleTimeline}
                     onTransitionStatus={transitionStatus}

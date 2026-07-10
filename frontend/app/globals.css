@@ -674,9 +674,9 @@ button {
 }
 
 .tracker-panel {
-    height: 1fr;
     position: relative;
     padding: 16px;
+    margin-bottom: 40px;
 }
 
 .panel h2 {
@@ -1016,11 +1016,47 @@ button {
     display: grid;
     gap: 5px;
     margin: 2px 0 0;
-    padding: 8px 0 0 16px;
+    padding: 8px 0 0;
     border-top: 1px solid #edf2f8;
     color: #53617b;
     font-size: 11px;
     line-height: 1.35;
+    list-style: none;
+}
+
+.job-card-history-event {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 20px;
+    align-items: start;
+    gap: 6px;
+}
+
+.job-card-history-event span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.job-card-history-remove {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 0;
+    border-radius: 5px;
+    padding: 0;
+    color: #8a95a8;
+    background: transparent;
+}
+
+.job-card-history-remove:hover,
+.job-card-history-remove:focus-visible {
+    color: #dc2626;
+    background: #fee2e2;
+    outline: none;
+}
+
+.job-card-history-empty {
+    color: #72809a;
 }
 
 .lane-empty {

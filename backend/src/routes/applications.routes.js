@@ -4,6 +4,7 @@ import { validateApplicationPayload, validateStatusTransition } from "../validat
 import {
   createApplicationController,
   deleteApplicationController,
+  deleteApplicationHistoryEventController,
   getApplicationController,
   getApplicationHistoryController,
   listApplicationHistoriesController,
@@ -20,6 +21,7 @@ router.post("/", validateApplicationPayload, createApplicationController);
 router.get("/history", listApplicationHistoriesController);
 router.get("/:id", getApplicationController);
 router.get("/:id/history", getApplicationHistoryController);
+router.delete("/:id/history/:activityLogId", deleteApplicationHistoryEventController);
 router.put("/:id", validateApplicationPayload, updateApplicationController);
 router.patch("/:id/status", validateStatusTransition, transitionApplicationStatusController);
 router.delete("/:id", deleteApplicationController);
