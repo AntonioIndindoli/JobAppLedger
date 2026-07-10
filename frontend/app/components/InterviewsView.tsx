@@ -581,7 +581,7 @@ export function InterviewsView({
                             </div>
                         </>
                     ) : (
-                        <div className="applications-empty application-detail-empty">
+                        <div className="applications-empty">
                             <span className="empty-illustration">
                                 <AppIcon name="calendar" size={31} />
                             </span>

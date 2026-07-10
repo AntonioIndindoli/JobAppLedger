@@ -1118,6 +1118,119 @@ button {
     color: #64748b;
 }
 
+.goal-card {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    text-align: left;
+}
+
+.goal-card p {
+    max-width: none;
+    margin: 0;
+}
+
+.goal-progress-summary {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    min-height: 96px;
+    padding: 13px;
+    border: 1px solid #e4edf8;
+    border-radius: 8px;
+    background: #fbfdff;
+}
+
+.goal-progress-dial {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(11, 107, 255, .08);
+}
+
+.goal-progress-dial span {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: white;
+}
+
+.goal-progress-dial strong {
+    color: #14213d;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.goal-progress-copy {
+    min-width: 0;
+}
+
+.goal-progress-copy strong {
+    display: block;
+    color: #14213d;
+    font-size: 20px;
+    line-height: 1.15;
+}
+
+.goal-progress-copy span {
+    display: block;
+    margin-top: 3px;
+    color: #53617b;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.goal-progress-copy p {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.goal-stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.goal-stat-row span {
+    min-width: 0;
+    min-height: 66px;
+    padding: 10px;
+    border: 1px solid #e4edf8;
+    border-radius: 8px;
+    background: #fbfdff;
+}
+
+.goal-stat-row strong,
+.goal-stat-row small {
+    display: block;
+}
+
+.goal-stat-row strong {
+    color: #14213d;
+    font-size: 18px;
+    line-height: 1.1;
+}
+
+.goal-stat-row small {
+    margin-top: 5px;
+    color: #63708a;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.goal-card-action {
+    align-self: flex-start;
+    margin-top: auto;
+}
+
 .analytics-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1893,6 +2006,17 @@ button {
     display: grid;
     gap: 16px;
     margin: 34px 42px 32px 38px;
+}
+
+.analytics-page-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+}
+
+.analytics-page-grid .panel {
+    margin-top: 0;
 }
 
 .applications-header {
@@ -2808,10 +2932,6 @@ button {
 
 .application-notes-card {
     margin-top: 18px;
-}
-
-.application-detail-empty {
-    min-height: 472px;
 }
 
 .interviews-header-meta {

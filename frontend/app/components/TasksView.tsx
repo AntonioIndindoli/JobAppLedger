@@ -601,7 +601,7 @@ export function TasksView({
                             </div>
                         </>
                     ) : (
-                        <div className="applications-empty application-detail-empty">
+                        <div className="applications-empty">
                             <span className="empty-illustration">
                                 <AppIcon name="checklist" size={31} />
                             </span>

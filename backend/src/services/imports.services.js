@@ -1,6 +1,7 @@
 import { getPrismaAsync } from "../db/prisma.js";
 import { detectJobSource, parseJobDescriptionWithFetch } from "./parser.services.js";
 import { normalizeUrl } from "../utils/url.js";
+import { maybeCreateAppliedFollowUpTask } from "./tasks.services.js";
 
 function withCompany(application) {
   return { ...application, companyName: application.company?.name ?? null };
@@ -162,7 +163,13 @@ export async function convertImportDraft(userId, id, overrides = {}) {
       },
     });
 
-    return { application: withCompany(application), importDraft: decorateDraft(importDraft) };
+    const createdTasks = [];
+    if (application.status === "APPLIED") {
+      const task = await maybeCreateAppliedFollowUpTask(tx, userId, application);
+      if (task) createdTasks.push(task);
+    }
+
+    return { application: withCompany(application), importDraft: decorateDraft(importDraft), createdTasks };
   });
 
   return result;

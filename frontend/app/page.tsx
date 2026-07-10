@@ -3,6 +3,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 
 import { AccountView } from "./components/AccountView";
+import { AnalyticsView } from "./components/AnalyticsView";
 import { ApplicationsView } from "./components/ApplicationsView";
 import { ApplicationDrawer } from "./components/ApplicationDrawer";
 import { AuthPanel } from "./components/AuthPanel";
@@ -1023,6 +1024,12 @@ export default function MainPage() {
                     onStartEdit={startEdit}
                     onViewInterview={viewInterview}
                 />
+            ) : currentView === "analytics" ? (
+                <AnalyticsView
+                    applications={applications}
+                    weeklyRangeWeeks={weeklyRangeWeeks}
+                    onWeeklyRangeChange={setWeeklyRangeWeeks}
+                />
             ) : currentView === "interviews" ? (
                 <InterviewsView
                     key={focusedInterviewId ?? "all-interviews"}
@@ -1056,7 +1063,6 @@ export default function MainPage() {
                     interviews={interviews}
                     openTimelineId={openTimelineId}
                     tasks={tasks}
-                    weeklyRangeWeeks={weeklyRangeWeeks}
                     onApplyTrackerFilters={() => setAppliedTrackerFilters(filters)}
                     onCreateApplication={openCreateApplication}
                     onCreateInterview={openCreateInterview}
@@ -1067,10 +1073,13 @@ export default function MainPage() {
                     onStartEdit={startEdit}
                     onToggleTimeline={toggleTimeline}
                     onTransitionStatus={transitionStatus}
+                    onViewApplications={() => {
+                        setFocusedApplicationId(null);
+                        changeCurrentView("applications");
+                    }}
                     onViewApplication={viewApplication}
                     onViewInterviews={() => changeCurrentView("interviews")}
                     onViewTasks={() => changeCurrentView("tasks")}
-                    onWeeklyRangeChange={setWeeklyRangeWeeks}
                 />
             )}
 

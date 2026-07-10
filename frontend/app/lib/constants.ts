@@ -140,6 +140,7 @@ export const DEFAULT_WEEKLY_RANGE: WeeklyRangeWeeks = 6;
 export const NAV_ITEMS: Array<{ label: string; icon: AppIconName }> = [
     { label: "Dashboard", icon: "dashboard" },
     { label: "Applications", icon: "applications" },
+    { label: "Analytics", icon: "analytics" },
     { label: "Interviews", icon: "calendar" },
     { label: "Tasks", icon: "checklist" },
     { label: "Contacts", icon: "contacts" },

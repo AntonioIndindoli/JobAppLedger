@@ -4,6 +4,7 @@ import {
     formatInterviewDateTime,
     getInterviewTypeLabel,
 } from "../../lib/interview-utils";
+import { getApplicationTimestamp } from "../../lib/application-analytics";
 import {
     formatTaskDueDate,
     getTaskDueState,
@@ -11,33 +12,72 @@ import {
     isOpenTask,
     sortTasksByDueDate,
 } from "../../lib/task-utils";
-import type { Interview, Task } from "../../lib/types";
+import type { Application, Interview, Task } from "../../lib/types";
 import { AddInterviewButton } from "../AddInterviewButton";
 import { AppIcon } from "../AppIcon";
 
+const APPLICATION_GOAL_TARGET = 20;
+const SUBMITTED_APPLICATION_STATUSES = new Set([
+    "APPLIED",
+    "INTERVIEWING",
+    "OFFER",
+    "REJECTED",
+    "WITHDRAWN",
+]);
+
 type DashboardCardsProps = {
+    applications: Application[];
     canCreateInterview: boolean;
     tasks: Task[];
     upcomingInterviews: Interview[];
+    onCreateApplication: () => void;
     onCreateInterview: () => void;
     onCreateTask: () => void;
-    onImportOpen: () => void;
+    onViewApplications: () => void;
     onViewInterviews: () => void;
     onViewTasks: () => void;
 };
 
 export function DashboardCards({
+    applications,
     canCreateInterview,
     tasks,
     upcomingInterviews,
+    onCreateApplication,
     onCreateInterview,
     onCreateTask,
-    onImportOpen,
+    onViewApplications,
     onViewInterviews,
     onViewTasks,
 }: DashboardCardsProps) {
     const visibleInterviews = upcomingInterviews.slice(0, 3);
     const visibleTasks = sortTasksByDueDate(tasks.filter(isOpenTask)).slice(0, 3);
+    const today = new Date();
+    const submittedApplications = applications.filter((application) =>
+        SUBMITTED_APPLICATION_STATUSES.has(application.status),
+    );
+    const monthlySubmittedApplications = submittedApplications.filter((application) => {
+        const applicationDate = new Date(getApplicationTimestamp(application));
+
+        return (
+            applicationDate.getFullYear() === today.getFullYear() &&
+            applicationDate.getMonth() === today.getMonth()
+        );
+    }).length;
+    const activeApplications = applications.filter((application) =>
+        ["APPLIED", "INTERVIEWING", "OFFER"].includes(application.status),
+    ).length;
+    const interviewingApplications = applications.filter(
+        (application) => application.status === "INTERVIEWING",
+    ).length;
+    const goalProgress = Math.min(
+        100,
+        Math.round((monthlySubmittedApplications / APPLICATION_GOAL_TARGET) * 100),
+    );
+    const remainingGoalApplications = Math.max(
+        APPLICATION_GOAL_TARGET - monthlySubmittedApplications,
+        0,
+    );
 
     return (
         <section className="mini-grid">
@@ -173,28 +213,71 @@ export function DashboardCards({
                     </>
                 )}
             </div>
-            <div className="panel empty-card">
+            <div className="panel empty-card goal-card">
                 <h2>
                     <span>
                         <span className="heading-icon">
-                            <AppIcon name="import" size={16} />
+                            <AppIcon name="trend" size={16} />
                         </span>
-                        PLACEHOLDER TITLE
+                        Application Goal Progress
                     </span>
-                    <button type="button" className="card-link">
+                    <button
+                        type="button"
+                        className="card-link"
+                        onClick={onViewApplications}
+                    >
                         View all
                     </button>
                 </h2>
-                <div className="empty-illustration">
-                    <AppIcon name="document" size={38} strokeWidth={1.5} />
+                <div className="goal-progress-summary">
+                    <div
+                        className="goal-progress-dial"
+                        role="progressbar"
+                        aria-label="Monthly application goal progress"
+                        aria-valuemin={0}
+                        aria-valuemax={APPLICATION_GOAL_TARGET}
+                        aria-valuenow={monthlySubmittedApplications}
+                        style={{
+                            background: `conic-gradient(#0b6bff ${goalProgress}%, #e6edf7 0)`,
+                        }}
+                    >
+                        <span>
+                            <strong>{goalProgress}%</strong>
+                        </span>
+                    </div>
+                    <div className="goal-progress-copy">
+                        <strong>
+                            {monthlySubmittedApplications} of {APPLICATION_GOAL_TARGET}
+                        </strong>
+                        <span>submitted this month</span>
+                        <p>
+                            {remainingGoalApplications
+                                ? `${remainingGoalApplications} applications to go.`
+                                : "Monthly application goal reached."}
+                        </p>
+                    </div>
                 </div>
-                <h3>PLACEHOLDER TEXT</h3>
-                <p>
-                    lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl nec
-                </p>
-                <button className="secondary small" onClick={onImportOpen}>
-                    <AppIcon name="import" size={15} />
-                    Placeholder Button
+                <div className="goal-stat-row">
+                    <span>
+                        <strong>{submittedApplications.length}</strong>
+                        <small>Total submitted</small>
+                    </span>
+                    <span>
+                        <strong>{activeApplications}</strong>
+                        <small>Active now</small>
+                    </span>
+                    <span>
+                        <strong>{interviewingApplications}</strong>
+                        <small>Interviewing</small>
+                    </span>
+                </div>
+                <button
+                    type="button"
+                    className="secondary small goal-card-action"
+                    onClick={onCreateApplication}
+                >
+                    <AppIcon name="plus" size={15} />
+                    Add Application
                 </button>
             </div>
         </section>

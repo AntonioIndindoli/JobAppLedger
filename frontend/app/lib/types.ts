@@ -19,6 +19,7 @@ export type AuthStatus = "checking" | "signedOut" | "signedIn";
 export type DashboardView =
     | "dashboard"
     | "applications"
+    | "analytics"
     | "interviews"
     | "tasks"
     | "account";
