@@ -3325,8 +3325,7 @@ button {
 
 .application-detail-header {
     display: grid;
-    gap: 12px;
-    padding-bottom: 18px;
+    gap: 5px;
 }
 
 .application-detail-top-row {
@@ -4198,13 +4197,10 @@ button {
     display: inline-flex;
 }
 
-.interview-detail-header {
-    gap: 14px;
-}
-
 .interview-detail-header .application-detail-top-row {
     grid-template-columns: minmax(0, 1fr) auto;
 }
+
 
 .interview-detail-body {
     display: grid;
@@ -5098,12 +5094,6 @@ button {
     font-size: 13px;
 }
 
-/* Applications detail: compact hierarchy and action clarity. */
-.application-detail-header {
-    gap: 8px;
-    padding-bottom: 14px;
-}
-
 .application-detail-heading {
     gap: 5px;
 }
@@ -5459,4 +5449,121 @@ button {
     min-height: 34px;
     padding: 7px 13px;
     font-size: 12px;
+}
+
+/* Shared detail-panel system for applications, interviews, and tasks. */
+.task-detail-header {
+    gap: 8px;
+}
+
+.application-detail-header .status-select,
+.detail-status-control {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+}
+
+.detail-status-control {
+    width: fit-content;
+    cursor: default;
+}
+
+.detail-status-control.scheduled,
+.detail-status-control.upcoming {
+    color: #0b56c7;
+}
+
+.detail-status-control.completed {
+    color: #0369a1;
+}
+
+.detail-status-control.passed {
+    color: #15803d;
+}
+
+.detail-status-control.failed,
+.detail-status-control.overdue {
+    color: #dc2626;
+}
+
+.detail-status-control.canceled,
+.detail-status-control.no-due-date {
+    color: #64748b;
+}
+
+.detail-status-control.today {
+    color: #c2410c;
+}
+
+.status-select.scheduled,
+.status-select.upcoming {
+    color: #0b56c7;
+}
+
+.status-select.completed {
+    color: #0369a1;
+}
+
+.status-select.passed {
+    color: #15803d;
+}
+
+.status-select.failed,
+.status-select.overdue {
+    color: #dc2626;
+}
+
+.status-select.canceled,
+.status-select.no-due-date {
+    color: #64748b;
+}
+
+.status-select.today {
+    color: #c2410c;
+}
+
+.interview-detail-header .application-detail-summary>span,
+.task-detail-header .application-detail-summary>span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.interview-detail-body,
+.task-detail-body {
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.interview-detail-facts,
+.task-detail-facts {
+    gap: 12px;
+}
+
+.interview-detail-fact,
+.interview-detail-fact-primary,
+.interview-detail-fact.is-missing {
+    min-height: 112px;
+    padding: 16px;
+    border: 1px solid #dfe7f1;
+    border-radius: 11px;
+    background: #fff;
+}
+
+.interview-detail-content-grid>.application-detail-card-section .interview-detail-section-title,
+.task-detail-body>.application-detail-card-section .interview-detail-section-title {
+    min-height: 34px;
+    margin-bottom: 12px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.interview-detail-content-grid>.application-detail-card-section p,
+.task-detail-body>.application-detail-card-section p {
+    min-height: 48px;
+    margin: 0;
+    padding: 13px 14px;
+    border: 0;
+    border-radius: 8px;
+    background: #f7f9fc;
 }

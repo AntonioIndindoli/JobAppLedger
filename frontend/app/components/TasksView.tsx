@@ -30,6 +30,7 @@ type TasksViewProps = {
     ) => void | Promise<void>;
     onRemoveTask: (id: string) => void | Promise<void>;
     onStartEdit: (task: Task) => void;
+    onUpdateDescription: (id: string, description: string) => Promise<void>;
     onViewApplication: (id: string) => void;
 };
 
@@ -107,12 +108,17 @@ export function TasksView({
     onPreferenceChange,
     onRemoveTask,
     onStartEdit,
+    onUpdateDescription,
     onViewApplication,
 }: TasksViewProps) {
     const [filters, setFilters] = useState<TaskFilters>(INITIAL_FILTERS);
     const [sortKey, setSortKey] = useState<SortKey>("dueDate");
     const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
     const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+    const [isDetailMenuOpen, setIsDetailMenuOpen] = useState(false);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    const [descriptionDraft, setDescriptionDraft] = useState("");
+    const [isSavingDescription, setIsSavingDescription] = useState(false);
 
     const taskSummary = useMemo(() => {
         const summary = {
@@ -456,67 +462,39 @@ export function TasksView({
                         <>
                             <header className="application-detail-header task-detail-header">
                                 <div className="application-detail-top-row">
-                                    <div className="application-detail-title-line">
+                                    <div className="application-detail-heading">
                                         <h2>{selectedTask.title}</h2>
-                                        <span
-                                            className={`status-pill ${getTaskStatusClass(selectedTask)}`}
-                                        >
-                                            {TASK_STATUS_LABELS[getTaskDueState(selectedTask)]}
-                                        </span>
+                                        <p className="application-detail-company-location">
+                                            <span>{selectedTask.applicationTitle ?? "No linked application"}</span>
+                                            <span aria-hidden="true">·</span>
+                                            <span>{selectedTask.companyName ?? getTaskTypeLabel(selectedTask.type)}</span>
+                                            <span aria-hidden="true">·</span>
+                                            <label className="application-detail-status-control">
+                                                <select aria-label="Task status" className={`status-select ${getTaskStatusClass(selectedTask)}`} value={getTaskDueState(selectedTask)} onChange={(event) => { if (event.target.value === "completed") onCompleteTask(selectedTask.id); if (event.target.value === "edit") onStartEdit(selectedTask); }}>
+                                                    <option value={getTaskDueState(selectedTask)}>{TASK_STATUS_LABELS[getTaskDueState(selectedTask)]}</option>
+                                                    {isOpenTask(selectedTask) && <option value="completed">Completed</option>}
+                                                    <option value="edit">Edit task details…</option>
+                                                </select>
+                                            </label>
+                                        </p>
                                     </div>
                                     <div className="application-detail-header-actions">
-                                        {isOpenTask(selectedTask) && (
-                                            <button
-                                                type="button"
-                                                className="secondary task-complete-button"
-                                                onClick={() => onCompleteTask(selectedTask.id)}
-                                            >
-                                                <AppIcon name="check" size={15} />
-                                                Complete
-                                            </button>
-                                        )}
                                         <button
                                             type="button"
-                                            className="secondary"
+                                            className="alternative"
+                                            aria-label="Edit task"
                                             onClick={() => onStartEdit(selectedTask)}
                                         >
-                                            <AppIcon name="edit" size={15} />
-                                            Edit
+                                            <AppIcon name="edit" size={25} />
                                         </button>
-                                        <button
-                                            type="button"
-                                            className="danger application-detail-delete"
-                                            onClick={() => onRemoveTask(selectedTask.id)}
-                                        >
-                                            <AppIcon name="trash" size={15} />
-                                            Delete
-                                        </button>
+                                        <div className="application-detail-menu" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDetailMenuOpen(false); }}>
+                                            <button type="button" className="application-detail-menu-trigger" aria-label="More task actions" aria-haspopup="menu" aria-expanded={isDetailMenuOpen} onClick={() => setIsDetailMenuOpen((open) => !open)}><AppIcon name="dots-vertical" size={25} /></button>
+                                            {isDetailMenuOpen && <div className="application-detail-menu-popover" role="menu">
+                                                {isOpenTask(selectedTask) && <button type="button" role="menuitem" onClick={() => { setIsDetailMenuOpen(false); onCompleteTask(selectedTask.id); }}><AppIcon name="check" size={15} /> Mark complete</button>}
+                                                <button type="button" role="menuitem" className="danger-text" onClick={() => { setIsDetailMenuOpen(false); onRemoveTask(selectedTask.id); }}><AppIcon name="trash" size={15} /> Delete task</button>
+                                            </div>}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="application-detail-subline">
-                                    <span className="task-type-pill">
-                                        {getTaskTypeLabel(selectedTask.type)}
-                                    </span>
-                                    {selectedTask.applicationId ? (
-                                        <button
-                                            type="button"
-                                            className="application-detail-posting-link"
-                                            onClick={() => {
-                                                if (selectedTask.applicationId) {
-                                                    onViewApplication(
-                                                        selectedTask.applicationId,
-                                                    );
-                                                }
-                                            }}
-                                        >
-                                            <AppIcon name="applications" size={15} />
-                                            View application
-                                        </button>
-                                    ) : (
-                                        <span className="company-line">
-                                            No linked application
-                                        </span>
-                                    )}
                                 </div>
                             </header>
 
@@ -536,7 +514,7 @@ export function TasksView({
                                             <span>
                                                 {
                                                     TASK_STATUS_LABELS[
-                                                        getTaskDueState(selectedTask)
+                                                    getTaskDueState(selectedTask)
                                                     ]
                                                 }
                                             </span>
@@ -584,16 +562,17 @@ export function TasksView({
                                     </div>
                                 </dl>
 
-                                <section className="interview-notes-card task-notes-card">
+                                <section className="application-detail-section application-detail-card-section interview-notes-card task-notes-card">
                                     <div className="interview-detail-section-title">
                                         <div className="interview-notes-card-title">
                                             <h3>Description</h3>
                                         </div>
+                                        {!isEditingDescription && <button type="button" className="alternative application-section-action" onClick={() => { setDescriptionDraft(selectedDescription); setIsEditingDescription(true); }}>Edit description</button>}
                                     </div>
-                                    <p className={selectedDescription ? "" : "is-empty"}>
-                                        {selectedDescription ||
-                                            "No description saved for this task."}
-                                    </p>
+                                    {isEditingDescription ? <div className="application-notes-editor">
+                                        <textarea aria-label="Task description" autoFocus value={descriptionDraft} onChange={(event) => setDescriptionDraft(event.target.value)} placeholder="Write a description…" />
+                                        <div className="application-notes-editor-actions"><button type="button" className="secondary" disabled={isSavingDescription} onClick={() => setIsEditingDescription(false)}>Cancel</button><button type="button" className="primary" disabled={isSavingDescription} onClick={async () => { setIsSavingDescription(true); try { await onUpdateDescription(selectedTask.id, descriptionDraft); setIsEditingDescription(false); } catch { } finally { setIsSavingDescription(false); } }}>{isSavingDescription ? "Saving…" : "Save description"}</button></div>
+                                    </div> : <p className={selectedDescription ? "" : "is-empty"}>{selectedDescription || "No description added"}</p>}
                                 </section>
                             </div>
                         </>

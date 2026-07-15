@@ -918,6 +918,35 @@ export default function MainPage() {
         loadTasks();
     }
 
+    async function updateInterviewOutcome(id: string, outcome: string) {
+        const res = await authedFetch(`/interviews/${id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ outcome }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) return setMessage(data.message ?? "Interview status update failed");
+        setMessage("Interview status updated.");
+        loadInterviews();
+        loadApplications();
+        loadTasks();
+    }
+
+    async function updateInterviewNotes(id: string, notes: string) {
+        const res = await authedFetch(`/interviews/${id}`, { method: "PATCH", body: JSON.stringify({ notes }) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) { setMessage(data.message ?? "Interview notes could not be saved."); throw new Error(); }
+        setMessage("Interview notes updated.");
+        await loadInterviews();
+    }
+
+    async function updateTaskDescription(id: string, description: string) {
+        const res = await authedFetch(`/tasks/${id}`, { method: "PATCH", body: JSON.stringify({ description }) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) { setMessage(data.message ?? "Task description could not be saved."); throw new Error(); }
+        setMessage("Task description updated.");
+        await loadTasks();
+    }
+
     async function saveTask(event: FormEvent) {
         event.preventDefault();
         if (!validateTaskForm()) return;
@@ -1158,6 +1187,8 @@ export default function MainPage() {
                     interviews={interviews}
                     onCreateInterview={() => openCreateInterview()}
                     onRemoveInterview={removeInterview}
+                    onOutcomeChange={updateInterviewOutcome}
+                    onUpdateNotes={updateInterviewNotes}
                     onStartEdit={startEditInterview}
                     onViewApplication={viewApplication}
                 />
@@ -1171,6 +1202,7 @@ export default function MainPage() {
                     onPreferenceChange={updateTaskAutomationPreferences}
                     onRemoveTask={removeTask}
                     onStartEdit={startEditTask}
+                    onUpdateDescription={updateTaskDescription}
                     onViewApplication={viewApplication}
                 />
             ) : (

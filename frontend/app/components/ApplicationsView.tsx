@@ -506,6 +506,7 @@ export function ApplicationsView({
                                         <button
                                             type="button"
                                             className="alternative"
+                                            aria-label="Edit application"
                                             onClick={() => onStartEdit(selectedApplication)}
                                         >
                                             <AppIcon name="edit" size={25} />

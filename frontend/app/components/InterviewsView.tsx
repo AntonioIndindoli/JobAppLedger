@@ -20,6 +20,8 @@ type InterviewsViewProps = {
     interviews: Interview[];
     onCreateInterview: () => void;
     onRemoveInterview: (id: string) => void;
+    onOutcomeChange: (id: string, outcome: string) => void | Promise<void>;
+    onUpdateNotes: (id: string, notes: string) => Promise<void>;
     onStartEdit: (interview: Interview) => void;
     onViewApplication: (id: string) => void;
 };
@@ -108,6 +110,8 @@ export function InterviewsView({
     interviews,
     onCreateInterview,
     onRemoveInterview,
+    onOutcomeChange,
+    onUpdateNotes,
     onStartEdit,
     onViewApplication,
 }: InterviewsViewProps) {
@@ -117,6 +121,10 @@ export function InterviewsView({
     const [selectedInterviewId, setSelectedInterviewId] = useState<string | null>(
         focusedInterviewId ?? null,
     );
+    const [isDetailMenuOpen, setIsDetailMenuOpen] = useState(false);
+    const [isEditingNotes, setIsEditingNotes] = useState(false);
+    const [notesDraft, setNotesDraft] = useState("");
+    const [isSavingNotes, setIsSavingNotes] = useState(false);
     const canCreateInterview = applications.length > 0;
 
     const filteredInterviews = useMemo(() => {
@@ -403,16 +411,17 @@ export function InterviewsView({
                         <>
                             <header className="application-detail-header interview-detail-header">
                                 <div className="application-detail-top-row">
-                                    <div className="application-detail-title-line">
-                                        <h2>
-                                            {selectedInterview.applicationTitle ??
-                                                "Unknown role"}
-                                        </h2>
-                                        <span
-                                            className={`status-pill ${selectedInterview.outcome.toLowerCase()}`}
-                                        >
-                                            {getInterviewTypeLabel(selectedInterview.type,) == "Other" ? "" : getInterviewTypeLabel(selectedInterview.type,)} {getInterviewTypeLabel(selectedInterview.type,) == "Other" ? "" : "-"} {getInterviewOutcomeLabel(selectedInterview.outcome,)}
-                                        </span>
+                                    <div className="application-detail-heading">
+                                        <h2>{selectedInterview.applicationTitle ?? "Unknown role"}</h2>
+                                        <p className="application-detail-company-location">
+                                            <span>{selectedInterview.companyName ?? "Unknown company"}</span>
+                                            <span aria-hidden="true">·</span>
+                                            <label className="application-detail-status-control">
+                                                <select aria-label="Interview status" className={`status-select ${selectedInterview.outcome.toLowerCase()}`} value={selectedInterview.outcome} onChange={(event) => onOutcomeChange(selectedInterview.id, event.target.value)}>
+                                                    {INTERVIEW_OUTCOMES.map((outcome) => <option key={outcome} value={outcome}>{getInterviewOutcomeLabel(outcome)}</option>)}
+                                                </select>
+                                            </label>
+                                        </p>
                                     </div>
                                     <div
                                         className="application-detail-header-actions"
@@ -420,48 +429,23 @@ export function InterviewsView({
                                     >
                                         <button
                                             type="button"
-                                            className="secondary"
+                                            className="alternative"
+                                            aria-label="Edit interview"
                                             onClick={() => onStartEdit(selectedInterview)}
                                         >
-                                            <AppIcon name="edit" size={15} />
-                                            Edit
+                                            <AppIcon name="edit" size={25} />
                                         </button>
-                                        <button
-                                            type="button"
-                                            className="danger application-detail-delete"
-                                            onClick={() =>
-                                                onRemoveInterview(selectedInterview.id)
-                                            }
-                                        >
-                                            <AppIcon name="trash" size={15} />
-                                            Delete
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="application-detail-title-row">
-                                    <div className="application-detail-title-block">
-                                        <div className="application-detail-subline">
-                                            <span className="company-line">
-                                                {selectedInterview.companyName ??
-                                                    "Unknown company"}
-                                            </span>
-                                            <button
-                                                type="button"
-                                                className="application-detail-posting-link"
-                                                onClick={() =>
-                                                    onViewApplication(
-                                                        selectedInterview.applicationId,
-                                                    )
-                                                }
-                                            >
-                                                <AppIcon
-                                                    name="applications"
-                                                    size={15}
-                                                />
-                                                View application
-                                            </button>
+                                        <div className="application-detail-menu" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDetailMenuOpen(false); }}>
+                                            <button type="button" className="application-detail-menu-trigger" aria-label="More interview actions" aria-haspopup="menu" aria-expanded={isDetailMenuOpen} onClick={() => setIsDetailMenuOpen((open) => !open)}><AppIcon name="dots-vertical" size={25} /></button>
+                                            {isDetailMenuOpen && <div className="application-detail-menu-popover" role="menu">
+                                                <button type="button" role="menuitem" className="danger-text" onClick={() => { setIsDetailMenuOpen(false); onRemoveInterview(selectedInterview.id); }}><AppIcon name="trash" size={15} /> Delete interview</button>
+                                            </div>}
                                         </div>
                                     </div>
+                                </div>
+                                <div className="application-detail-summary" aria-label="Interview summary">
+                                    <span>{getInterviewTypeLabel(selectedInterview.type)} interview</span>
+                                    <button type="button" className="application-detail-posting-link" onClick={() => onViewApplication(selectedInterview.applicationId)}><AppIcon name="applications" size={15} /> View application</button>
                                 </div>
                             </header>
 
@@ -561,16 +545,17 @@ export function InterviewsView({
                                 </dl>
 
                                 <div className="interview-detail-content-grid">
-                                    <section className="interview-notes-card">
+                                    <section className="application-detail-section application-detail-card-section interview-notes-card">
                                         <div className="interview-detail-section-title">
                                             <div className="interview-notes-card-title">
                                                 <h3>Notes</h3>
                                             </div>
+                                            {!isEditingNotes && <button type="button" className="alternative application-section-action" onClick={() => { setNotesDraft(selectedNotes); setIsEditingNotes(true); }}>Edit notes</button>}
                                         </div>
-                                        <p className={selectedNotes ? "" : "is-empty"}>
-                                            {selectedNotes ||
-                                                "No notes saved for this interview."}
-                                        </p>
+                                        {isEditingNotes ? <div className="application-notes-editor">
+                                            <textarea aria-label="Interview notes" autoFocus value={notesDraft} onChange={(event) => setNotesDraft(event.target.value)} placeholder="Write a note…" />
+                                            <div className="application-notes-editor-actions"><button type="button" className="secondary" disabled={isSavingNotes} onClick={() => setIsEditingNotes(false)}>Cancel</button><button type="button" className="primary" disabled={isSavingNotes} onClick={async () => { setIsSavingNotes(true); try { await onUpdateNotes(selectedInterview.id, notesDraft); setIsEditingNotes(false); } catch { } finally { setIsSavingNotes(false); } }}>{isSavingNotes ? "Saving…" : "Save notes"}</button></div>
+                                        </div> : <p className={selectedNotes ? "" : "is-empty"}>{selectedNotes || "No notes added"}</p>}
                                     </section>
                                 </div>
                             </div>
