@@ -79,6 +79,12 @@ function formatDisplayDate(value: string | null) {
     }).format(date);
 }
 
+function formatFilterDate(value: string) {
+    if (!value) return "";
+    const date = new Date(`${value}T00:00:00`);
+    return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(date);
+}
+
 function formatSalaryRange(application: Application) {
     const { salaryMin, salaryMax } = application;
     const moneyFormatter = new Intl.NumberFormat(undefined, {
@@ -154,6 +160,7 @@ export function ApplicationsView({
     const [notesDraft, setNotesDraft] = useState("");
     const [isSavingNotes, setIsSavingNotes] = useState(false);
     const [openInterviewMenuId, setOpenInterviewMenuId] = useState<string | null>(null);
+    const [isAppliedDateOpen, setIsAppliedDateOpen] = useState(false);
     const [selectedApplicationId, setSelectedApplicationId] = useState<
         string | null
     >(focusedApplicationId ?? null);
@@ -361,22 +368,30 @@ export function ApplicationsView({
                         </option>
                     ))}
                 </select>
-                <input
-                    type="date"
-                    aria-label="Start date"
-                    value={filters.startDate}
-                    onChange={(event) =>
-                        setFilters({ ...filters, startDate: event.target.value })
-                    }
-                />
-                <input
-                    type="date"
-                    aria-label="End date"
-                    value={filters.endDate}
-                    onChange={(event) =>
-                        setFilters({ ...filters, endDate: event.target.value })
-                    }
-                />
+                <div className="applications-date-filter" onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsAppliedDateOpen(false);
+                }}>
+                    <button type="button" className="applications-date-filter-trigger" aria-haspopup="dialog" aria-expanded={isAppliedDateOpen} onClick={() => setIsAppliedDateOpen((open) => !open)}>
+                        <span><strong>Applied date:</strong> {filters.startDate || filters.endDate
+                            ? `${filters.startDate ? formatFilterDate(filters.startDate) : "Any"} – ${filters.endDate ? formatFilterDate(filters.endDate) : "Any"}`
+                            : "Any time"}</span>
+                        <AppIcon name="chevron-down" size={14} />
+                    </button>
+                    {isAppliedDateOpen && (
+                        <div className="applications-date-filter-popover" role="dialog" aria-label="Applied date range">
+                            <div className="applications-date-filter-heading">
+                                <strong>Applied date</strong>
+                                <span>Choose a date range</span>
+                            </div>
+                            <label>From<input type="date" value={filters.startDate} max={filters.endDate || undefined} onChange={(event) => setFilters({ ...filters, startDate: event.target.value })} /></label>
+                            <label>To<input type="date" value={filters.endDate} min={filters.startDate || undefined} onChange={(event) => setFilters({ ...filters, endDate: event.target.value })} /></label>
+                            <div className="applications-date-filter-actions">
+                                <button type="button" className="application-detail-posting-link" onClick={() => setFilters({ ...filters, startDate: "", endDate: "" })}>Clear</button>
+                                <button type="button" className="primary" onClick={() => setIsAppliedDateOpen(false)}>Done</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
                 <button
                     type="button"
                     className="interviews-reset-button"
@@ -493,18 +508,18 @@ export function ApplicationsView({
                                             className="alternative"
                                             onClick={() => onStartEdit(selectedApplication)}
                                         >
-                                            <AppIcon name="edit" size={20} />
+                                            <AppIcon name="edit" size={25} />
                                         </button>
                                         <div className="application-detail-menu" onBlur={(event) => {
                                             if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsApplicationMenuOpen(false);
                                         }}>
                                             <button type="button" className="application-detail-menu-trigger" aria-label="More application actions" aria-haspopup="menu" aria-expanded={isApplicationMenuOpen} onClick={() => setIsApplicationMenuOpen((open) => !open)}>
-                                                <AppIcon name="dots-vertical" size={20} />
+                                                <AppIcon name="dots-vertical" size={25} />
                                             </button>
                                             {isApplicationMenuOpen && (
-                                                <div className="application-detail-menu-popover" role="menu">
+                                                <div className="alternative application-detail-menu-popover" role="menu">
                                                     <button type="button" role="menuitem" onClick={() => { setIsApplicationMenuOpen(false); onRemoveApplication(selectedApplication.id); }}>
-                                                        <AppIcon name="trash" size={20} /> Delete application
+                                                        <AppIcon name="trash" size={25} /> Delete application
                                                     </button>
                                                 </div>
                                             )}

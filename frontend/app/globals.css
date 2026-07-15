@@ -2791,7 +2791,7 @@ button {
 
 .applications-toolbar {
     display: grid;
-    grid-template-columns: minmax(220px, 2fr) minmax(140px, 1fr) minmax(150px, 1fr) minmax(135px, 1fr) minmax(135px, 1fr) auto;
+    grid-template-columns: minmax(220px, 2fr) minmax(140px, 1fr) minmax(150px, 1fr) minmax(230px, 1.35fr) auto;
     gap: 8px;
     padding: 12px;
     border: 1px solid var(--border);
@@ -3452,10 +3452,6 @@ button {
 .application-detail-layout .application-detail-main>section {
     padding: 10px 0;
     border-top: 1px solid #dee4ec;
-}
-
-.application-detail-layout .application-detail-main>section:first-child {
-    padding-top: 5px;
 }
 
 .application-detail-layout .application-detail-main>section:last-child {
@@ -5372,4 +5368,95 @@ button {
     color: #66738b;
     font-size: 13px;
     font-weight: 650;
+}
+
+.applications-date-filter {
+    position: relative;
+    min-width: 0;
+}
+
+.applications-date-filter-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    height: 44px;
+    padding: 0 11px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: #fbfdff;
+    color: #53617b;
+    font: inherit;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.applications-date-filter-trigger strong {
+    color: #26334d;
+}
+
+.applications-date-filter-popover {
+    position: absolute;
+    top: calc(100% + 7px);
+    right: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 340px;
+    padding: 16px;
+    border: 1px solid #dfe7f1;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 14px 34px rgba(20, 33, 61, .16);
+}
+
+.applications-date-filter-heading {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 2px;
+}
+
+.applications-date-filter-heading strong {
+    color: #14213d;
+    font-size: 14px;
+}
+
+.applications-date-filter-heading span {
+    color: #66738b;
+    font-size: 12px;
+}
+
+.applications-date-filter-popover label {
+    display: grid;
+    gap: 6px;
+    color: #53617b;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.applications-date-filter-popover input {
+    min-width: 0;
+    width: 100%;
+    padding: 9px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: #fbfdff;
+    color: #14213d;
+    font: inherit;
+}
+
+.applications-date-filter-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 3px;
+}
+
+.applications-date-filter-actions .primary {
+    min-height: 34px;
+    padding: 7px 13px;
+    font-size: 12px;
 }

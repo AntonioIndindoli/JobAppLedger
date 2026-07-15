@@ -224,15 +224,6 @@ export function ApplicationDrawer({
                         </label>
                     </section>
                     <footer className="drawer-footer">
-                        {isEditing && editingId && (
-                            <button
-                                type="button"
-                                className="danger"
-                                onClick={() => onRemoveApplication(editingId)}
-                            >
-                                Delete application
-                            </button>
-                        )}
                         <button type="button" className="secondary" onClick={onClose}>
                             Cancel
                         </button>
