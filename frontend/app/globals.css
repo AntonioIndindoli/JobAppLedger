@@ -3123,19 +3123,22 @@ button {
 .application-detail-panel {
     overflow: hidden;
     border: 1px solid var(--border);
-    border-radius: 12px;
     background: white;
     box-shadow: 0 10px 26px rgba(31, 60, 100, .035);
 }
 
 .application-list-panel {
-    min-height: 520px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
 }
 
 .application-detail-panel {
     min-width: 0;
     min-height: 520px;
     padding: 24px;
+    box-shadow: inset 3px 0 #0b6bff;
+    border-bottom-right-radius: 12px;
+    border-top-right-radius: 12px;
 }
 
 .application-list-header {
@@ -3165,10 +3168,6 @@ button {
     font-size: 13px;
 }
 
-.application-list {
-    display: grid;
-}
-
 .application-table-header,
 .application-list-item.applications-table-columns,
 .application-list-item.interviews-table-columns,
@@ -3179,11 +3178,11 @@ button {
 }
 
 .applications-table-columns {
-    grid-template-columns: minmax(160px, 1.35fr) minmax(110px, 1fr) minmax(105px, .75fr) auto;
+    grid-template-columns: minmax(150px, 1.4fr) minmax(100px, .9fr) minmax(135px, 1fr) minmax(50px, .4fr);
 }
 
 .interviews-table-columns {
-    grid-template-columns: minmax(140px, 1.3fr) minmax(100px, .9fr) minmax(135px, 1fr) minmax(80px, .7fr) auto;
+    grid-template-columns: minmax(150px, 1.3fr) minmax(100px, .9fr) minmax(135px, 1fr) minmax(80px, .7fr) auto;
 }
 
 .tasks-table-columns {
@@ -3328,7 +3327,6 @@ button {
     display: grid;
     gap: 12px;
     padding-bottom: 18px;
-    border-bottom: 1px solid #edf2f8;
 }
 
 .application-detail-top-row {
@@ -3436,7 +3434,7 @@ button {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
     align-items: start;
-    margin-top: 16px;
+    margin-top: 8px;
 }
 
 .application-detail-layout .application-detail-section {
@@ -3452,12 +3450,12 @@ button {
 }
 
 .application-detail-layout .application-detail-main>section {
-    padding: 20px 0;
-    border-bottom: 1px solid #edf2f8;
+    padding: 10px 0;
+    border-top: 1px solid #dee4ec;
 }
 
 .application-detail-layout .application-detail-main>section:first-child {
-    padding-top: 0;
+    padding-top: 5px;
 }
 
 .application-detail-layout .application-detail-main>section:last-child {
@@ -3466,14 +3464,17 @@ button {
 }
 
 .application-next-action-card {
-    display: flex;
+    display: grid;
+    grid-template-columns: 25px 1fr;
     align-items: center;
     gap: 12px;
+    min-width: 0;
     border: 1px solid #dfeaf6;
-    border-radius: 9px;
-    padding: 12px;
+    border-radius: 8px;
+    padding: 13px 12px;
     background: #fcfeff;
 }
+
 
 .application-task-state {
     display: grid;
@@ -3695,7 +3696,6 @@ button {
 
 .application-detail-section {
     display: grid;
-    gap: 8px;
     margin-top: 18px;
     padding-top: 18px;
     border-top: 1px solid #edf2f8;
@@ -4444,7 +4444,14 @@ button {
 }
 
 .interview-notes-card p.is-empty {
-    color: #7b86a0;
+    min-height: 48px;
+    margin: 0;
+    padding: 13px 14px;
+    border-radius: 8px;
+    background: #f7f9fc;
+    color: #66738b;
+    font-size: 13px;
+    font-weight: 650;
 }
 
 .interview-detail-ready {
@@ -5145,7 +5152,7 @@ button {
     border: 0;
     border-radius: 6px;
     background: transparent;
-    color: #b42318;
+    color: #334155;
     font: inherit;
     font-size: 13px;
     font-weight: 750;
@@ -5153,7 +5160,43 @@ button {
 }
 
 .application-detail-menu-popover button:hover {
+    background: #f5f8fc;
+}
+
+.application-detail-menu-popover button.danger-text {
+    color: #b42318;
+}
+
+.application-detail-menu-popover button.danger-text:hover {
     background: #fff1f0;
+}
+
+.application-interview-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.application-interview-icon-button {
+    display: grid;
+    place-items: center;
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    background: #fff;
+    color: #53617b;
+}
+
+
+.application-interview-icon-button:hover {
+    border-color: #b9d5ff;
+    background: #f5f9ff;
+    color: #0b6bff;
+}
+
+.application-interview-menu-popover {
+    min-width: 170px;
 }
 
 .application-section-action {
@@ -5169,25 +5212,10 @@ button {
     gap: 12px;
 }
 
-.application-detail-layout .application-detail-main>.application-detail-card-section {
-    margin: 0;
-    padding: 16px !important;
-    border: 1px solid #dfe7f1 !important;
-    border-radius: 11px;
-    background: #fff;
-}
-
 .application-detail-card-section .application-detail-section-heading,
 .application-detail-card-section>.interview-detail-section-title {
     min-height: 34px;
     margin-bottom: 12px;
-}
-
-.application-next-action-card {
-    margin-top: 0;
-    border: 0;
-    padding: 0;
-    background: transparent;
 }
 
 .application-task-checkbox {

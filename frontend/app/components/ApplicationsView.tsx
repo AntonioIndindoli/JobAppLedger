@@ -31,7 +31,9 @@ type ApplicationsViewProps = {
     onCompleteTask: (id: string) => void | Promise<void>;
     onImportOpen: () => void;
     onRemoveApplication: (id: string) => void;
+    onRemoveInterview: (id: string) => void | Promise<void>;
     onStartEdit: (application: Application) => void;
+    onStartEditInterview: (interview: Interview) => void;
     onStatusChange: (id: string, status: string) => void;
     onUpdateNotes: (application: Application, notes: string) => Promise<void>;
     onViewInterview: (interviewId: string) => void;
@@ -136,7 +138,9 @@ export function ApplicationsView({
     onCompleteTask,
     onImportOpen,
     onRemoveApplication,
+    onRemoveInterview,
     onStartEdit,
+    onStartEditInterview,
     onStatusChange,
     onUpdateNotes,
     onViewInterview,
@@ -149,6 +153,7 @@ export function ApplicationsView({
     const [isEditingNotes, setIsEditingNotes] = useState(false);
     const [notesDraft, setNotesDraft] = useState("");
     const [isSavingNotes, setIsSavingNotes] = useState(false);
+    const [openInterviewMenuId, setOpenInterviewMenuId] = useState<string | null>(null);
     const [selectedApplicationId, setSelectedApplicationId] = useState<
         string | null
     >(focusedApplicationId ?? null);
@@ -635,21 +640,28 @@ export function ApplicationsView({
                                                                 interview.outcome,
                                                             )}
                                                         </span>
-                                                        <button
-                                                            type="button"
-                                                            className="application-detail-posting-link application-interview-view-link"
-                                                            onClick={() =>
-                                                                onViewInterview(
-                                                                    interview.id,
-                                                                )
-                                                            }
-                                                        >
-                                                            <AppIcon
-                                                                name="view"
-                                                                size={15}
-                                                            />
-                                                            View interview
-                                                        </button>
+                                                        <div className="application-interview-actions">
+                                                            <button type="button" className="application-interview-icon-button" aria-label={`Edit ${getInterviewTypeLabel(interview.type)} interview`} onClick={() => onStartEditInterview(interview)}>
+                                                                <AppIcon name="edit" size={18} />
+                                                            </button>
+                                                            <div className="application-detail-menu" onBlur={(event) => {
+                                                                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenInterviewMenuId(null);
+                                                            }}>
+                                                                <button type="button" className="application-interview-icon-button" aria-label="More interview actions" aria-haspopup="menu" aria-expanded={openInterviewMenuId === interview.id} onClick={() => setOpenInterviewMenuId((current) => current === interview.id ? null : interview.id)}>
+                                                                    <AppIcon name="dots-vertical" size={18} />
+                                                                </button>
+                                                                {openInterviewMenuId === interview.id && (
+                                                                    <div className="application-detail-menu-popover application-interview-menu-popover" role="menu">
+                                                                        <button type="button" role="menuitem" onClick={() => { setOpenInterviewMenuId(null); onViewInterview(interview.id); }}>
+                                                                            <AppIcon name="view" size={18} /> View interview
+                                                                        </button>
+                                                                        <button type="button" role="menuitem" className="danger-text" onClick={() => { setOpenInterviewMenuId(null); onRemoveInterview(interview.id); }}>
+                                                                            <AppIcon name="trash" size={18} /> Delete interview
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </article>
                                                 ))}
                                             </div>

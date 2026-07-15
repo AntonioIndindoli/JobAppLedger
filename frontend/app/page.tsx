@@ -1134,7 +1134,9 @@ export default function MainPage() {
                     onCompleteTask={completeTask}
                     onImportOpen={openImportDrawer}
                     onRemoveApplication={removeApplication}
+                    onRemoveInterview={removeInterview}
                     onStartEdit={startEdit}
+                    onStartEditInterview={startEditInterview}
                     onStatusChange={transitionStatus}
                     onUpdateNotes={updateApplicationNotes}
                     onViewInterview={viewInterview}
