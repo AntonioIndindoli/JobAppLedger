@@ -204,6 +204,7 @@ export type AppIconName =
     | "pipeline"
     | "plus"
     | "search"
+    | "salary"
     | "settings"
     | "source"
     | "trash"

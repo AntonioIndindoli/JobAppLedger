@@ -17,6 +17,7 @@ import type {
     TaskAutomationPreferences,
 } from "../lib/types";
 import { AppIcon } from "./AppIcon";
+import { InitialsBadge } from "./InitialsBadge";
 
 type TasksViewProps = {
     applications: Application[];
@@ -186,6 +187,8 @@ export function TasksView({
                 type="button"
                 className={isActive ? "table-sort-button active" : "table-sort-button"}
                 onClick={() => updateSort(nextSortKey)}
+                aria-label={`Sort by ${label}${isActive ? `, currently ${sortDirection === "asc" ? "ascending" : "descending"}` : ""}`}
+                aria-pressed={isActive}
             >
                 <span>{label}</span>
                 <AppIcon
@@ -366,17 +369,15 @@ export function TasksView({
                         </div>
                     </div>
 
-                    <div className="application-list-sort" aria-label="Sort tasks">
-                        <span>Sort</span>
-                        {renderSortButton("Due", "dueDate")}
-                        {renderSortButton("Task", "title")}
-                        {renderSortButton("Application", "applicationTitle")}
-                        {renderSortButton("Type", "type")}
-                        {renderSortButton("Status", "status")}
-                    </div>
-
                     {sortedTasks.length > 0 ? (
                         <div className="application-list" role="list">
+                            <div className="application-table-header tasks-table-columns" role="row" aria-label="Task columns and sorting">
+                                {renderSortButton("Task", "title")}
+                                {renderSortButton("Application", "applicationTitle")}
+                                {renderSortButton("Due", "dueDate")}
+                                {renderSortButton("Type", "type")}
+                                {renderSortButton("Status", "status")}
+                            </div>
                             {sortedTasks.map((task) => {
                                 const state = getTaskDueState(task);
                                 const isSelected = selectedTask?.id === task.id;
@@ -388,32 +389,28 @@ export function TasksView({
                                         type="button"
                                         className={
                                             isSelected
-                                                ? "application-list-item task-list-item active"
-                                                : "application-list-item task-list-item"
+                                                ? "application-list-item task-list-item tasks-table-columns active"
+                                                : "application-list-item task-list-item tasks-table-columns"
                                         }
                                         aria-current={isSelected ? "true" : undefined}
                                         onClick={() => setSelectedTaskId(task.id)}
                                     >
-                                        <span
-                                            className={
-                                                isCompleted
-                                                    ? "application-list-icon task-list-icon completed"
-                                                    : "application-list-icon task-list-icon"
-                                            }
-                                        >
-                                            <AppIcon
-                                                name={isCompleted ? "check" : "checklist"}
-                                                size={19}
+                                        <span className="application-primary-cell">
+                                            <InitialsBadge
+                                                label={task.companyName}
+                                                fallback={task.title}
+                                                className={isCompleted ? "task-list-icon completed" : "task-list-icon"}
                                             />
-                                        </span>
-                                        <span className="application-list-copy">
                                             <strong>{task.title}</strong>
-                                            <span>{getTaskApplicationLabel(task)}</span>
-                                            <em>
-                                                {formatTaskDueDate(task.dueDate)}
-                                                {" - "}
-                                                {getTaskTypeLabel(task.type)}
-                                            </em>
+                                        </span>
+                                        <span className="application-table-cell" data-label="Application">
+                                            {getTaskApplicationLabel(task)}
+                                        </span>
+                                        <span className="application-table-cell" data-label="Due">
+                                            {formatTaskDueDate(task.dueDate)}
+                                        </span>
+                                        <span className="application-table-cell" data-label="Type">
+                                            {getTaskTypeLabel(task.type)}
                                         </span>
                                         <span
                                             className={`status-pill ${getTaskStatusClass(task)}`}

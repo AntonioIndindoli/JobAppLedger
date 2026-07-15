@@ -14,19 +14,25 @@ import {
     getInterviewTypeLabel,
     sortInterviewsBySchedule,
 } from "../lib/interview-utils";
+import { formatTaskDueDate, getTaskDueState, sortTasksByDueDate } from "../lib/task-utils";
 import { SOURCES, STATUSES, STATUS_LABELS } from "../lib/constants";
-import type { Application, Interview } from "../lib/types";
+import type { Application, Interview, Task } from "../lib/types";
 import { AppIcon } from "./AppIcon";
+import { InitialsBadge } from "./InitialsBadge";
 
 type ApplicationsViewProps = {
     applications: Application[];
     focusedApplicationId?: string | null;
     interviews: Interview[];
+    tasks: Task[];
     onCreateApplication: () => void;
     onCreateInterview: (applicationId?: string) => void;
+    onCreateTask: (applicationId?: string) => void;
+    onCompleteTask: (id: string) => void | Promise<void>;
     onImportOpen: () => void;
     onRemoveApplication: (id: string) => void;
     onStartEdit: (application: Application) => void;
+    onStatusChange: (id: string, status: string) => void;
     onViewInterview: (interviewId: string) => void;
 };
 
@@ -87,7 +93,17 @@ function formatSalaryRange(application: Application) {
     if (salaryMin !== null) return `From ${moneyFormatter.format(salaryMin)}`;
     if (salaryMax !== null) return `Up to ${moneyFormatter.format(salaryMax)}`;
 
-    return "Not set";
+    return "Salary not specified";
+}
+
+function formatTaskRemaining(value: string | null) {
+    if (!value) return "";
+    const due = new Date(`${value.slice(0, 10)}T23:59:59`);
+    if (Number.isNaN(due.getTime())) return "";
+    const days = Math.ceil((due.getTime() - Date.now()) / 86_400_000);
+    if (days < 0) return `${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} overdue`;
+    if (days === 0) return "Due today";
+    return `${days} day${days === 1 ? "" : "s"} remaining`;
 }
 
 function getSortValue(application: Application, sortKey: SortKey) {
@@ -112,17 +128,22 @@ export function ApplicationsView({
     applications,
     focusedApplicationId,
     interviews,
+    tasks,
     onCreateApplication,
     onCreateInterview,
+    onCreateTask,
+    onCompleteTask,
     onImportOpen,
     onRemoveApplication,
     onStartEdit,
+    onStatusChange,
     onViewInterview,
 }: ApplicationsViewProps) {
     const [filters, setFilters] =
         useState<ApplicationsTableFilters>(INITIAL_FILTERS);
     const [sortKey, setSortKey] = useState<SortKey>("dateApplied");
     const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+    const [isApplicationMenuOpen, setIsApplicationMenuOpen] = useState(false);
     const [selectedApplicationId, setSelectedApplicationId] = useState<
         string | null
     >(focusedApplicationId ?? null);
@@ -213,6 +234,15 @@ export function ApplicationsView({
             "asc",
         )
         : [];
+    const selectedTasks = selectedApplication
+        ? sortTasksByDueDate(
+            tasks.filter(
+                (task) =>
+                    task.applicationId === selectedApplication.id && !task.completedAt,
+            ),
+        )
+        : [];
+    const nextTask = selectedTasks[0] ?? null;
     function updateSort(nextSortKey: SortKey) {
         if (nextSortKey === sortKey) {
             setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
@@ -231,6 +261,8 @@ export function ApplicationsView({
                 type="button"
                 className={isActive ? "table-sort-button active" : "table-sort-button"}
                 onClick={() => updateSort(nextSortKey)}
+                aria-label={`Sort by ${label}${isActive ? `, currently ${sortDirection === "asc" ? "ascending" : "descending"}` : ""}`}
+                aria-pressed={isActive}
             >
                 <span>{label}</span>
                 <AppIcon
@@ -357,16 +389,14 @@ export function ApplicationsView({
                         </div>
                     </div>
 
-                    <div className="application-list-sort" aria-label="Sort applications">
-                        <span>Sort</span>
-                        {renderSortButton("Role", "title")}
-                        {renderSortButton("Company", "companyName")}
-                        {renderSortButton("Status", "status")}
-                        {renderSortButton("Applied", "dateApplied")}
-                    </div>
-
                     {sortedApplications.length > 0 ? (
                         <div className="application-list" role="list">
+                            <div className="application-table-header applications-table-columns" role="row" aria-label="Application columns and sorting">
+                                {renderSortButton("Role", "title")}
+                                {renderSortButton("Company", "companyName")}
+                                {renderSortButton("Applied date", "dateApplied")}
+                                {renderSortButton("Status", "status")}
+                            </div>
                             {sortedApplications.map((application) => {
                                 const isSelected =
                                     selectedApplication?.id === application.id;
@@ -377,28 +407,26 @@ export function ApplicationsView({
                                         type="button"
                                         className={
                                             isSelected
-                                                ? "application-list-item active"
-                                                : "application-list-item"
+                                                ? "application-list-item applications-table-columns active"
+                                                : "application-list-item applications-table-columns"
                                         }
                                         aria-current={isSelected ? "true" : undefined}
                                         onClick={() =>
                                             setSelectedApplicationId(application.id)
                                         }
                                     >
-                                        <span className="application-list-icon">
-                                            <AppIcon name="applications" size={19} />
-                                        </span>
-                                        <span className="application-list-copy">
+                                        <span className="application-primary-cell">
+                                            <InitialsBadge
+                                                label={application.companyName}
+                                                fallback={application.title}
+                                            />
                                             <strong>{application.title}</strong>
-                                            <span>
-                                                {application.companyName ||
-                                                    "Unknown company"}
-                                            </span>
-                                            <em>
-                                                {formatDisplayDate(
-                                                    application.dateApplied,
-                                                )}
-                                            </em>
+                                        </span>
+                                        <span className="application-table-cell" data-label="Company">
+                                            {application.companyName || "Unknown company"}
+                                        </span>
+                                        <span className="application-table-cell" data-label="Applied date">
+                                            {formatDisplayDate(application.dateApplied)}
                                         </span>
                                         <span
                                             className={`status-pill ${application.status.toLowerCase()}`}
@@ -441,13 +469,34 @@ export function ApplicationsView({
                         <>
                             <header className="application-detail-header">
                                 <div className="application-detail-top-row">
-                                    <div className="application-detail-title-line">
+                                    <div className="application-detail-heading">
                                         <h2>{selectedApplication.title}</h2>
-                                        <span
-                                            className={`status-pill ${selectedApplication.status.toLowerCase()}`}
-                                        >
-                                            {getStatusLabel(selectedApplication.status)}
-                                        </span>
+                                        <p className="application-detail-company-location">
+                                            <span>{selectedApplication.companyName || "Unknown company"}</span>
+                                            <span aria-hidden="true">·</span>
+                                            <span>{selectedApplication.location || "Location not set"}</span>
+                                            <span aria-hidden="true">·</span>
+                                            <label className="application-detail-status-control">
+                                                <select
+                                                    aria-label="Application status"
+                                                    className={`status-select ${selectedApplication.status.toLowerCase()}`}
+                                                    value={selectedApplication.status}
+                                                    onChange={(event) =>
+                                                        onStatusChange(
+                                                            selectedApplication.id,
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                >
+                                                    {STATUSES.map((status) => (
+                                                        <option key={status} value={status}>
+                                                            {STATUS_LABELS[status]}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </label>
+                                        </p>
+
                                     </div>
                                     <div
                                         className="application-detail-header-actions"
@@ -461,47 +510,62 @@ export function ApplicationsView({
                                             <AppIcon name="edit" size={15} />
                                             Edit
                                         </button>
-                                        <button
-                                            type="button"
-                                            className="danger application-detail-delete"
-                                            onClick={() =>
-                                                onRemoveApplication(selectedApplication.id)
-                                            }
-                                        >
-                                            <AppIcon name="trash" size={15} />
-                                            Delete
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="application-detail-title-row">
-                                    <div className="application-detail-title-block">
-
-                                        <div className="application-detail-subline">
-                                            <span className="company-line">
-                                                {selectedApplication.companyName ||
-                                                    "Unknown company"}
-                                            </span>
-                                            {selectedApplication.sourceUrl && (
-                                                <a
-                                                    className="application-detail-posting-link"
-                                                    href={selectedApplication.sourceUrl}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                >
-                                                    <AppIcon
-                                                        name="external-link"
-                                                        size={15}
-                                                    />
-                                                    View posting
-                                                </a>
+                                        <div className="application-detail-menu" onBlur={(event) => {
+                                            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsApplicationMenuOpen(false);
+                                        }}>
+                                            <button type="button" className="application-detail-menu-trigger" aria-label="More application actions" aria-haspopup="menu" aria-expanded={isApplicationMenuOpen} onClick={() => setIsApplicationMenuOpen((open) => !open)}>
+                                                <AppIcon name="dots-vertical" size={17} />
+                                            </button>
+                                            {isApplicationMenuOpen && (
+                                                <div className="application-detail-menu-popover" role="menu">
+                                                    <button type="button" role="menuitem" onClick={() => { setIsApplicationMenuOpen(false); onRemoveApplication(selectedApplication.id); }}>
+                                                        <AppIcon name="trash" size={15} /> Delete application
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
                                 </div>
+                                <div className="application-detail-summary" aria-label="Application summary">
+                                    <span><AppIcon name="calendar" size={17} /> Applied {formatDisplayDate(selectedApplication.dateApplied)}</span>
+                                    <span aria-hidden="true">·</span>
+                                    <span><AppIcon name="source" size={17} /> {selectedApplication.source || "No source"}</span>
+                                    <span aria-hidden="true">·</span>
+                                    <span><AppIcon name="salary" size={17} /> {selectedApplication.salaryMin !== null || selectedApplication.salaryMax !== null ? `Salary: ${formatSalaryRange(selectedApplication)}` : formatSalaryRange(selectedApplication)}</span>
+                                </div>
+                                {selectedApplication.sourceUrl && (
+                                    <a className="application-detail-posting-link" href={selectedApplication.sourceUrl} target="_blank" rel="noreferrer">
+                                        Open original posting <AppIcon name="external-link" size={14} />
+                                    </a>
+                                )}
                             </header>
 
                             <div className="application-detail-layout">
                                 <div className="application-detail-main">
+                                    <section className="application-detail-section application-next-action-section">
+                                        <div className="application-detail-section-heading">
+                                            <h3>Next action</h3>
+                                            <button type="button" className="secondary application-section-action" onClick={() => onCreateTask(selectedApplication.id)}>
+                                                <AppIcon name="plus" size={15} /> Add task
+                                            </button>
+                                        </div>
+                                        {nextTask ? (
+                                            <div className="application-next-action-card">
+                                                <button type="button" className={`application-task-checkbox ${getTaskDueState(nextTask)}`} aria-label={`Mark ${nextTask.title} complete`} onClick={() => onCompleteTask(nextTask.id)}>
+                                                    <AppIcon name="check" size={15} />
+                                                </button>
+                                                <div>
+                                                    <strong>{nextTask.title}</strong>
+                                                    <p>
+                                                        {nextTask.dueDate
+                                                            ? `Due ${formatTaskDueDate(nextTask.dueDate)} · ${formatTaskRemaining(nextTask.dueDate)}`
+                                                            : "No due date"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : <p className="application-detail-empty-copy">No next action set.</p>}
+                                    </section>
+
                                     <section className="application-detail-section application-detail-interviews-section">
                                         <div className="application-detail-section-heading">
                                             <div>
@@ -584,75 +648,23 @@ export function ApplicationsView({
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className="application-interviews-empty">
-                                                <span>
-                                                    <AppIcon name="calendar" size={19} />
-                                                </span>
-                                                <div>
-                                                    <strong>No interviews added</strong>
-                                                    <p>
-                                                        Add interview details when this
-                                                        application moves forward.
-                                                    </p>
-                                                </div>
-                                            </div>
+                                            <div className="application-interviews-empty">No interviews yet</div>
                                         )}
-                                    </section>                            <section className="application-notes-card interview-notes-card">
+                                    </section>
+
+                                    <section className="application-notes-card interview-notes-card">
                                         <div className="interview-detail-section-title">
                                             <div className="interview-notes-card-title">
                                                 <h3>Notes</h3>
                                             </div>
+                                            <button type="button" className="application-detail-posting-link" onClick={() => onStartEdit(selectedApplication)}>{selectedNotes ? "Edit notes" : "Add note"}</button>
                                         </div>
                                         <p className={selectedNotes ? "" : "is-empty"}>
                                             {selectedNotes ||
-                                                "No notes saved for this application."}
+                                                "No notes added"}
                                         </p>
                                     </section>
                                 </div>
-
-                                <aside
-                                    className="application-detail-meta"
-                                    aria-label="Application details"
-                                >
-                                    <dl className="application-detail-meta-list">
-                                        <div className="application-detail-meta-item">
-                                            <dt>
-                                                <AppIcon name="calendar" size={15} />
-                                                Applied
-                                            </dt>
-                                            <dd>
-                                                {formatDisplayDate(
-                                                    selectedApplication.dateApplied,
-                                                )}
-                                            </dd>
-                                        </div>
-                                        <div className="application-detail-meta-item">
-                                            <dt>
-                                                <AppIcon name="location" size={15} />
-                                                Location
-                                            </dt>
-                                            <dd>
-                                                {selectedApplication.location || "Not set"}
-                                            </dd>
-                                        </div>
-                                        <div className="application-detail-meta-item">
-                                            <dt>
-                                                <AppIcon name="source" size={15} />
-                                                Source
-                                            </dt>
-                                            <dd>
-                                                {selectedApplication.source || "No source"}
-                                            </dd>
-                                        </div>
-                                        <div className="application-detail-meta-item">
-                                            <dt>
-                                                <AppIcon name="analytics" size={15} />
-                                                Salary
-                                            </dt>
-                                            <dd>{formatSalaryRange(selectedApplication)}</dd>
-                                        </div>
-                                    </dl>
-                                </aside>
                             </div>
 
 

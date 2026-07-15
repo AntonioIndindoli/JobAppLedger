@@ -256,6 +256,15 @@ export function AppIcon({
                 </>
             );
             break;
+        case "salary":
+            icon = (
+                <>
+                    <circle cx="12" cy="12" r="8" />
+                    <path d="M15.5 8.7c-.8-.7-1.8-1-3-1-1.7 0-3 .8-3 2 0 2.8 6 1.4 6 4.2 0 1.2-1.3 2.1-3 2.1-1.2 0-2.4-.4-3.2-1.2" />
+                    <path d="M12.5 5.8v12.4" />
+                </>
+            );
+            break;
         case "settings":
             icon = (
                 <>

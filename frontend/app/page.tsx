@@ -1101,11 +1101,15 @@ export default function MainPage() {
                     applications={applications}
                     focusedApplicationId={focusedApplicationId}
                     interviews={interviews}
+                    tasks={tasks}
                     onCreateApplication={openCreateApplication}
                     onCreateInterview={openCreateInterview}
+                    onCreateTask={openCreateTask}
+                    onCompleteTask={completeTask}
                     onImportOpen={openImportDrawer}
                     onRemoveApplication={removeApplication}
                     onStartEdit={startEdit}
+                    onStatusChange={transitionStatus}
                     onViewInterview={viewInterview}
                 />
             ) : currentView === "analytics" ? (

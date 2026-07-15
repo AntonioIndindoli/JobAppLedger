@@ -12,6 +12,7 @@ import { INTERVIEW_OUTCOMES, INTERVIEW_TYPES } from "../lib/constants";
 import type { Application, Interview } from "../lib/types";
 import { AddInterviewButton } from "./AddInterviewButton";
 import { AppIcon } from "./AppIcon";
+import { InitialsBadge } from "./InitialsBadge";
 
 type InterviewsViewProps = {
     applications: Application[];
@@ -202,6 +203,8 @@ export function InterviewsView({
                 type="button"
                 className={isActive ? "table-sort-button active" : "table-sort-button"}
                 onClick={() => updateSort(nextSortKey)}
+                aria-label={`Sort by ${label}${isActive ? `, currently ${sortDirection === "asc" ? "ascending" : "descending"}` : ""}`}
+                aria-pressed={isActive}
             >
                 <span>{label}</span>
                 <AppIcon
@@ -314,17 +317,15 @@ export function InterviewsView({
                         </div>
                     </div>
 
-                    <div className="application-list-sort" aria-label="Sort interviews">
-                        <span>Sort</span>
-                        {renderSortButton("When", "scheduledAt")}
-                        {renderSortButton("Role", "applicationTitle")}
-                        {renderSortButton("Company", "companyName")}
-                        {renderSortButton("Stage", "type")}
-                        {renderSortButton("Status", "outcome")}
-                    </div>
-
                     {sortedInterviews.length > 0 ? (
                         <div className="application-list" role="list">
+                            <div className="application-table-header interviews-table-columns" role="row" aria-label="Interview columns and sorting">
+                                {renderSortButton("Role", "applicationTitle")}
+                                {renderSortButton("Company", "companyName")}
+                                {renderSortButton("When", "scheduledAt")}
+                                {renderSortButton("Stage", "type")}
+                                {renderSortButton("Status", "outcome")}
+                            </div>
                             {sortedInterviews.map((interview) => {
                                 const isSelected =
                                     selectedInterview?.id === interview.id;
@@ -335,37 +336,31 @@ export function InterviewsView({
                                         type="button"
                                         className={
                                             isSelected
-                                                ? "application-list-item interview-list-item active"
-                                                : "application-list-item interview-list-item"
+                                                ? "application-list-item interview-list-item interviews-table-columns active"
+                                                : "application-list-item interview-list-item interviews-table-columns"
                                         }
                                         aria-current={isSelected ? "true" : undefined}
                                         onClick={() =>
                                             setSelectedInterviewId(interview.id)
                                         }
                                     >
-                                        <span className="application-list-icon interview-list-icon">
-                                            <AppIcon name="calendar" size={19} />
+                                        <span className="application-primary-cell">
+                                            <InitialsBadge
+                                                label={interview.companyName}
+                                                fallback={interview.applicationTitle}
+                                                className="interview-list-icon"
+                                            />
+                                            <strong>{interview.applicationTitle ?? "Unknown role"}</strong>
                                         </span>
-                                        <span className="application-list-copy">
-                                            <strong>
-                                                {interview.applicationTitle ??
-                                                    "Unknown role"}
-                                            </strong>
-                                            <span>
-                                                {interview.companyName ??
-                                                    "Unknown company"}
-                                            </span>
-                                            <em>
-                                                {formatInterviewDateLabel(
-                                                    interview.scheduledAt,
-                                                )}
-                                                {" at "}
-                                                {formatInterviewTimeLabel(
-                                                    interview.scheduledAt,
-                                                )}
-                                                {" - "}
-                                                {getInterviewTypeLabel(interview.type)}
-                                            </em>
+                                        <span className="application-table-cell" data-label="Company">
+                                            {interview.companyName ?? "Unknown company"}
+                                        </span>
+                                        <span className="application-table-cell" data-label="When">
+                                            {formatInterviewDateLabel(interview.scheduledAt)} at{" "}
+                                            {formatInterviewTimeLabel(interview.scheduledAt)}
+                                        </span>
+                                        <span className="application-table-cell" data-label="Stage">
+                                            {getInterviewTypeLabel(interview.type)}
                                         </span>
                                         <span
                                             className={`status-pill ${interview.outcome.toLowerCase()}`}

@@ -1,22 +1,6 @@
 /* Leaflet's own stylesheet is also required:
    import "leaflet/dist/leaflet.css" from app/layout.tsx or pages/_app.tsx. */
 
-.application-map-shell {
-    position: relative;
-    min-width: 0;
-    overflow: hidden;
-    border-radius: 12px;
-}
-
-.application-map-canvas {
-    width: 100%;
-    height: 380px;
-    min-height: 380px;
-    border-radius: 12px;
-    background: #e5e7eb;
-    isolation: isolate;
-}
-
 .application-map-canvas:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 2px;
