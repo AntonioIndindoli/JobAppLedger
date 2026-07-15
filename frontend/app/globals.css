@@ -379,7 +379,7 @@ button {
 
 .sankey-frame {
     width: 100%;
-    min-height: 250px;
+    min-height: 320px;
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: thin;
@@ -390,9 +390,9 @@ button {
 .sankey-canvas {
     display: block;
     width: 100%;
-    min-width: 820px;
+    min-width: 960px;
     height: auto;
-    min-height: 250px;
+    min-height: 320px;
 }
 
 .sankey-link {
@@ -3098,7 +3098,7 @@ padding: 4px;
 
 .applications-split-panel {
     display: grid;
-    grid-template-columns: max(525px, 33%) 1fr;
+    grid-template-columns: 1fr minmax(815px, 33%);
     gap: 16px;
     align-items: start;
 }
@@ -3273,7 +3273,7 @@ padding: 4px;
 }
 
 .application-detail-top-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 175px;
     justify-content: space-between;
     display: grid;
     gap: 12px;
@@ -3326,13 +3326,12 @@ padding: 4px;
     display: flex;
     align-items: center;
     gap: 12px;
-    flex-wrap: wrap;
     min-width: 0;
 }
 
 .application-detail-title-line h2 {
     margin: 0;
-    font-size: 28px;
+    font-size: 24px;
     line-height: 1.12;
 }
 

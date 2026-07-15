@@ -1,6 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+// Import "leaflet/dist/leaflet.css" once from your global app entry
+// (app/layout.tsx for the App Router or pages/_app.tsx for the Pages Router).
+
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { STATUS_LABELS } from "../../lib/constants";
 import {
@@ -16,367 +19,259 @@ type ApplicationMapProps = {
     onViewApplication: (applicationId: string) => void;
 };
 
-type GeoCoordinate = {
+type GeocodedLocation = {
     lat: number;
     lng: number;
+    displayName: string;
 };
 
-type ApplicationMapPoint = {
+type ApplicationMapPoint = GeocodedLocation & {
     application: Application;
-    x: number;
-    y: number;
     locationLabel: string;
-    locationType: "matched" | "remote" | "fallback";
 };
 
-const MAP_WIDTH = 760;
-const MAP_HEIGHT = 380;
-const MIN_LAT = 24;
-const MAX_LAT = 50;
-const MIN_LNG = -125;
-const MAX_LNG = -66;
-const REMOTE_COORDINATE = { lat: 39.5, lng: -98.35 };
-const FALLBACK_COORDINATE = { lat: 28.6, lng: -72.2 };
+type NominatimSearchResult = {
+    lat: string;
+    lon: string;
+    display_name: string;
+};
 
-const LOCATION_COORDINATES = {
-    "ann arbor": { lat: 42.28, lng: -83.74 },
-    arlington: { lat: 38.88, lng: -77.1 },
-    atlanta: { lat: 33.75, lng: -84.39 },
-    austin: { lat: 30.27, lng: -97.74 },
-    "bay area": { lat: 37.77, lng: -122.42 },
-    bellevue: { lat: 47.61, lng: -122.2 },
-    berkeley: { lat: 37.87, lng: -122.27 },
-    boston: { lat: 42.36, lng: -71.06 },
-    boulder: { lat: 40.02, lng: -105.27 },
-    brooklyn: { lat: 40.68, lng: -73.94 },
-    cambridge: { lat: 42.37, lng: -71.11 },
-    charlotte: { lat: 35.23, lng: -80.84 },
-    chicago: { lat: 41.88, lng: -87.63 },
-    cincinnati: { lat: 39.1, lng: -84.51 },
-    cleveland: { lat: 41.5, lng: -81.69 },
-    columbus: { lat: 39.96, lng: -82.99 },
-    "costa mesa": { lat: 33.64, lng: -117.92 },
-    "culver city": { lat: 34.02, lng: -118.4 },
-    dallas: { lat: 32.78, lng: -96.8 },
-    denver: { lat: 39.74, lng: -104.99 },
-    detroit: { lat: 42.33, lng: -83.05 },
-    durham: { lat: 35.99, lng: -78.9 },
-    houston: { lat: 29.76, lng: -95.37 },
-    indianapolis: { lat: 39.77, lng: -86.16 },
-    irvine: { lat: 33.68, lng: -117.83 },
-    "jersey city": { lat: 40.72, lng: -74.04 },
-    "kansas city": { lat: 39.1, lng: -94.58 },
-    lehi: { lat: 40.39, lng: -111.85 },
-    "los angeles": { lat: 34.05, lng: -118.24 },
-    manhattan: { lat: 40.78, lng: -73.97 },
-    miami: { lat: 25.76, lng: -80.19 },
-    minneapolis: { lat: 44.98, lng: -93.27 },
-    "mountain view": { lat: 37.39, lng: -122.08 },
-    nashville: { lat: 36.16, lng: -86.78 },
-    "new york": { lat: 40.71, lng: -74.01 },
-    "new york city": { lat: 40.71, lng: -74.01 },
-    "newport beach": { lat: 33.62, lng: -117.93 },
-    nyc: { lat: 40.71, lng: -74.01 },
-    oakland: { lat: 37.8, lng: -122.27 },
-    omaha: { lat: 41.26, lng: -95.94 },
-    "orange county": { lat: 33.72, lng: -117.83 },
-    orlando: { lat: 28.54, lng: -81.38 },
-    "palo alto": { lat: 37.44, lng: -122.14 },
-    pasadena: { lat: 34.15, lng: -118.14 },
-    philadelphia: { lat: 39.95, lng: -75.17 },
-    phoenix: { lat: 33.45, lng: -112.07 },
-    pittsburgh: { lat: 40.44, lng: -79.99 },
-    portland: { lat: 45.52, lng: -122.68 },
-    provo: { lat: 40.23, lng: -111.66 },
-    raleigh: { lat: 35.78, lng: -78.64 },
-    redmond: { lat: 47.67, lng: -122.12 },
-    "redwood city": { lat: 37.49, lng: -122.24 },
-    sacramento: { lat: 38.58, lng: -121.49 },
-    "salt lake city": { lat: 40.76, lng: -111.89 },
-    "san antonio": { lat: 29.42, lng: -98.49 },
-    "san diego": { lat: 32.72, lng: -117.16 },
-    "san francisco": { lat: 37.77, lng: -122.42 },
-    "san jose": { lat: 37.34, lng: -121.89 },
-    "san mateo": { lat: 37.56, lng: -122.33 },
-    "santa monica": { lat: 34.02, lng: -118.49 },
-    seattle: { lat: 47.61, lng: -122.33 },
-    "sf bay area": { lat: 37.77, lng: -122.42 },
-    "silicon valley": { lat: 37.39, lng: -122.08 },
-    "st louis": { lat: 38.63, lng: -90.2 },
-    sunnyvale: { lat: 37.37, lng: -122.04 },
-    tampa: { lat: 27.95, lng: -82.46 },
-    "washington dc": { lat: 38.9, lng: -77.04 },
-    "washington d.c.": { lat: 38.9, lng: -77.04 },
-    vancouver: { lat: 49.28, lng: -123.12 },
-    toronto: { lat: 43.65, lng: -79.38 },
-    montreal: { lat: 45.5, lng: -73.57 },
-    ottawa: { lat: 45.42, lng: -75.69 },
-    waterloo: { lat: 43.46, lng: -80.52 },
-} satisfies Record<string, GeoCoordinate>;
+type GeocodeCacheEntry = {
+    cachedAt: number;
+    value: GeocodedLocation | null;
+};
 
-const STATE_COORDINATES = {
-    AL: { lat: 32.8, lng: -86.8 },
-    AK: { lat: 61.4, lng: -152.4 },
-    AZ: { lat: 34.2, lng: -111.7 },
-    AR: { lat: 34.8, lng: -92.2 },
-    CA: { lat: 36.8, lng: -119.4 },
-    CO: { lat: 39.0, lng: -105.5 },
-    CT: { lat: 41.6, lng: -72.7 },
-    DC: { lat: 38.9, lng: -77.04 },
-    DE: { lat: 39.0, lng: -75.5 },
-    FL: { lat: 28.1, lng: -81.6 },
-    GA: { lat: 32.7, lng: -83.4 },
-    HI: { lat: 20.8, lng: -156.3 },
-    IA: { lat: 42.1, lng: -93.5 },
-    ID: { lat: 44.2, lng: -114.6 },
-    IL: { lat: 40.0, lng: -89.2 },
-    IN: { lat: 39.9, lng: -86.3 },
-    KS: { lat: 38.5, lng: -98.0 },
-    KY: { lat: 37.7, lng: -85.0 },
-    LA: { lat: 31.0, lng: -92.0 },
-    MA: { lat: 42.2, lng: -71.8 },
-    MD: { lat: 39.0, lng: -76.7 },
-    ME: { lat: 45.3, lng: -69.2 },
-    MI: { lat: 44.3, lng: -85.6 },
-    MN: { lat: 46.3, lng: -94.2 },
-    MO: { lat: 38.5, lng: -92.5 },
-    MS: { lat: 32.7, lng: -89.7 },
-    MT: { lat: 46.9, lng: -110.4 },
-    NC: { lat: 35.5, lng: -79.4 },
-    ND: { lat: 47.4, lng: -100.5 },
-    NE: { lat: 41.5, lng: -99.8 },
-    NH: { lat: 43.7, lng: -71.6 },
-    NJ: { lat: 40.1, lng: -74.7 },
-    NM: { lat: 34.4, lng: -106.1 },
-    NV: { lat: 39.3, lng: -116.6 },
-    NY: { lat: 42.9, lng: -75.5 },
-    OH: { lat: 40.3, lng: -82.8 },
-    OK: { lat: 35.6, lng: -97.5 },
-    OR: { lat: 44.0, lng: -120.5 },
-    PA: { lat: 40.9, lng: -77.8 },
-    RI: { lat: 41.7, lng: -71.5 },
-    SC: { lat: 33.8, lng: -80.9 },
-    SD: { lat: 44.4, lng: -100.2 },
-    TN: { lat: 35.8, lng: -86.4 },
-    TX: { lat: 31.0, lng: -99.9 },
-    UT: { lat: 39.3, lng: -111.7 },
-    VA: { lat: 37.5, lng: -78.7 },
-    VT: { lat: 44.0, lng: -72.7 },
-    WA: { lat: 47.4, lng: -120.7 },
-    WI: { lat: 44.6, lng: -89.8 },
-    WV: { lat: 38.6, lng: -80.6 },
-    WY: { lat: 43.0, lng: -107.6 },
-    BC: { lat: 53.7, lng: -124.7 },
-    ON: { lat: 50.0, lng: -85.0 },
-    QC: { lat: 52.0, lng: -71.9 },
-} satisfies Record<string, GeoCoordinate>;
+type GeocodeCache = Record<string, GeocodeCacheEntry>;
 
-const STATE_NAME_TO_CODE = {
-    alabama: "AL",
-    alaska: "AK",
-    arizona: "AZ",
-    arkansas: "AR",
-    california: "CA",
-    colorado: "CO",
-    connecticut: "CT",
-    delaware: "DE",
-    florida: "FL",
-    georgia: "GA",
-    hawaii: "HI",
-    idaho: "ID",
-    illinois: "IL",
-    indiana: "IN",
-    iowa: "IA",
-    kansas: "KS",
-    kentucky: "KY",
-    louisiana: "LA",
-    maine: "ME",
-    maryland: "MD",
-    massachusetts: "MA",
-    michigan: "MI",
-    minnesota: "MN",
-    mississippi: "MS",
-    missouri: "MO",
-    montana: "MT",
-    nebraska: "NE",
-    nevada: "NV",
-    "new hampshire": "NH",
-    "new jersey": "NJ",
-    "new mexico": "NM",
-    "new york": "NY",
-    "north carolina": "NC",
-    "north dakota": "ND",
-    ohio: "OH",
-    oklahoma: "OK",
-    oregon: "OR",
-    pennsylvania: "PA",
-    "rhode island": "RI",
-    "south carolina": "SC",
-    "south dakota": "SD",
-    tennessee: "TN",
-    texas: "TX",
-    utah: "UT",
-    vermont: "VT",
-    virginia: "VA",
-    washington: "WA",
-    "washington dc": "DC",
-    "washington d.c.": "DC",
-    "west virginia": "WV",
-    wisconsin: "WI",
-    wyoming: "WY",
-    "british columbia": "BC",
-    ontario: "ON",
-    quebec: "QC",
-} satisfies Record<string, keyof typeof STATE_COORDINATES>;
+type GeocodingState = {
+    phase: "idle" | "loading" | "ready" | "error";
+    completed: number;
+    total: number;
+    error: string | null;
+};
 
-const LOCATION_KEYS = (
-    Object.keys(LOCATION_COORDINATES) as Array<keyof typeof LOCATION_COORDINATES>
-).sort(
-    (first, second) => second.length - first.length,
-);
+type LeafletModule = typeof import("leaflet");
+type LeafletMapInstance = ReturnType<LeafletModule["map"]>;
+type LeafletLayerGroupInstance = ReturnType<LeafletModule["layerGroup"]>;
 
-function normalizeLocation(value: string) {
-    return value
-        .toLowerCase()
-        .replace(/d\.c\./g, "dc")
-        .replace(/[^a-z0-9\s.]/g, " ")
-        .replace(/\b(greater|metro|area|office|offices|hybrid|onsite|on site)\b/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
+const DEFAULT_MAP_CENTER: [number, number] = [20, 0];
+const DEFAULT_MAP_ZOOM = 2;
+const SINGLE_LOCATION_ZOOM = 9;
+const GEOCODE_CACHE_KEY = "application-map:nominatim-geocoding:v1";
+const GEOCODE_CACHE_TTL_MS = 180 * 24 * 60 * 60 * 1000;
+const GEOCODE_REQUEST_INTERVAL_MS = 1_100;
+
+const GEOCODING_ENDPOINT =
+    process.env.NEXT_PUBLIC_GEOCODING_ENDPOINT ??
+    "https://nominatim.openstreetmap.org/search";
+const NOMINATIM_CONTACT_EMAIL =
+    process.env.NEXT_PUBLIC_NOMINATIM_CONTACT_EMAIL?.trim() || null;
+const MAP_TILE_URL =
+    process.env.NEXT_PUBLIC_MAP_TILE_URL ??
+    "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+const MAP_TILE_ATTRIBUTION =
+    process.env.NEXT_PUBLIC_MAP_TILE_ATTRIBUTION ??
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+const REMOTE_LOCATION_PATTERN =
+    /\b(remote|virtual|anywhere|distributed|work\s+from\s+home|wfh)\b/i;
+const WORK_MODE_PATTERN = /\b(hybrid|on[- ]?site|office|offices)\b/gi;
+
+function sleep(duration: number, signal: AbortSignal) {
+    return new Promise<void>((resolve, reject) => {
+        if (signal.aborted) {
+            reject(new DOMException("Aborted", "AbortError"));
+            return;
+        }
+
+        const timeoutId = window.setTimeout(resolve, duration);
+        signal.addEventListener(
+            "abort",
+            () => {
+                window.clearTimeout(timeoutId);
+                reject(new DOMException("Aborted", "AbortError"));
+            },
+            { once: true },
+        );
+    });
 }
 
-function isRemoteLocation(value: string) {
-    return /\b(remote|virtual|anywhere|distributed)\b/i.test(value);
-}
-
-function projectCoordinate(coordinate: GeoCoordinate) {
-    if (
-        coordinate.lat < MIN_LAT ||
-        coordinate.lat > MAX_LAT ||
-        coordinate.lng < MIN_LNG ||
-        coordinate.lng > MAX_LNG
-    ) {
-        return null;
-    }
-
-    return {
-        x: ((coordinate.lng - MIN_LNG) / (MAX_LNG - MIN_LNG)) * MAP_WIDTH,
-        y: ((MAX_LAT - coordinate.lat) / (MAX_LAT - MIN_LAT)) * MAP_HEIGHT,
-    };
-}
-
-function resolveCoordinate(location: string | null) {
+function getLocationQuery(location: string | null) {
     const rawLocation = location?.trim();
-    if (!rawLocation) {
-        return {
-            coordinate: FALLBACK_COORDINATE,
-            label: "Location not set",
-            type: "fallback" as const,
-        };
-    }
+    if (!rawLocation || REMOTE_LOCATION_PATTERN.test(rawLocation)) return null;
 
-    const normalizedLocation = normalizeLocation(rawLocation);
-    const locationKey = LOCATION_KEYS.find((key) =>
-        normalizedLocation.includes(key),
-    );
-    if (locationKey) {
-        return {
-            coordinate: LOCATION_COORDINATES[locationKey],
-            label: rawLocation,
-            type: "matched" as const,
-        };
-    }
+    const query = rawLocation
+        .replace(WORK_MODE_PATTERN, " ")
+        .replace(/[()[\]{}]/g, " ")
+        .replace(/\s+/g, " ")
+        .replace(/^[,;|\-\s]+|[,;|\-\s]+$/g, "")
+        .trim();
 
-    const stateCode = rawLocation.match(/\b([A-Z]{2})\b/)?.[1] as
-        | keyof typeof STATE_COORDINATES
-        | undefined;
-    if (stateCode && STATE_COORDINATES[stateCode]) {
-        return {
-            coordinate: STATE_COORDINATES[stateCode],
-            label: rawLocation,
-            type: "matched" as const,
-        };
-    }
-
-    const stateName = (
-        Object.keys(STATE_NAME_TO_CODE) as Array<keyof typeof STATE_NAME_TO_CODE>
-    ).find((name) => normalizedLocation.includes(name));
-    if (stateName) {
-        return {
-            coordinate: STATE_COORDINATES[STATE_NAME_TO_CODE[stateName]],
-            label: rawLocation,
-            type: "matched" as const,
-        };
-    }
-
-    if (isRemoteLocation(rawLocation)) {
-        return {
-            coordinate: REMOTE_COORDINATE,
-            label: rawLocation,
-            type: "remote" as const,
-        };
-    }
-
-    if (/\b(united states|usa|u\.s\.|us)\b/i.test(rawLocation)) {
-        return {
-            coordinate: REMOTE_COORDINATE,
-            label: rawLocation,
-            type: "matched" as const,
-        };
-    }
+    if (!query) return null;
 
     return {
-        coordinate: FALLBACK_COORDINATE,
+        key: query.toLocaleLowerCase("en-US"),
+        query,
         label: rawLocation,
-        type: "fallback" as const,
     };
 }
 
-function offsetPoint(x: number, y: number, index: number) {
-    if (index === 0) return { x, y };
+function isGeocodedLocation(value: unknown): value is GeocodedLocation {
+    if (!value || typeof value !== "object") return false;
 
-    const ring = Math.ceil(index / 8);
-    const angle = ((index - 1) % 8) * (Math.PI / 4);
-    const radius = 8 + ring * 5;
+    const candidate = value as Partial<GeocodedLocation>;
+    return (
+        typeof candidate.lat === "number" &&
+        Number.isFinite(candidate.lat) &&
+        typeof candidate.lng === "number" &&
+        Number.isFinite(candidate.lng) &&
+        typeof candidate.displayName === "string"
+    );
+}
+
+function readGeocodeCache() {
+    if (typeof window === "undefined") return {} satisfies GeocodeCache;
+
+    try {
+        const rawCache = window.localStorage.getItem(GEOCODE_CACHE_KEY);
+        if (!rawCache) return {} satisfies GeocodeCache;
+
+        const parsedCache = JSON.parse(rawCache) as unknown;
+        if (!parsedCache || typeof parsedCache !== "object") {
+            return {} satisfies GeocodeCache;
+        }
+
+        const now = Date.now();
+        const validEntries: GeocodeCache = {};
+
+        for (const [key, rawEntry] of Object.entries(parsedCache)) {
+            if (!rawEntry || typeof rawEntry !== "object") continue;
+
+            const entry = rawEntry as Partial<GeocodeCacheEntry>;
+            if (
+                typeof entry.cachedAt !== "number" ||
+                now - entry.cachedAt > GEOCODE_CACHE_TTL_MS
+            ) {
+                continue;
+            }
+
+            if (entry.value === null || isGeocodedLocation(entry.value)) {
+                validEntries[key] = {
+                    cachedAt: entry.cachedAt,
+                    value: entry.value,
+                };
+            }
+        }
+
+        return validEntries;
+    } catch {
+        return {} satisfies GeocodeCache;
+    }
+}
+
+function writeGeocodeCache(cache: GeocodeCache) {
+    try {
+        window.localStorage.setItem(GEOCODE_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+        // Mapping still works when storage is unavailable; it simply cannot reuse results.
+    }
+}
+
+async function geocodeLocation(query: string, signal: AbortSignal) {
+    const url = new URL(GEOCODING_ENDPOINT);
+    url.searchParams.set("q", query);
+    url.searchParams.set("format", "jsonv2");
+    url.searchParams.set("limit", "1");
+    url.searchParams.set("addressdetails", "0");
+    url.searchParams.set(
+        "accept-language",
+        navigator.language?.toLowerCase() || "en",
+    );
+
+    if (NOMINATIM_CONTACT_EMAIL) {
+        url.searchParams.set("email", NOMINATIM_CONTACT_EMAIL);
+    }
+
+    const response = await fetch(url, {
+        signal,
+        headers: { Accept: "application/json" },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Geocoding failed with HTTP ${response.status}.`);
+    }
+
+    const payload = (await response.json()) as NominatimSearchResult[];
+    const result = payload[0];
+    if (!result) return null;
+
+    const lat = Number(result.lat);
+    const lng = Number(result.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
 
     return {
-        x: Math.min(MAP_WIDTH - 16, Math.max(16, x + Math.cos(angle) * radius)),
-        y: Math.min(MAP_HEIGHT - 16, Math.max(16, y + Math.sin(angle) * radius)),
+        lat,
+        lng,
+        displayName: result.display_name,
+    } satisfies GeocodedLocation;
+}
+
+function spreadCoordinate(
+    coordinate: GeocodedLocation,
+    occurrenceIndex: number,
+): GeocodedLocation {
+    if (occurrenceIndex === 0) return coordinate;
+
+    const ring = Math.ceil(occurrenceIndex / 8);
+    const angle = ((occurrenceIndex - 1) % 8) * (Math.PI / 4);
+    const latitudeOffset = Math.sin(angle) * 0.018 * ring;
+    const longitudeScale = Math.max(
+        0.35,
+        Math.cos((coordinate.lat * Math.PI) / 180),
+    );
+    const longitudeOffset =
+        (Math.cos(angle) * 0.018 * ring) / longitudeScale;
+
+    return {
+        ...coordinate,
+        lat: coordinate.lat + latitudeOffset,
+        lng: coordinate.lng + longitudeOffset,
     };
 }
 
 function buildApplicationMapPoints(
     applications: Application[],
+    locationsByKey: Record<string, GeocodedLocation | null>,
 ): ApplicationMapPoint[] {
-    const occurrenceByLocation = new Map<string, number>();
+    const occurrencesByLocation = new Map<string, number>();
 
-    return applications
-        .map((application) => {
-            const resolved = resolveCoordinate(application.location);
-            const projected =
-                projectCoordinate(resolved.coordinate) ??
-                projectCoordinate(FALLBACK_COORDINATE);
-            const basePoint = projected ?? { x: MAP_WIDTH - 70, y: MAP_HEIGHT - 56 };
-            const occurrenceKey = `${Math.round(basePoint.x)}-${Math.round(
-                basePoint.y,
-            )}-${resolved.type}`;
-            const occurrence = occurrenceByLocation.get(occurrenceKey) ?? 0;
-            occurrenceByLocation.set(occurrenceKey, occurrence + 1);
-            const point = offsetPoint(basePoint.x, basePoint.y, occurrence);
-
-            return {
-                application,
-                x: point.x,
-                y: point.y,
-                locationLabel: resolved.label,
-                locationType: resolved.type,
-            };
-        })
+    return [...applications]
         .sort(
             (first, second) =>
-                getApplicationTimestamp(second.application) -
-                getApplicationTimestamp(first.application),
-        );
+                getApplicationTimestamp(second) -
+                getApplicationTimestamp(first),
+        )
+        .flatMap((application) => {
+            const location = getLocationQuery(application.location);
+            if (!location) return [];
+
+            const coordinate = locationsByKey[location.key];
+            if (!coordinate) return [];
+
+            const occurrence = occurrencesByLocation.get(location.key) ?? 0;
+            occurrencesByLocation.set(location.key, occurrence + 1);
+            const spread = spreadCoordinate(coordinate, occurrence);
+
+            return [
+                {
+                    application,
+                    lat: spread.lat,
+                    lng: spread.lng,
+                    displayName: coordinate.displayName,
+                    locationLabel: location.label,
+                },
+            ];
+        });
 }
 
 function getStatusLabel(status: string) {
@@ -385,6 +280,23 @@ function getStatusLabel(status: string) {
 
 function getStatusClass(status: string) {
     return isApplicationStatus(status) ? status.toLowerCase() : "saved";
+}
+
+function getMarkerColor(status: string) {
+    switch (getStatusClass(status)) {
+        case "applied":
+            return "#2563eb";
+        case "interviewing":
+            return "#d97706";
+        case "offer":
+            return "#16a34a";
+        case "rejected":
+            return "#dc2626";
+        case "withdrawn":
+            return "#7c3aed";
+        default:
+            return "#64748b";
+    }
 }
 
 function formatAppliedDate(value: string | null) {
@@ -404,17 +316,314 @@ export function ApplicationMap({
     applications,
     onViewApplication,
 }: ApplicationMapProps) {
+    const mapContainerRef = useRef<HTMLDivElement | null>(null);
+    const leafletRef = useRef<LeafletModule | null>(null);
+    const mapRef = useRef<LeafletMapInstance | null>(null);
+    const markerLayerRef = useRef<LeafletLayerGroupInstance | null>(null);
+
+    const [mapReady, setMapReady] = useState(false);
+    const [retryVersion, setRetryVersion] = useState(0);
+    const [locationsByKey, setLocationsByKey] = useState<
+        Record<string, GeocodedLocation | null>
+    >({});
+    const [geocodingState, setGeocodingState] = useState<GeocodingState>({
+        phase: "idle",
+        completed: 0,
+        total: 0,
+        error: null,
+    });
+    const [selectedApplicationId, setSelectedApplicationId] = useState<
+        string | null
+    >(null);
+
+    useEffect(() => {
+        const container = mapContainerRef.current;
+        if (!container) return;
+
+        let disposed = false;
+        let resizeObserver: ResizeObserver | null = null;
+        let map: LeafletMapInstance | null = null;
+
+        void import("leaflet").then((leaflet) => {
+            const currentContainer = mapContainerRef.current;
+            if (disposed || !currentContainer) return;
+
+            leafletRef.current = leaflet;
+            map = leaflet.map(currentContainer, {
+                minZoom: 2,
+                worldCopyJump: true,
+                zoomControl: true,
+                attributionControl: true,
+            });
+            map.setView(DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM);
+
+            leaflet
+                .tileLayer(MAP_TILE_URL, {
+                    attribution: MAP_TILE_ATTRIBUTION,
+                    maxZoom: 19,
+                })
+                .addTo(map);
+
+            markerLayerRef.current = leaflet.layerGroup().addTo(map);
+            mapRef.current = map;
+            setMapReady(true);
+
+            if (typeof ResizeObserver !== "undefined") {
+                resizeObserver = new ResizeObserver(() => {
+                    map?.invalidateSize({ pan: false });
+                });
+                resizeObserver.observe(currentContainer);
+            }
+        });
+
+        return () => {
+            disposed = true;
+            resizeObserver?.disconnect();
+            map?.remove();
+            mapRef.current = null;
+            markerLayerRef.current = null;
+            leafletRef.current = null;
+        };
+    }, []);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        let cancelled = false;
+
+        type LocationQuery = NonNullable<ReturnType<typeof getLocationQuery>>;
+        const uniqueLocations = new Map<string, LocationQuery>();
+
+        for (const application of applications) {
+            const location = getLocationQuery(application.location);
+            if (location) uniqueLocations.set(location.key, location);
+        }
+
+        const locationEntries = [...uniqueLocations.values()];
+        const cache = readGeocodeCache();
+        const initialLocations: Record<string, GeocodedLocation | null> = {};
+        const missingLocations: typeof locationEntries = [];
+
+        for (const location of locationEntries) {
+            if (Object.prototype.hasOwnProperty.call(cache, location.key)) {
+                initialLocations[location.key] = cache[location.key].value;
+            } else {
+                missingLocations.push(location);
+            }
+        }
+
+        setLocationsByKey(initialLocations);
+        setGeocodingState({
+            phase: missingLocations.length > 0 ? "loading" : "ready",
+            completed: locationEntries.length - missingLocations.length,
+            total: locationEntries.length,
+            error: null,
+        });
+
+        async function resolveMissingLocations() {
+            if (missingLocations.length === 0) return;
+
+            let completed = locationEntries.length - missingLocations.length;
+            let failedRequests = 0;
+            let lastError: string | null = null;
+
+            for (let index = 0; index < missingLocations.length; index += 1) {
+                const location = missingLocations[index];
+
+                try {
+                    const result = await geocodeLocation(
+                        location.query,
+                        controller.signal,
+                    );
+                    if (cancelled) return;
+
+                    setLocationsByKey((current) => ({
+                        ...current,
+                        [location.key]: result,
+                    }));
+                    cache[location.key] = {
+                        cachedAt: Date.now(),
+                        value: result,
+                    };
+                    writeGeocodeCache(cache);
+                } catch (error: unknown) {
+                    if (
+                        cancelled ||
+                        (error instanceof DOMException &&
+                            error.name === "AbortError")
+                    ) {
+                        return;
+                    }
+
+                    failedRequests += 1;
+                    lastError =
+                        error instanceof Error
+                            ? error.message
+                            : "The geocoding service could not be reached.";
+                }
+
+                completed += 1;
+                setGeocodingState({
+                    phase: "loading",
+                    completed,
+                    total: locationEntries.length,
+                    error: lastError,
+                });
+
+                if (index < missingLocations.length - 1) {
+                    await sleep(GEOCODE_REQUEST_INTERVAL_MS, controller.signal);
+                }
+            }
+
+            if (cancelled) return;
+
+            setGeocodingState({
+                phase: failedRequests > 0 ? "error" : "ready",
+                completed,
+                total: locationEntries.length,
+                error:
+                    failedRequests > 0
+                        ? lastError ??
+                        `${failedRequests} location requests could not be completed.`
+                        : null,
+            });
+        }
+
+        void resolveMissingLocations().catch((error: unknown) => {
+            if (cancelled || (error instanceof DOMException && error.name === "AbortError")) {
+                return;
+            }
+
+            setGeocodingState((current) => ({
+                ...current,
+                phase: "error",
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : "The geocoding service could not be reached.",
+            }));
+        });
+
+        return () => {
+            cancelled = true;
+            controller.abort();
+        };
+    }, [applications, retryVersion]);
+
     const points = useMemo(
-        () => buildApplicationMapPoints(applications),
-        [applications],
+        () => buildApplicationMapPoints(applications, locationsByKey),
+        [applications, locationsByKey],
     );
-    const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(
-        null,
-    );
+
     const selectedPoint =
-        points.find((point) => point.application.id === selectedApplicationId) ??
+        points.find(
+            (point) => point.application.id === selectedApplicationId,
+        ) ??
         points[0] ??
         null;
+
+    useEffect(() => {
+        if (!selectedPoint) {
+            setSelectedApplicationId(null);
+            return;
+        }
+
+        if (selectedPoint.application.id !== selectedApplicationId) {
+            setSelectedApplicationId(selectedPoint.application.id);
+        }
+    }, [selectedApplicationId, selectedPoint]);
+
+    useEffect(() => {
+        const leaflet = leafletRef.current;
+        const markerLayer = markerLayerRef.current;
+        if (!mapReady || !leaflet || !markerLayer) return;
+
+        markerLayer.clearLayers();
+
+        for (const point of points) {
+            const isSelected =
+                point.application.id === selectedPoint?.application.id;
+            const color = getMarkerColor(point.application.status);
+            const marker = leaflet.circleMarker([point.lat, point.lng], {
+                radius: isSelected ? 10 : 7,
+                color,
+                fillColor: color,
+                fillOpacity: isSelected ? 1 : 0.82,
+                opacity: 1,
+                weight: isSelected ? 4 : 2,
+                bubblingMouseEvents: false,
+            });
+
+            const tooltip = document.createElement("span");
+            tooltip.textContent = `${point.application.title} — ${point.application.companyName ?? "Unknown company"
+                }`;
+            marker.bindTooltip(tooltip, { direction: "top", offset: [0, -8] });
+            marker.on("click", () => {
+                setSelectedApplicationId(point.application.id);
+            });
+            marker.addTo(markerLayer);
+
+            const markerElement = marker.getElement();
+            if (markerElement) {
+                markerElement.setAttribute("role", "button");
+                markerElement.setAttribute("tabindex", "0");
+                markerElement.setAttribute(
+                    "aria-label",
+                    `${point.application.title} at ${point.locationLabel}`,
+                );
+                markerElement.setAttribute(
+                    "aria-pressed",
+                    String(isSelected),
+                );
+                markerElement.addEventListener("keydown", (event) => {
+                    if (!(event instanceof KeyboardEvent)) return;
+
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setSelectedApplicationId(point.application.id);
+                    }
+                });
+            }
+        }
+    }, [mapReady, points, selectedPoint?.application.id]);
+
+    const pointSignature = useMemo(
+        () =>
+            points
+                .map((point) => `${point.application.id}:${point.lat}:${point.lng}`)
+                .join("|"),
+        [points],
+    );
+
+    useEffect(() => {
+        const leaflet = leafletRef.current;
+        const map = mapRef.current;
+        if (!mapReady || !leaflet || !map) return;
+
+        const frameId = window.requestAnimationFrame(() => {
+            map.invalidateSize({ pan: false });
+
+            if (points.length === 0) {
+                map.setView(DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM);
+            } else if (points.length === 1) {
+                map.setView([points[0].lat, points[0].lng], SINGLE_LOCATION_ZOOM);
+            } else {
+                map.fitBounds(
+                    leaflet.latLngBounds(
+                        points.map(
+                            (point) =>
+                                [point.lat, point.lng] as [number, number],
+                        ),
+                    ),
+                    { padding: [32, 32], maxZoom: 9 },
+                );
+            }
+        });
+
+        return () => window.cancelAnimationFrame(frameId);
+    }, [mapReady, pointSignature, points]);
+
+    const unmappedCount = applications.length - points.length;
+    const isGeocoding = geocodingState.phase === "loading";
 
     return (
         <div className="panel application-map-panel">
@@ -425,128 +634,81 @@ export function ApplicationMap({
                 Application Map
                 <InfoTooltip
                     label="Application map information"
-                    tooltip="Shows tracked applications as selectable location points based on saved location text."
+                    tooltip="Uses OpenStreetMap tiles and Nominatim geocoding. Remote, missing, and unresolved locations are not assigned fake coordinates."
                 />
             </h2>
 
-            {points.length > 0 ? (
+            {applications.length > 0 ? (
                 <div className="application-map-layout">
                     <div className="application-map-shell">
-                        <svg
+                        <div
+                            ref={mapContainerRef}
                             className="application-map-canvas"
-                            viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
-                            role="img"
-                            aria-label={`${points.length} application locations`}
-                        >
-                            <rect
-                                className="application-map-water"
-                                width={MAP_WIDTH}
-                                height={MAP_HEIGHT}
-                                rx="12"
-                            />
-                            <path
-                                className="application-map-land"
-                                d="M64 92 C118 42 194 28 275 42 C335 52 372 86 433 82 C503 78 579 96 626 148 C677 204 658 290 599 322 C538 356 442 346 376 326 C304 304 250 316 180 303 C101 288 39 238 42 169 C44 133 48 112 64 92Z"
-                            />
-                            <path
-                                className="application-map-coast"
-                                d="M86 112 C132 80 183 72 238 82 M286 84 C349 116 420 126 510 118 M528 134 C586 172 612 232 590 291 M166 286 C214 266 257 264 304 281 M360 306 C436 328 516 324 572 286"
-                            />
-                            <g className="application-map-grid-lines">
-                                <path d="M92 56V324" />
-                                <path d="M220 40V340" />
-                                <path d="M348 42V342" />
-                                <path d="M476 58V326" />
-                                <path d="M604 90V302" />
-                                <path d="M62 116H642" />
-                                <path d="M50 190H660" />
-                                <path d="M70 264H620" />
-                            </g>
-                            <g>
-                                {points.map((point) => {
-                                    const isSelected =
-                                        selectedPoint?.application.id ===
-                                        point.application.id;
+                            role="region"
+                            aria-label={`${points.length} mapped application locations`}
+                        />
 
-                                    return (
-                                        <g
-                                            key={point.application.id}
-                                            role="button"
-                                            tabIndex={0}
-                                            aria-pressed={isSelected}
-                                            aria-label={`${point.application.title} at ${point.locationLabel}`}
-                                            className={`application-map-point ${getStatusClass(
-                                                point.application.status,
-                                            )}${isSelected ? " selected" : ""} ${
-                                                point.locationType === "fallback"
-                                                    ? "is-fallback"
-                                                    : ""
-                                            }`}
-                                            transform={`translate(${point.x} ${point.y})`}
-                                            onClick={() =>
-                                                setSelectedApplicationId(
-                                                    point.application.id,
-                                                )
-                                            }
-                                            onKeyDown={(event) => {
-                                                if (
-                                                    event.key === "Enter" ||
-                                                    event.key === " "
-                                                ) {
-                                                    event.preventDefault();
-                                                    setSelectedApplicationId(
-                                                        point.application.id,
-                                                    );
-                                                }
-                                            }}
-                                        >
-                                            <title>
-                                                {point.application.title} -{" "}
-                                                {point.application.companyName ??
-                                                    "Unknown company"}
-                                            </title>
-                                            <circle
-                                                className="application-map-point-ring"
-                                                r="9"
-                                            />
-                                            <circle
-                                                className="application-map-point-dot"
-                                                r="5"
-                                            />
-                                        </g>
-                                    );
-                                })}
-                            </g>
-                        </svg>
-                        <div className="application-map-legend" aria-hidden="true">
+                        {isGeocoding && (
+                            <div
+                                className="application-map-loading"
+                                role="status"
+                                aria-live="polite"
+                            >
+                                Mapping locations {geocodingState.completed}/
+                                {geocodingState.total}
+                            </div>
+                        )}
+
+                        {geocodingState.phase === "error" && (
+                            <div className="application-map-error" role="alert">
+                                <span>
+                                    {geocodingState.error ??
+                                        "Some locations could not be mapped."}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setRetryVersion((version) => version + 1)
+                                    }
+                                >
+                                    Retry
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="application-map-legend">
                             <span>
-                                <b className="applied" />
+                                <b style={{ backgroundColor: "#2563eb" }} />
                                 Applied
                             </span>
                             <span>
-                                <b className="interviewing" />
+                                <b style={{ backgroundColor: "#d97706" }} />
                                 Interviewing
                             </span>
                             <span>
-                                <b className="offer" />
+                                <b style={{ backgroundColor: "#16a34a" }} />
                                 Offer
                             </span>
-                            <span>
-                                <b className="fallback" />
-                                Unresolved
+                            <span className="application-map-count">
+                                {points.length} mapped
+                                {unmappedCount > 0
+                                    ? ` · ${unmappedCount} unmapped`
+                                    : ""}
                             </span>
                         </div>
                     </div>
 
                     <aside className="application-map-detail">
-                        {selectedPoint && (
+                        {selectedPoint ? (
                             <>
                                 <div className="application-map-detail-header">
                                     <span>
                                         <AppIcon name="applications" size={18} />
                                     </span>
                                     <div>
-                                        <strong>{selectedPoint.application.title}</strong>
+                                        <strong>
+                                            {selectedPoint.application.title}
+                                        </strong>
                                         <small>
                                             {selectedPoint.application.companyName ??
                                                 "Unknown company"}
@@ -557,6 +719,10 @@ export function ApplicationMap({
                                     <div>
                                         <dt>Location</dt>
                                         <dd>{selectedPoint.locationLabel}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Mapped as</dt>
+                                        <dd>{selectedPoint.displayName}</dd>
                                     </div>
                                     <div>
                                         <dt>Status</dt>
@@ -601,6 +767,15 @@ export function ApplicationMap({
                                     View application
                                 </button>
                             </>
+                        ) : (
+                            <div className="application-map-detail-empty">
+                                <AppIcon name="location" size={28} />
+                                <h3>No physical locations mapped</h3>
+                                <p>
+                                    Remote, missing, and unrecognized locations are
+                                    intentionally left off the map.
+                                </p>
+                            </div>
                         )}
                     </aside>
                 </div>

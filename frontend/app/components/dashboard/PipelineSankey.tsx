@@ -104,8 +104,84 @@ const ALLOWED_TRANSITIONS: Record<PipelineNodeId, PipelineNodeId[]> = {
     NO_RESPONSE: [],
 };
 
+const SANKEY_MARGIN = {
+    top: 24,
+    right: 28,
+    bottom: 44,
+    left: 28,
+} as const;
+const SANKEY_NODE_PADDING = 28;
+const SANKEY_NODE_WIDTH = 5;
+
 function canAddLink(source: PipelineNodeId, target: PipelineNodeId) {
     return ALLOWED_TRANSITIONS[source].includes(target);
+}
+
+function spreadSankeyNodes(
+    graph: PipelineGraph,
+    top: number,
+    bottom: number,
+) {
+    const columns = new Map<
+        number,
+        SankeyNode<PipelineNodeDatum, PipelineLinkDatum>[]
+    >();
+
+    for (const node of graph.nodes) {
+        // Group by the actual column configuration, not node.depth.
+        const columnId = NODE_COLUMN[node.id];
+
+        const column = columns.get(columnId) ?? [];
+        column.push(node);
+        columns.set(columnId, column);
+    }
+
+    for (const [columnId, nodes] of columns) {
+        nodes.sort(compareNodes);
+
+        const heights = nodes.map(
+            (node) => Math.max(2, (node.y1 ?? 0) - (node.y0 ?? 0)),
+        );
+
+        const totalNodeHeight = heights.reduce(
+            (sum, height) => sum + height,
+            0,
+        );
+
+        const columnHeight = bottom - top;
+
+        if (nodes.length === 1) {
+            const node = nodes[0];
+            const height = heights[0];
+
+            const y =
+                columnId === 0
+                    ? top + (columnHeight - height) / 2
+                    : top;
+
+            node.y0 = y;
+            node.y1 = y + height;
+            continue;
+        }
+
+        const availableGapSpace = Math.max(
+            0,
+            columnHeight - totalNodeHeight,
+        );
+
+        const gap = availableGapSpace / (nodes.length - 1);
+
+        let currentY = top;
+
+        nodes.forEach((node, index) => {
+            const height = heights[index];
+
+            node.y0 = currentY;
+            node.y1 = currentY + height;
+
+            currentY += height + gap;
+        });
+    }
 }
 
 function getSankeyEndId(
@@ -199,8 +275,8 @@ function buildPipelineSankey(
 
     if (!graphInput.links.length) {
         const node = graphInput.nodes[0];
-        const y0 = 16;
-        const y1 = PIPELINE_HEIGHT - 34;
+        const y0 = SANKEY_MARGIN.top;
+        const y1 = PIPELINE_HEIGHT - SANKEY_MARGIN.bottom;
         return {
             counts,
             total,
@@ -212,8 +288,8 @@ function buildPipelineSankey(
                         depth: 0,
                         height: 0,
                         value: total,
-                        x0: 18,
-                        x1: 23,
+                        x0: SANKEY_MARGIN.left,
+                        x1: SANKEY_MARGIN.left + SANKEY_NODE_WIDTH,
                         y0,
                         y1,
                     },
@@ -225,18 +301,35 @@ function buildPipelineSankey(
         };
     }
 
-    const graph = sankey<PipelineNodeDatum, PipelineLinkDatum>()
+const layoutTop = SANKEY_MARGIN.top;
+const layoutBottom = PIPELINE_HEIGHT - SANKEY_MARGIN.bottom;
+
+const sankeyGenerator =
+    sankey<PipelineNodeDatum, PipelineLinkDatum>()
         .nodeId((node) => node.id)
-        .nodeWidth(5)
-        .nodePadding(14)
-        .nodeAlign((node, columns) => Math.min(NODE_COLUMN[node.id], columns - 1))
+        .nodeWidth(SANKEY_NODE_WIDTH)
+        .nodePadding(SANKEY_NODE_PADDING)
+        .nodeAlign((node, columns) =>
+            Math.min(NODE_COLUMN[node.id], columns - 1)
+        )
         .nodeSort(compareNodes)
         .linkSort(compareLinks)
         .iterations(64)
         .extent([
-            [18, 16],
-            [PIPELINE_WIDTH - 18, PIPELINE_HEIGHT - 34],
-        ])(graphInput);
+            [SANKEY_MARGIN.left, layoutTop],
+            [
+                PIPELINE_WIDTH - SANKEY_MARGIN.right,
+                layoutBottom,
+            ],
+        ]);
+
+const graph = sankeyGenerator(graphInput);
+
+// Move nodes apart vertically.
+spreadSankeyNodes(graph, layoutTop, layoutBottom);
+
+// Recalculate where the links connect after moving the nodes.
+sankeyGenerator.update(graph);
 
     return {
         counts,

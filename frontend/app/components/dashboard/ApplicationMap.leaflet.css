@@ -1,0 +1,142 @@
+/* Leaflet's own stylesheet is also required:
+   import "leaflet/dist/leaflet.css" from app/layout.tsx or pages/_app.tsx. */
+
+.application-map-shell {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.application-map-canvas {
+    width: 100%;
+    height: 380px;
+    min-height: 380px;
+    border-radius: 12px;
+    background: #e5e7eb;
+    isolation: isolate;
+}
+
+.application-map-canvas:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+.application-map-loading,
+.application-map-error {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: calc(100% - 24px);
+    padding: 8px 10px;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.14);
+    color: #334155;
+    font-size: 12px;
+    transform: translateX(-50%);
+    backdrop-filter: blur(6px);
+}
+
+.application-map-error {
+    color: #991b1b;
+}
+
+.application-map-error button {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.application-map-legend {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    z-index: 500;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    width: fit-content;
+    max-width: calc(100% - 24px);
+    padding: 8px 10px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+    color: #334155;
+    font-size: 11px;
+    pointer-events: none;
+    backdrop-filter: blur(6px);
+}
+
+.application-map-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.application-map-legend b {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+.application-map-count {
+    color: #64748b;
+}
+
+.application-map-detail-empty {
+    display: grid;
+    min-height: 240px;
+    place-content: center;
+    justify-items: center;
+    padding: 24px;
+    color: #64748b;
+    text-align: center;
+}
+
+.application-map-detail-empty h3 {
+    margin: 10px 0 4px;
+    color: inherit;
+    font-size: 14px;
+}
+
+.application-map-detail-empty p {
+    max-width: 28ch;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.application-map-canvas .leaflet-control-attribution {
+    font-size: 10px;
+}
+
+.application-map-canvas .leaflet-interactive:focus-visible {
+    outline: none;
+    filter: drop-shadow(0 0 3px rgba(15, 23, 42, 0.8));
+}
+
+@media (max-width: 720px) {
+    .application-map-canvas {
+        height: 340px;
+        min-height: 340px;
+    }
+
+    .application-map-legend {
+        gap: 6px 10px;
+    }
+}
