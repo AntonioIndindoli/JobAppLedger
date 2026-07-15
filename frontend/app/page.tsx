@@ -869,6 +869,32 @@ export default function MainPage() {
         loadTasks();
     }
 
+    async function updateApplicationNotes(app: Application, notes: string) {
+        const res = await authedFetch(`/applications/${app.id}`, {
+            method: "PUT",
+            body: JSON.stringify({
+                title: app.title,
+                companyName: app.companyName,
+                status: app.status,
+                source: app.source,
+                sourceUrl: app.sourceUrl,
+                location: app.location,
+                salaryMin: app.salaryMin,
+                salaryMax: app.salaryMax,
+                description: app.description,
+                notes,
+                dateApplied: app.dateApplied,
+            }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            setMessage(data.message ?? "Notes could not be saved.");
+            throw new Error(data.message ?? "Notes could not be saved.");
+        }
+        setMessage("Notes updated.");
+        await loadApplications();
+    }
+
     async function saveInterview(event: FormEvent) {
         event.preventDefault();
         if (!validateInterviewForm()) return;
@@ -1110,6 +1136,7 @@ export default function MainPage() {
                     onRemoveApplication={removeApplication}
                     onStartEdit={startEdit}
                     onStatusChange={transitionStatus}
+                    onUpdateNotes={updateApplicationNotes}
                     onViewInterview={viewInterview}
                 />
             ) : currentView === "analytics" ? (

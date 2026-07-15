@@ -33,6 +33,7 @@ type ApplicationsViewProps = {
     onRemoveApplication: (id: string) => void;
     onStartEdit: (application: Application) => void;
     onStatusChange: (id: string, status: string) => void;
+    onUpdateNotes: (application: Application, notes: string) => Promise<void>;
     onViewInterview: (interviewId: string) => void;
 };
 
@@ -137,6 +138,7 @@ export function ApplicationsView({
     onRemoveApplication,
     onStartEdit,
     onStatusChange,
+    onUpdateNotes,
     onViewInterview,
 }: ApplicationsViewProps) {
     const [filters, setFilters] =
@@ -144,6 +146,9 @@ export function ApplicationsView({
     const [sortKey, setSortKey] = useState<SortKey>("dateApplied");
     const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
     const [isApplicationMenuOpen, setIsApplicationMenuOpen] = useState(false);
+    const [isEditingNotes, setIsEditingNotes] = useState(false);
+    const [notesDraft, setNotesDraft] = useState("");
+    const [isSavingNotes, setIsSavingNotes] = useState(false);
     const [selectedApplicationId, setSelectedApplicationId] = useState<
         string | null
     >(focusedApplicationId ?? null);
@@ -411,9 +416,10 @@ export function ApplicationsView({
                                                 : "application-list-item applications-table-columns"
                                         }
                                         aria-current={isSelected ? "true" : undefined}
-                                        onClick={() =>
-                                            setSelectedApplicationId(application.id)
-                                        }
+                                        onClick={() => {
+                                            setSelectedApplicationId(application.id);
+                                            setIsEditingNotes(false);
+                                        }}
                                     >
                                         <span className="application-primary-cell">
                                             <InitialsBadge
@@ -471,81 +477,81 @@ export function ApplicationsView({
                                 <div className="application-detail-top-row">
                                     <div className="application-detail-heading">
                                         <h2>{selectedApplication.title}</h2>
-                                        <p className="application-detail-company-location">
-                                            <span>{selectedApplication.companyName || "Unknown company"}</span>
-                                            <span aria-hidden="true">·</span>
-                                            <span>{selectedApplication.location || "Location not set"}</span>
-                                            <span aria-hidden="true">·</span>
-                                            <label className="application-detail-status-control">
-                                                <select
-                                                    aria-label="Application status"
-                                                    className={`status-select ${selectedApplication.status.toLowerCase()}`}
-                                                    value={selectedApplication.status}
-                                                    onChange={(event) =>
-                                                        onStatusChange(
-                                                            selectedApplication.id,
-                                                            event.target.value,
-                                                        )
-                                                    }
-                                                >
-                                                    {STATUSES.map((status) => (
-                                                        <option key={status} value={status}>
-                                                            {STATUS_LABELS[status]}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </label>
-                                        </p>
-
                                     </div>
+
                                     <div
                                         className="application-detail-header-actions"
                                         aria-label="Application actions"
                                     >
                                         <button
                                             type="button"
-                                            className="secondary"
+                                            className="alternative"
                                             onClick={() => onStartEdit(selectedApplication)}
                                         >
-                                            <AppIcon name="edit" size={15} />
-                                            Edit
+                                            <AppIcon name="edit" size={20} />
                                         </button>
                                         <div className="application-detail-menu" onBlur={(event) => {
                                             if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsApplicationMenuOpen(false);
                                         }}>
                                             <button type="button" className="application-detail-menu-trigger" aria-label="More application actions" aria-haspopup="menu" aria-expanded={isApplicationMenuOpen} onClick={() => setIsApplicationMenuOpen((open) => !open)}>
-                                                <AppIcon name="dots-vertical" size={17} />
+                                                <AppIcon name="dots-vertical" size={20} />
                                             </button>
                                             {isApplicationMenuOpen && (
                                                 <div className="application-detail-menu-popover" role="menu">
                                                     <button type="button" role="menuitem" onClick={() => { setIsApplicationMenuOpen(false); onRemoveApplication(selectedApplication.id); }}>
-                                                        <AppIcon name="trash" size={15} /> Delete application
+                                                        <AppIcon name="trash" size={20} /> Delete application
                                                     </button>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                 </div>
+                                <p className="application-detail-company-location">
+                                    <span>{selectedApplication.companyName || "Unknown company"}</span>
+                                    <span aria-hidden="true">·</span>
+                                    <span>{selectedApplication.location || "Location not set"}</span>
+                                    <span aria-hidden="true">·</span>
+                                    <label className="application-detail-status-control">
+                                        <select
+                                            aria-label="Application status"
+                                            className={`status-select ${selectedApplication.status.toLowerCase()}`}
+                                            value={selectedApplication.status}
+                                            onChange={(event) =>
+                                                onStatusChange(
+                                                    selectedApplication.id,
+                                                    event.target.value,
+                                                )
+                                            }
+                                        >
+                                            {STATUSES.map((status) => (
+                                                <option key={status} value={status}>
+                                                    {STATUS_LABELS[status]}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                </p>
                                 <div className="application-detail-summary" aria-label="Application summary">
                                     <span><AppIcon name="calendar" size={17} /> Applied {formatDisplayDate(selectedApplication.dateApplied)}</span>
-                                    <span aria-hidden="true">·</span>
                                     <span><AppIcon name="source" size={17} /> {selectedApplication.source || "No source"}</span>
-                                    <span aria-hidden="true">·</span>
                                     <span><AppIcon name="salary" size={17} /> {selectedApplication.salaryMin !== null || selectedApplication.salaryMax !== null ? `Salary: ${formatSalaryRange(selectedApplication)}` : formatSalaryRange(selectedApplication)}</span>
+                                    {selectedApplication.sourceUrl && (
+                                        <span><AppIcon name="external-link" size={17} className="application-detail-external-link-icon" />
+                                            <a className="application-detail-posting-link" href={selectedApplication.sourceUrl} target="_blank" rel="noreferrer">
+                                                Original posting
+                                            </a>
+                                        </span>
+                                    )}
                                 </div>
-                                {selectedApplication.sourceUrl && (
-                                    <a className="application-detail-posting-link" href={selectedApplication.sourceUrl} target="_blank" rel="noreferrer">
-                                        Open original posting <AppIcon name="external-link" size={14} />
-                                    </a>
-                                )}
+
                             </header>
 
                             <div className="application-detail-layout">
                                 <div className="application-detail-main">
-                                    <section className="application-detail-section application-next-action-section">
+                                    <section className="application-detail-section application-detail-card-section application-next-action-section">
                                         <div className="application-detail-section-heading">
                                             <h3>Next action</h3>
-                                            <button type="button" className="secondary application-section-action" onClick={() => onCreateTask(selectedApplication.id)}>
+                                            <button type="button" className="alternative application-section-action" onClick={() => onCreateTask(selectedApplication.id)}>
                                                 <AppIcon name="plus" size={15} /> Add task
                                             </button>
                                         </div>
@@ -566,7 +572,7 @@ export function ApplicationsView({
                                         ) : <p className="application-detail-empty-copy">No next action set.</p>}
                                     </section>
 
-                                    <section className="application-detail-section application-detail-interviews-section">
+                                    <section className="application-detail-section application-detail-card-section application-detail-interviews-section">
                                         <div className="application-detail-section-heading">
                                             <div>
                                                 <div className="interview-detail-section-title">
@@ -577,7 +583,7 @@ export function ApplicationsView({
                                             </div>
                                             <button
                                                 type="button"
-                                                className="secondary application-interviews-add"
+                                                className="alternative application-section-action"
                                                 onClick={() =>
                                                     onCreateInterview(selectedApplication.id)
                                                 }
@@ -652,17 +658,30 @@ export function ApplicationsView({
                                         )}
                                     </section>
 
-                                    <section className="application-notes-card interview-notes-card">
+                                    <section className="application-detail-section application-detail-card-section application-notes-card interview-notes-card">
                                         <div className="interview-detail-section-title">
                                             <div className="interview-notes-card-title">
                                                 <h3>Notes</h3>
                                             </div>
-                                            <button type="button" className="application-detail-posting-link" onClick={() => onStartEdit(selectedApplication)}>{selectedNotes ? "Edit notes" : "Add note"}</button>
+                                            {!isEditingNotes && (
+                                                <button type="button" className="alternative application-section-action" onClick={() => { setNotesDraft(selectedNotes); setIsEditingNotes(true); }}>
+                                                    Edit notes
+                                                </button>
+                                            )}
                                         </div>
-                                        <p className={selectedNotes ? "" : "is-empty"}>
-                                            {selectedNotes ||
-                                                "No notes added"}
-                                        </p>
+                                        {isEditingNotes ? (
+                                            <div className="application-notes-editor">
+                                                <textarea aria-label="Application notes" autoFocus value={notesDraft} onChange={(event) => setNotesDraft(event.target.value)} placeholder="Write a note…" />
+                                                <div className="application-notes-editor-actions">
+                                                    <button type="button" className="secondary" disabled={isSavingNotes} onClick={() => setIsEditingNotes(false)}>Cancel</button>
+                                                    <button type="button" className="primary" disabled={isSavingNotes} onClick={async () => { setIsSavingNotes(true); try { await onUpdateNotes(selectedApplication, notesDraft); setIsEditingNotes(false); } catch { /* The page-level message reports the API error. */ } finally { setIsSavingNotes(false); } }}>
+                                                        {isSavingNotes ? "Saving…" : "Save notes"}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className={selectedNotes ? "" : "is-empty"}>{selectedNotes || "No notes added"}</p>
+                                        )}
                                     </section>
                                 </div>
                             </div>

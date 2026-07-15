@@ -235,6 +235,21 @@ button {
     line-height: 1.2;
 }
 
+.alternative {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 3px 4px;
+    line-height: 1.2;
+    color: #0b56c7;
+}
+
+.alternative:hover {
+    background: #f1f7ff;
+    outline: none;
+}
+
 .primary {
     background: var(--blue);
     color: white;
@@ -3099,7 +3114,7 @@ button {
 
 .applications-split-panel {
     display: grid;
-    grid-template-columns: 1fr minmax(815px, 33%);
+    grid-template-columns: 1fr 1fr;
     gap: 16px;
     align-items: start;
 }
@@ -3350,9 +3365,6 @@ button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    min-height: 36px;
-    padding: 8px 11px;
     font-size: 13px;
 }
 
@@ -3401,10 +3413,11 @@ button {
     background: transparent;
     color: #0b6bff;
     font-family: inherit;
-    font-size: 13px;
-    font-weight: 800;
-    line-height: 1.2;
     text-decoration: none;
+}
+
+.application-detail-external-link-icon {
+    color: #0b6bff;
 }
 
 .application-detail-posting-link:hover,
@@ -3438,13 +3451,19 @@ button {
     min-width: 0;
 }
 
-.application-detail-layout .application-detail-main > section {
+.application-detail-layout .application-detail-main>section {
     padding: 20px 0;
     border-bottom: 1px solid #edf2f8;
 }
 
-.application-detail-layout .application-detail-main > section:first-child { padding-top: 0; }
-.application-detail-layout .application-detail-main > section:last-child { padding-bottom: 0; border-bottom: 0; }
+.application-detail-layout .application-detail-main>section:first-child {
+    padding-top: 0;
+}
+
+.application-detail-layout .application-detail-main>section:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
 
 .application-next-action-card {
     display: flex;
@@ -3467,7 +3486,10 @@ button {
     color: #0b6bff;
 }
 
-.application-task-state.overdue { background: #fff0f0; color: #bd2c2c; }
+.application-task-state.overdue {
+    background: #fff0f0;
+    color: #bd2c2c;
+}
 
 .application-next-action-card strong {
     display: block;
@@ -3482,7 +3504,9 @@ button {
     font-size: 13px;
 }
 
-.application-posting-section .application-detail-posting-link { margin-top: 2px; }
+.application-posting-section .application-detail-posting-link {
+    margin-top: 2px;
+}
 
 .application-detail-section-heading {
     display: flex;
@@ -4791,7 +4815,8 @@ button {
     }
 
     .applications-actions .primary,
-    .applications-actions .secondary {
+    .applications-actions .secondary,
+    .applications-actions .alternative {
         flex: 1 1 160px;
     }
 
@@ -5050,7 +5075,9 @@ button {
     font-weight: 750;
 }
 
-.application-detail-status-control { display: inline-flex; }
+.application-detail-status-control {
+    display: inline-flex;
+}
 
 .status-select {
     color: #26334d;
@@ -5064,29 +5091,38 @@ button {
 }
 
 .application-detail-summary {
-    padding-top: 2px;
     color: #66738b;
     font-size: 13px;
 }
 
 /* Applications detail: compact hierarchy and action clarity. */
-.application-detail-header { gap: 8px; padding-bottom: 14px; }
-.application-detail-heading { gap: 5px; }
-.application-detail-header-actions { align-self: start; }
+.application-detail-header {
+    gap: 8px;
+    padding-bottom: 14px;
+}
 
-.application-detail-menu { position: relative; }
+.application-detail-heading {
+    gap: 5px;
+}
+
+.application-detail-header-actions {
+    align-self: start;
+}
+
+.application-detail-menu {
+    position: relative;
+}
+
 .application-detail-menu-trigger {
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    border: 1px solid #d8e2ef;
-    border-radius: 8px;
-    background: #fff;
-    color: #53617b;
 }
-.application-detail-menu-trigger:hover { background: #f5f8fc; color: #14213d; }
+
+.application-detail-menu-trigger:hover {
+    background: #f5f8fc;
+    color: #14213d;
+}
+
 .application-detail-menu-popover {
     position: absolute;
     top: calc(100% + 6px);
@@ -5099,6 +5135,7 @@ button {
     background: #fff;
     box-shadow: 0 12px 30px rgba(20, 33, 61, .14);
 }
+
 .application-detail-menu-popover button {
     display: flex;
     align-items: center;
@@ -5114,7 +5151,10 @@ button {
     font-weight: 750;
     text-align: left;
 }
-.application-detail-menu-popover button:hover { background: #fff1f0; }
+
+.application-detail-menu-popover button:hover {
+    background: #fff1f0;
+}
 
 .application-section-action {
     display: inline-flex;
@@ -5124,19 +5164,32 @@ button {
     padding: 7px 11px;
     font-size: 12px;
 }
-.application-next-action-section {
-    margin: 0 -12px;
-    padding: 16px 12px 18px !important;
-    border: 1px solid #d8e7fb !important;
-    border-radius: 11px;
-    background: #f7fbff;
+
+.application-detail-main:has(.application-detail-card-section) {
+    gap: 12px;
 }
+
+.application-detail-layout .application-detail-main>.application-detail-card-section {
+    margin: 0;
+    padding: 16px !important;
+    border: 1px solid #dfe7f1 !important;
+    border-radius: 11px;
+    background: #fff;
+}
+
+.application-detail-card-section .application-detail-section-heading,
+.application-detail-card-section>.interview-detail-section-title {
+    min-height: 34px;
+    margin-bottom: 12px;
+}
+
 .application-next-action-card {
-    margin-top: 12px;
+    margin-top: 0;
     border: 0;
     padding: 0;
     background: transparent;
 }
+
 .application-task-checkbox {
     display: grid;
     place-items: center;
@@ -5149,8 +5202,15 @@ button {
     background: #fff;
     color: transparent;
 }
-.application-task-checkbox:hover { border-color: #0b6bff; color: #0b6bff; }
-.application-task-checkbox.overdue { border-color: #d14a4a; }
+
+.application-task-checkbox:hover {
+    border-color: #0b6bff;
+    color: #0b6bff;
+}
+
+.application-task-checkbox.overdue {
+    border-color: #d14a4a;
+}
 
 .application-interviews-empty {
     min-height: 48px;
@@ -5161,42 +5221,127 @@ button {
     font-size: 13px;
     font-weight: 650;
 }
-.application-notes-card.interview-notes-card { padding-top: 16px; }
-.application-notes-card .interview-detail-section-title { align-items: center; justify-content: space-between; }
+
+.application-notes-card .interview-detail-section-title {
+    align-items: center;
+    justify-content: space-between;
+}
+
+.application-notes-editor {
+    display: grid;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.application-notes-editor textarea {
+    width: 100%;
+    min-height: 120px;
+    resize: vertical;
+    padding: 11px 12px;
+    border: 1px solid #b8cbe2;
+    border-radius: 8px;
+    background: #fff;
+    color: #26334d;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.application-notes-editor textarea:focus {
+    border-color: #0b6bff;
+    outline: 3px solid rgba(11, 107, 255, .12);
+}
+
+.application-notes-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.application-notes-editor-actions button {
+    min-height: 34px;
+    padding: 7px 12px;
+    font-size: 12px;
+}
 
 /* Reference-aligned application header. */
 .application-detail-heading h2 {
     margin: 0;
     color: #10203b;
-    font-size: 30px;
+    font-size: 24px;
     font-weight: 850;
     line-height: 1.12;
     letter-spacing: -.025em;
 }
-.application-detail-company-location { margin-top: 2px; font-size: 15px; }
-.status-select.saved { color: #475569; }
-.status-select.applied { color: #0b56c7; }
-.status-select.interviewing { color: #6d3bd1; }
-.status-select.offer { color: #18794e; }
-.status-select.rejected { color: #d64545; }
-.status-select.withdrawn { color: #9a5b13; }
+
+.application-detail-company-location {
+    margin-top: 2px;
+    font-size: 15px;
+}
+
+.application-detail-header .status-select {
+    min-width: 0;
+    width: fit-content;
+    field-sizing: content;
+    padding-right: 6px;
+}
+
+.status-select.saved {
+    color: #475569;
+}
+
+.status-select.applied {
+    color: #0b56c7;
+}
+
+.status-select.interviewing {
+    color: #6d3bd1;
+}
+
+.status-select.offer {
+    color: #18794e;
+}
+
+.status-select.rejected {
+    color: #d64545;
+}
+
+.status-select.withdrawn {
+    color: #9a5b13;
+}
 
 .application-detail-header-actions .secondary {
-    min-height: 40px;
-    padding: 9px 14px;
     border-color: #c9dcfb;
     color: #0b6bff;
     font-size: 14px;
 }
-.application-detail-header .application-detail-menu-trigger { width: 40px; height: 40px; }
+
 .application-detail-summary {
-    gap: 10px;
-    margin-top: 8px;
+    gap: 16px;
     font-size: 14px;
 }
-.application-detail-summary > span:not([aria-hidden]) {
+
+.application-detail-summary>span:not([aria-hidden]) {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: 3px;
 }
-.application-detail-summary svg { color: #71809a; }
+
+.application-detail-card-section.interview-notes-card p {
+    margin: 0;
+    min-height: 48px;
+    padding: 13px 14px;
+    border: 0;
+    background: #f7f9fc;
+}
+
+.application-next-action-section>.application-detail-empty-copy {
+    min-height: 48px;
+    margin: 0;
+    padding: 13px 14px;
+    border-radius: 8px;
+    background: #f7f9fc;
+    color: #66738b;
+    font-size: 13px;
+    font-weight: 650;
+}
