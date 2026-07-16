@@ -3446,6 +3446,7 @@ button {
     color: #0b6bff;
     font-family: inherit;
     text-decoration: none;
+    padding-right: 6px;
 }
 
 .application-detail-external-link-icon {
@@ -5111,8 +5112,8 @@ button {
     font-weight: 750;
 }
 
-.application-detail-company-location span:last-child {
-    padding-right: 0px;
+.application-detail-company-location span:last-of-type {
+    padding-right: 2px;
 }
 
 .application-detail-status-control {
@@ -5601,4 +5602,17 @@ button {
     border: 0;
     border-radius: 8px;
     background: #f7f9fc;
+}
+
+.task-list-checkbox {
+    width: 20px;
+    height: 20px;
+    margin: 0 0 0 7px;
+    accent-color: #15803d;
+    cursor: pointer;
+}
+
+.task-list-checkbox:focus-visible {
+    outline: 3px solid rgba(11, 107, 255, .24);
+    outline-offset: 3px;
 }

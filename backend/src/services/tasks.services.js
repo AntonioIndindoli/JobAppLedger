@@ -101,7 +101,7 @@ export async function completeTask(userId, id) {
     const existing = await tx.task.findFirst({ where: { id, userId } });
     if (!existing) return null;
 
-    const completedAt = existing.completedAt ?? new Date();
+    const completedAt = existing.completedAt ? null : new Date();
     const task = await tx.task.update({ where: { id }, data: { completedAt }, include: TASK_INCLUDE });
     if (!existing.completedAt) {
       await logTaskActivity(tx, userId, task.applicationId, "TASK_COMPLETED", `Task completed: ${task.title}`, { taskId: task.id });

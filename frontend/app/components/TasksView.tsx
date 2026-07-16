@@ -17,7 +17,6 @@ import type {
     TaskAutomationPreferences,
 } from "../lib/types";
 import { AppIcon } from "./AppIcon";
-import { InitialsBadge } from "./InitialsBadge";
 
 type TasksViewProps = {
     applications: Application[];
@@ -390,9 +389,10 @@ export function TasksView({
                                 const isCompleted = !isOpenTask(task);
 
                                 return (
-                                    <button
+                                    <div
                                         key={task.id}
-                                        type="button"
+                                        role="button"
+                                        tabIndex={0}
                                         className={
                                             isSelected
                                                 ? `application-list-item task-list-item tasks-table-columns status-accent ${getTaskStatusClass(task)} active`
@@ -400,12 +400,21 @@ export function TasksView({
                                         }
                                         aria-current={isSelected ? "true" : undefined}
                                         onClick={() => setSelectedTaskId(task.id)}
+                                        onKeyDown={(event) => {
+                                            if (event.key === "Enter" || event.key === " ") {
+                                                event.preventDefault();
+                                                setSelectedTaskId(task.id);
+                                            }
+                                        }}
                                     >
                                         <span className="application-primary-cell">
-                                            <InitialsBadge
-                                                label={task.companyName}
-                                                fallback={task.title}
-                                                className={isCompleted ? "task-list-icon completed" : "task-list-icon"}
+                                            <input
+                                                type="checkbox"
+                                                className="task-list-checkbox"
+                                                checked={isCompleted}
+                                                aria-label={`Mark ${task.title} ${isCompleted ? "not completed" : "completed"}`}
+                                                onClick={(event) => event.stopPropagation()}
+                                                onChange={() => onCompleteTask(task.id)}
                                             />
                                             <strong>{task.title}</strong>
                                         </span>
@@ -423,7 +432,7 @@ export function TasksView({
                                         >
                                             {TASK_STATUS_LABELS[state]}
                                         </span>
-                                    </button>
+                                    </div>
                                 );
                             })}
                         </div>

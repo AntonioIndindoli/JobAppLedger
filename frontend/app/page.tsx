@@ -970,10 +970,10 @@ export default function MainPage() {
     async function completeTask(id: string) {
         const res = await authedFetch(`/tasks/${id}/complete`, { method: "PATCH" });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) return setMessage(data.message ?? "Task completion failed");
+        if (!res.ok) return setMessage(data.message ?? "Task status update failed");
 
         setTasks((prev) => prev.map((task) => (task.id === id ? data.task : task)));
-        setMessage("Task completed.");
+        setMessage(data.task?.completedAt ? "Task completed." : "Task marked not completed.");
         if (data.task?.applicationId) loadHistory(data.task.applicationId);
     }
 
