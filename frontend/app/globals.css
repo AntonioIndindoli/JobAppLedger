@@ -3016,13 +3016,13 @@ button {
 }
 
 .status-pill.completed {
-    background: #e0f2fe;
-    color: #0369a1;
+    background: #e0fefa;
+    color: #03a179;
 }
 
 .status-pill.passed {
     background: #dcfce7;
-    color: #15803d;
+    color: #12a51e;
 }
 
 .status-pill.failed {
@@ -3136,7 +3136,7 @@ button {
     min-width: 0;
     min-height: 520px;
     padding: 24px;
-    box-shadow: inset 3px 0 #0b6bff;
+    box-shadow: inset 4px 0 var(--status-accent, #0b6bff);
     border-bottom-right-radius: 12px;
     border-top-right-radius: 12px;
 }
@@ -3263,7 +3263,43 @@ button {
 
 .application-list-item.active {
     background: #f4f9ff;
-    box-shadow: inset 3px 0 0 #0b6bff;
+    box-shadow: inset 4px 0 0 var(--status-accent, #0b6bff);
+}
+
+.status-accent.saved,
+.status-accent.withdrawn,
+.status-accent.canceled,
+.status-accent.no-due-date {
+    --status-accent: #64748b;
+}
+
+.status-accent.applied,
+.status-accent.upcoming {
+    --status-accent: #0b6bff;
+}
+
+.status-accent.interviewing,
+.status-accent.scheduled {
+    --status-accent: #6d3bd1;
+}
+
+.status-accent.offer,
+.status-accent.passed {
+    --status-accent: #15803d;
+}
+
+.status-accent.rejected,
+.status-accent.failed,
+.status-accent.overdue {
+    --status-accent: #dc2626;
+}
+
+.status-accent.completed {
+    --status-accent: #03a179;
+}
+
+.status-accent.today {
+    --status-accent: #c2410c;
 }
 
 .application-list-icon {
@@ -3325,7 +3361,6 @@ button {
 
 .application-detail-header {
     display: grid;
-    gap: 5px;
 }
 
 .application-detail-top-row {
@@ -5053,7 +5088,6 @@ button {
 .application-detail-heading {
     display: grid;
     justify-items: start;
-    gap: 8px;
     min-width: 0;
 }
 
@@ -5062,16 +5096,23 @@ button {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 7px;
     margin: 0;
     color: #53617b;
     font-size: 14px;
     line-height: 1.4;
 }
 
+.application-detail-company-location span {
+    padding-right: 6px;
+}
+
 .application-detail-company-location span:first-child {
     color: #26334d;
     font-weight: 750;
+}
+
+.application-detail-company-location span:last-child {
+    padding-right: 0px;
 }
 
 .application-detail-status-control {
@@ -5092,10 +5133,6 @@ button {
 .application-detail-summary {
     color: #66738b;
     font-size: 13px;
-}
-
-.application-detail-heading {
-    gap: 5px;
 }
 
 .application-detail-header-actions {
@@ -5284,8 +5321,6 @@ button {
     color: #10203b;
     font-size: 24px;
     font-weight: 850;
-    line-height: 1.12;
-    letter-spacing: -.025em;
 }
 
 .application-detail-company-location {
@@ -5474,7 +5509,7 @@ button {
 }
 
 .detail-status-control.completed {
-    color: #0369a1;
+    color: #03a179;
 }
 
 .detail-status-control.passed {
@@ -5501,7 +5536,7 @@ button {
 }
 
 .status-select.completed {
-    color: #0369a1;
+    color: #03a110;
 }
 
 .status-select.passed {

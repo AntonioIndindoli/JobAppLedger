@@ -344,7 +344,7 @@ export function InterviewsView({
                                         type="button"
                                         className={
                                             isSelected
-                                                ? "application-list-item interview-list-item interviews-table-columns active"
+                                                ? `application-list-item interview-list-item interviews-table-columns status-accent ${interview.outcome.toLowerCase()} active`
                                                 : "application-list-item interview-list-item interviews-table-columns"
                                         }
                                         aria-current={isSelected ? "true" : undefined}
@@ -404,7 +404,7 @@ export function InterviewsView({
                 </aside>
 
                 <aside
-                    className="application-detail-panel interview-detail-panel"
+                    className={`application-detail-panel interview-detail-panel status-accent ${selectedInterview?.outcome.toLowerCase() ?? ""}`}
                     aria-label="Selected interview"
                 >
                     {selectedInterview ? (

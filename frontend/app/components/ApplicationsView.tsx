@@ -432,7 +432,7 @@ export function ApplicationsView({
                                         type="button"
                                         className={
                                             isSelected
-                                                ? "application-list-item applications-table-columns active"
+                                                ? `application-list-item applications-table-columns status-accent ${application.status.toLowerCase()} active`
                                                 : "application-list-item applications-table-columns"
                                         }
                                         aria-current={isSelected ? "true" : undefined}
@@ -490,13 +490,38 @@ export function ApplicationsView({
                     )}
                 </aside>
 
-                <aside className="application-detail-panel">
+                <aside className={`application-detail-panel status-accent ${selectedApplication?.status.toLowerCase() ?? ""}`}>
                     {selectedApplication ? (
                         <>
                             <header className="application-detail-header">
                                 <div className="application-detail-top-row">
                                     <div className="application-detail-heading">
                                         <h2>{selectedApplication.title}</h2>
+                                        <p className="application-detail-company-location">
+                                            <span>{selectedApplication.companyName || "Unknown company"}</span>
+                                            <span aria-hidden="true">·</span>
+                                            <span>{selectedApplication.location || "Location not set"}</span>
+                                            <span aria-hidden="true">·</span>
+                                            <label className="application-detail-status-control">
+                                                <select
+                                                    aria-label="Application status"
+                                                    className={`status-select ${selectedApplication.status.toLowerCase()}`}
+                                                    value={selectedApplication.status}
+                                                    onChange={(event) =>
+                                                        onStatusChange(
+                                                            selectedApplication.id,
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                >
+                                                    {STATUSES.map((status) => (
+                                                        <option key={status} value={status}>
+                                                            {STATUS_LABELS[status]}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </label>
+                                        </p>
                                     </div>
 
                                     <div
@@ -527,31 +552,7 @@ export function ApplicationsView({
                                         </div>
                                     </div>
                                 </div>
-                                <p className="application-detail-company-location">
-                                    <span>{selectedApplication.companyName || "Unknown company"}</span>
-                                    <span aria-hidden="true">·</span>
-                                    <span>{selectedApplication.location || "Location not set"}</span>
-                                    <span aria-hidden="true">·</span>
-                                    <label className="application-detail-status-control">
-                                        <select
-                                            aria-label="Application status"
-                                            className={`status-select ${selectedApplication.status.toLowerCase()}`}
-                                            value={selectedApplication.status}
-                                            onChange={(event) =>
-                                                onStatusChange(
-                                                    selectedApplication.id,
-                                                    event.target.value,
-                                                )
-                                            }
-                                        >
-                                            {STATUSES.map((status) => (
-                                                <option key={status} value={status}>
-                                                    {STATUS_LABELS[status]}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </label>
-                                </p>
+
                                 <div className="application-detail-summary" aria-label="Application summary">
                                     <span><AppIcon name="calendar" size={17} /> Applied {formatDisplayDate(selectedApplication.dateApplied)}</span>
                                     <span><AppIcon name="source" size={17} /> {selectedApplication.source || "No source"}</span>

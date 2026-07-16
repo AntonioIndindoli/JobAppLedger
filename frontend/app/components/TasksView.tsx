@@ -395,7 +395,7 @@ export function TasksView({
                                         type="button"
                                         className={
                                             isSelected
-                                                ? "application-list-item task-list-item tasks-table-columns active"
+                                                ? `application-list-item task-list-item tasks-table-columns status-accent ${getTaskStatusClass(task)} active`
                                                 : "application-list-item task-list-item tasks-table-columns"
                                         }
                                         aria-current={isSelected ? "true" : undefined}
@@ -455,7 +455,7 @@ export function TasksView({
                 </aside>
 
                 <aside
-                    className="application-detail-panel task-detail-panel"
+                    className={`application-detail-panel task-detail-panel status-accent ${selectedTask ? getTaskStatusClass(selectedTask) : ""}`}
                     aria-label="Selected task"
                 >
                     {selectedTask ? (
@@ -465,7 +465,14 @@ export function TasksView({
                                     <div className="application-detail-heading">
                                         <h2>{selectedTask.title}</h2>
                                         <p className="application-detail-company-location">
-                                            <span>{selectedTask.applicationTitle ?? "No linked application"}</span>
+                                            {selectedTask.applicationId ? (
+                                                <button type="button" className="application-detail-posting-link" onClick={() => onViewApplication(selectedTask.applicationId!)}>
+                                                    <AppIcon name="applications" size={15} />
+                                                    View application
+                                                </button>
+                                            ) : (
+                                                <span>No linked application</span>
+                                            )}
                                             <span aria-hidden="true">·</span>
                                             <span>{selectedTask.companyName ?? getTaskTypeLabel(selectedTask.type)}</span>
                                             <span aria-hidden="true">·</span>
