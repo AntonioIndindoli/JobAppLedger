@@ -284,7 +284,7 @@ export function TasksView({
 
     return (
         <section className={isMobileDetailOpen ? "applications-page tasks-page mobile-page-detail-open" : "applications-page tasks-page"}>
-            <header className="applications-header">
+            <header className="page-header">
                 <div>
                     <p>Tasks & Follow-Ups</p>
                     <span className="tasks-header-meta" aria-label="Task summary">
@@ -387,28 +387,6 @@ export function TasksView({
                         ))}
                     </select>
                 </label>
-                <label className="interviews-select-field">
-                    <span>Application</span>
-                    <select
-                        value={filters.applicationId}
-                        onChange={(event) =>
-                            setFilters({
-                                ...filters,
-                                applicationId: event.target.value,
-                            })
-                        }
-                    >
-                        <option value="">All applications</option>
-                        {applications.map((application) => (
-                            <option key={application.id} value={application.id}>
-                                {application.title}
-                                {application.companyName
-                                    ? ` at ${application.companyName}`
-                                    : ""}
-                            </option>
-                        ))}
-                    </select>
-                </label>
                 <button
                     type="button"
                     className="interviews-reset-button"
@@ -465,7 +443,7 @@ export function TasksView({
                                             }
                                         }}
                                     >
-                                        <span className="application-primary-cell">
+                                        <span className="application-primary-cell-task">
                                             <input
                                                 type="checkbox"
                                                 className="task-list-checkbox"

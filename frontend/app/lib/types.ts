@@ -200,6 +200,7 @@ export type AppIconName =
     | "ledger"
     | "location"
     | "logout"
+    | "menu"
     | "minus"
     | "pipeline"
     | "plus"

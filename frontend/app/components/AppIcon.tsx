@@ -226,6 +226,15 @@ export function AppIcon({
                 </>
             );
             break;
+        case "menu":
+            icon = (
+                <>
+                    <path d="M4 7h16" />
+                    <path d="M4 12h16" />
+                    <path d="M4 17h16" />
+                </>
+            );
+            break;
         case "minus":
             icon = <path d="M7 12h10" />;
             break;

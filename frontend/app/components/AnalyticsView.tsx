@@ -39,7 +39,7 @@ export function AnalyticsView({
 
     return (
         <section className="applications-page analytics-page">
-            <header className="applications-header">
+            <header className="page-header">
                 <div>
                     <p>Analytics</p>
                     <span>

@@ -349,17 +349,8 @@ export function ApplicationTracker({
                                                 </div>
                                             </div>
                                             <div
-                                                className={`job-card-footer${
-                                                    interview ? " has-interview" : ""
-                                                }`}
+                                                className="job-card-footer"
                                             >
-                                                {interview && (
-                                                    <span className="job-card-interview-type">
-                                                        {getInterviewTypeLabel(
-                                                            interview.type,
-                                                        )}
-                                                    </span>
-                                                )}
                                                 <small className="applied-date">
                                                     <AppIcon name="calendar" size={12} />
                                                     {formatAppliedDate(

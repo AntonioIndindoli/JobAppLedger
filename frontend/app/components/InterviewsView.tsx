@@ -12,7 +12,6 @@ import { INTERVIEW_OUTCOMES, INTERVIEW_TYPES } from "../lib/constants";
 import type { Application, Interview } from "../lib/types";
 import { AddInterviewButton } from "./AddInterviewButton";
 import { AppIcon } from "./AppIcon";
-import { InitialsBadge } from "./InitialsBadge";
 
 type InterviewsViewProps = {
     applications: Application[];
@@ -282,7 +281,7 @@ export function InterviewsView({
 
     return (
         <section className={isMobileDetailOpen ? "applications-page interviews-page mobile-page-detail-open" : "applications-page interviews-page"}>
-            <header className="applications-header">
+            <header className="page-header">
                 <div>
                     <p>Interviews</p>
                     <span
@@ -388,86 +387,81 @@ export function InterviewsView({
 
                     {sortedInterviews.length > 0 ? (
                         <>
-                        <div className="application-list desktop-record-list" role="list">
-                            <div className="application-table-header interviews-table-columns" role="row" aria-label="Interview columns and sorting">
-                                {renderSortButton("Role", "applicationTitle")}
-                                {renderSortButton("Company", "companyName")}
-                                {renderSortButton("When", "scheduledAt")}
-                                {renderSortButton("Stage", "type")}
-                                {renderSortButton("Status", "outcome")}
-                            </div>
-                            {sortedInterviews.map((interview) => {
-                                const isSelected =
-                                    selectedInterview?.id === interview.id;
+                            <div className="application-list desktop-record-list" role="list">
+                                <div className="application-table-header interviews-table-columns" role="row" aria-label="Interview columns and sorting">
+                                    {renderSortButton("Date", "scheduledAt")}
+                                    {renderSortButton("Role", "applicationTitle")}
+                                    {renderSortButton("Company", "companyName")}
+                                    {renderSortButton("Stage", "type")}
+                                    {renderSortButton("Status", "outcome")}
+                                </div>
+                                {sortedInterviews.map((interview) => {
+                                    const isSelected =
+                                        selectedInterview?.id === interview.id;
 
-                                return (
-                                    <button
-                                        key={interview.id}
-                                        type="button"
-                                        className={
-                                            isSelected
-                                                ? `application-list-item interview-list-item interviews-table-columns status-accent ${interview.outcome.toLowerCase()} active`
-                                                : "application-list-item interview-list-item interviews-table-columns"
-                                        }
-                                        aria-current={isSelected ? "true" : undefined}
-                                        onClick={() => openMobileDetail(interview.id)}
-                                    >
-                                        <span className="application-primary-cell">
-                                            <InitialsBadge
-                                                label={interview.companyName}
-                                                fallback={interview.applicationTitle}
-                                                className="interview-list-icon"
-                                            />
-                                            <strong>{interview.applicationTitle ?? "Unknown role"}</strong>
-                                        </span>
-                                        <span className="application-table-cell" data-label="Company">
-                                            {interview.companyName ?? "Unknown company"}
-                                        </span>
-                                        <span className="application-table-cell" data-label="When">
-                                            {formatInterviewDateLabel(interview.scheduledAt)} at{" "}
-                                            {formatInterviewTimeLabel(interview.scheduledAt)}
-                                        </span>
-                                        <span className="application-table-cell" data-label="Stage">
-                                            {getInterviewTypeLabel(interview.type)}
-                                        </span>
-                                        <span
-                                            className={`status-pill ${interview.outcome.toLowerCase()}`}
-                                        >
-                                            {getInterviewOutcomeLabel(interview.outcome)}
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        <div className="mobile-grouped-list" role="list" aria-label="Interview agenda">
-                            {interviewAgendaGroups.map((group) => (
-                                <section key={group.label} className="mobile-record-group">
-                                    <h3>{group.label}</h3>
-                                    {group.interviews.map((interview) => (
+                                    return (
                                         <button
                                             key={interview.id}
                                             type="button"
-                                            className={`mobile-agenda-card status-accent ${interview.outcome.toLowerCase()}`}
+                                            className={
+                                                isSelected
+                                                    ? `application-list-item interview-list-item interviews-table-columns status-accent ${interview.outcome.toLowerCase()} active`
+                                                    : "application-list-item interview-list-item interviews-table-columns"
+                                            }
+                                            aria-current={isSelected ? "true" : undefined}
                                             onClick={() => openMobileDetail(interview.id)}
                                         >
-                                            <span className="mobile-agenda-date">
-                                                <strong>{formatInterviewDateLabel(interview.scheduledAt)}</strong>
-                                                <span>{formatInterviewTimeLabel(interview.scheduledAt)}</span>
+                                            <span className="application-table-cell" data-label="When">
+                                                {formatInterviewDateLabel(interview.scheduledAt)} at{" "}
+                                                {formatInterviewTimeLabel(interview.scheduledAt)}
                                             </span>
-                                            <span className="mobile-agenda-copy">
-                                                <strong>{interview.companyName ?? "Unknown company"}</strong>
-                                                <span>{getInterviewTypeLabel(interview.type)} · {interview.applicationTitle ?? "Unknown role"}</span>
-                                                <small><AppIcon name={interview.meetingUrl?.trim() ? "external-link" : "location"} size={14} /> {getInterviewLocationLabel(interview)}</small>
+                                            <span className="application-primary-cell">
+                                                <strong>{interview.applicationTitle ?? "Unknown role"}</strong>
                                             </span>
-                                            <span className={`status-pill ${interview.outcome.toLowerCase()}`}>
+                                            <span className="application-table-cell" data-label="Company">
+                                                {interview.companyName ?? "Unknown company"}
+                                            </span>
+                                            <span className="application-table-cell" data-label="Stage">
+                                                {getInterviewTypeLabel(interview.type)}
+                                            </span>
+                                            <span
+                                                className={`status-pill ${interview.outcome.toLowerCase()}`}
+                                            >
                                                 {getInterviewOutcomeLabel(interview.outcome)}
                                             </span>
-                                            <AppIcon name="arrow-right" size={18} className="mobile-record-chevron" />
                                         </button>
-                                    ))}
-                                </section>
-                            ))}
-                        </div>
+                                    );
+                                })}
+                            </div>
+                            <div className="mobile-grouped-list" role="list" aria-label="Interview agenda">
+                                {interviewAgendaGroups.map((group) => (
+                                    <section key={group.label} className="mobile-record-group">
+                                        <h3>{group.label}</h3>
+                                        {group.interviews.map((interview) => (
+                                            <button
+                                                key={interview.id}
+                                                type="button"
+                                                className={`mobile-agenda-card status-accent ${interview.outcome.toLowerCase()}`}
+                                                onClick={() => openMobileDetail(interview.id)}
+                                            >
+                                                <span className="mobile-agenda-date">
+                                                    <strong>{formatInterviewDateLabel(interview.scheduledAt)}</strong>
+                                                    <span>{formatInterviewTimeLabel(interview.scheduledAt)}</span>
+                                                </span>
+                                                <span className="mobile-agenda-copy">
+                                                    <strong>{interview.companyName ?? "Unknown company"}</strong>
+                                                    <span>{getInterviewTypeLabel(interview.type)} · {interview.applicationTitle ?? "Unknown role"}</span>
+                                                    <small><AppIcon name={interview.meetingUrl?.trim() ? "external-link" : "location"} size={14} /> {getInterviewLocationLabel(interview)}</small>
+                                                </span>
+                                                <span className={`status-pill ${interview.outcome.toLowerCase()}`}>
+                                                    {getInterviewOutcomeLabel(interview.outcome)}
+                                                </span>
+                                                <AppIcon name="arrow-right" size={18} className="mobile-record-chevron" />
+                                            </button>
+                                        ))}
+                                    </section>
+                                ))}
+                            </div>
                         </>
                     ) : (
                         <div className="applications-empty application-list-empty interviews-empty">

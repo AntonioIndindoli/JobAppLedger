@@ -18,7 +18,6 @@ import { formatTaskDueDate, getTaskDueState, sortTasksByDueDate } from "../lib/t
 import { SOURCES, STATUSES, STATUS_LABELS } from "../lib/constants";
 import type { Application, Interview, Task } from "../lib/types";
 import { AppIcon } from "./AppIcon";
-import { InitialsBadge } from "./InitialsBadge";
 
 type ApplicationsViewProps = {
     applications: Application[];
@@ -353,7 +352,7 @@ export function ApplicationsView({
 
     return (
         <section className={isMobileDetailOpen ? "applications-page mobile-page-detail-open" : "applications-page"}>
-            <header className="applications-header">
+            <header className="page-header">
                 <div>
                     <p>Applications</p>
                     <span
@@ -504,10 +503,6 @@ export function ApplicationsView({
                                         onClick={() => openMobileDetail(application.id)}
                                     >
                                         <span className="application-primary-cell desktop-record-cell">
-                                            <InitialsBadge
-                                                label={application.companyName}
-                                                fallback={application.title}
-                                            />
                                             <strong>{application.title}</strong>
                                         </span>
                                         <span className="application-table-cell desktop-record-cell" data-label="Company">
@@ -522,10 +517,6 @@ export function ApplicationsView({
                                             {getStatusLabel(application.status)}
                                         </span>
                                         <span className="mobile-record-card application-mobile-card">
-                                            <InitialsBadge
-                                                label={application.companyName}
-                                                fallback={application.title}
-                                            />
                                             <span className="mobile-record-card-copy">
                                                 <strong>{application.title}</strong>
                                                 <span>{application.companyName || "Unknown company"}</span>

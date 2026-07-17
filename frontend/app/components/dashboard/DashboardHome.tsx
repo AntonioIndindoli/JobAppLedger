@@ -100,10 +100,14 @@ export function DashboardHome({
     return (
         <>
             <section className="hero">
-                <h1>Your job search at a glance</h1>
-                <p>
-                    Track applications, interviews, offers, and follow-ups in one place.
-                </p>
+                <header className="page-header">
+                    <div>
+                        <p>Your job search at a glance</p>
+                        <span>
+                            TODO: put some something here
+                        </span>
+                    </div>
+                </header>
             </section>
             <DashboardStats
                 activePipeline={activePipeline}
