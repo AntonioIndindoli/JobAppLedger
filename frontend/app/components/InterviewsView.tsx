@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import {
     getInterviewOutcomeLabel,
@@ -125,6 +125,11 @@ export function InterviewsView({
     const [isEditingNotes, setIsEditingNotes] = useState(false);
     const [notesDraft, setNotesDraft] = useState("");
     const [isSavingNotes, setIsSavingNotes] = useState(false);
+    const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+    const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(
+        Boolean(focusedInterviewId),
+    );
+    const listScrollPosition = useRef(0);
     const canCreateInterview = applications.length > 0;
 
     const filteredInterviews = useMemo(() => {
@@ -192,6 +197,53 @@ export function InterviewsView({
     }, [interviews]);
 
     const hasActiveFilters = Object.values(filters).some(Boolean);
+    const activeFilterCount = [filters.type, filters.outcome].filter(Boolean).length;
+    const interviewAgendaGroups = useMemo(() => {
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const startOfTomorrow = new Date(startOfToday);
+        startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+        const groups = [
+            {
+                label: "Upcoming",
+                interviews: filteredInterviews
+                    .filter((interview) => getInterviewTimestamp(interview) >= startOfTomorrow.getTime())
+                    .sort((left, right) => getInterviewTimestamp(left) - getInterviewTimestamp(right)),
+            },
+            {
+                label: "Today",
+                interviews: filteredInterviews
+                    .filter((interview) => {
+                        const timestamp = getInterviewTimestamp(interview);
+                        return timestamp >= startOfToday.getTime() && timestamp < startOfTomorrow.getTime();
+                    })
+                    .sort((left, right) => getInterviewTimestamp(left) - getInterviewTimestamp(right)),
+            },
+            {
+                label: "Past",
+                interviews: filteredInterviews
+                    .filter((interview) => getInterviewTimestamp(interview) < startOfToday.getTime())
+                    .sort((left, right) => getInterviewTimestamp(right) - getInterviewTimestamp(left)),
+            },
+        ];
+
+        return groups.filter((group) => group.interviews.length > 0);
+    }, [filteredInterviews]);
+
+    function openMobileDetail(interviewId: string) {
+        listScrollPosition.current = window.scrollY;
+        setSelectedInterviewId(interviewId);
+        setIsEditingNotes(false);
+        setIsMobileDetailOpen(true);
+        requestAnimationFrame(() => window.scrollTo({ top: 0 }));
+    }
+
+    function closeMobileDetail() {
+        setIsMobileDetailOpen(false);
+        requestAnimationFrame(() =>
+            window.scrollTo({ top: listScrollPosition.current, behavior: "auto" }),
+        );
+    }
 
     function updateSort(nextSortKey: SortKey) {
         if (nextSortKey === sortKey) {
@@ -229,7 +281,7 @@ export function InterviewsView({
     }
 
     return (
-        <section className="applications-page interviews-page">
+        <section className={isMobileDetailOpen ? "applications-page interviews-page mobile-page-detail-open" : "applications-page interviews-page"}>
             <header className="applications-header">
                 <div>
                     <p>Interviews</p>
@@ -249,7 +301,7 @@ export function InterviewsView({
                 </div>
                 <div className="applications-actions">
                     <AddInterviewButton
-                        className="primary"
+                        className="primary mobile-page-primary-action"
                         onClick={onCreateInterview}
                         disabled={!canCreateInterview}
                     />
@@ -257,7 +309,7 @@ export function InterviewsView({
             </header>
 
             <div
-                className="interviews-control-panel"
+                className={isFiltersOpen ? "interviews-control-panel mobile-filters-open" : "interviews-control-panel"}
                 aria-label="Interview table filters"
             >
                 <label className="interviews-search-field">
@@ -271,6 +323,15 @@ export function InterviewsView({
                         placeholder="Search interviews"
                     />
                 </label>
+                <button
+                    type="button"
+                    className="mobile-filter-toggle"
+                    aria-expanded={isFiltersOpen}
+                    onClick={() => setIsFiltersOpen((open) => !open)}
+                >
+                    <AppIcon name="filter" size={18} />
+                    Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
+                </button>
                 <label className="interviews-select-field">
                     <span>Type</span>
                     <select
@@ -313,7 +374,7 @@ export function InterviewsView({
                 </button>
             </div>
 
-            <div className="applications-split-panel interviews-split-panel">
+            <div className={isMobileDetailOpen ? "applications-split-panel interviews-split-panel mobile-detail-open" : "applications-split-panel interviews-split-panel"}>
                 <aside className="application-list-panel interviews-list-panel">
                     <div className="application-list-header">
                         <div>
@@ -326,7 +387,8 @@ export function InterviewsView({
                     </div>
 
                     {sortedInterviews.length > 0 ? (
-                        <div className="application-list" role="list">
+                        <>
+                        <div className="application-list desktop-record-list" role="list">
                             <div className="application-table-header interviews-table-columns" role="row" aria-label="Interview columns and sorting">
                                 {renderSortButton("Role", "applicationTitle")}
                                 {renderSortButton("Company", "companyName")}
@@ -348,9 +410,7 @@ export function InterviewsView({
                                                 : "application-list-item interview-list-item interviews-table-columns"
                                         }
                                         aria-current={isSelected ? "true" : undefined}
-                                        onClick={() =>
-                                            setSelectedInterviewId(interview.id)
-                                        }
+                                        onClick={() => openMobileDetail(interview.id)}
                                     >
                                         <span className="application-primary-cell">
                                             <InitialsBadge
@@ -379,6 +439,36 @@ export function InterviewsView({
                                 );
                             })}
                         </div>
+                        <div className="mobile-grouped-list" role="list" aria-label="Interview agenda">
+                            {interviewAgendaGroups.map((group) => (
+                                <section key={group.label} className="mobile-record-group">
+                                    <h3>{group.label}</h3>
+                                    {group.interviews.map((interview) => (
+                                        <button
+                                            key={interview.id}
+                                            type="button"
+                                            className={`mobile-agenda-card status-accent ${interview.outcome.toLowerCase()}`}
+                                            onClick={() => openMobileDetail(interview.id)}
+                                        >
+                                            <span className="mobile-agenda-date">
+                                                <strong>{formatInterviewDateLabel(interview.scheduledAt)}</strong>
+                                                <span>{formatInterviewTimeLabel(interview.scheduledAt)}</span>
+                                            </span>
+                                            <span className="mobile-agenda-copy">
+                                                <strong>{interview.companyName ?? "Unknown company"}</strong>
+                                                <span>{getInterviewTypeLabel(interview.type)} · {interview.applicationTitle ?? "Unknown role"}</span>
+                                                <small><AppIcon name={interview.meetingUrl?.trim() ? "external-link" : "location"} size={14} /> {getInterviewLocationLabel(interview)}</small>
+                                            </span>
+                                            <span className={`status-pill ${interview.outcome.toLowerCase()}`}>
+                                                {getInterviewOutcomeLabel(interview.outcome)}
+                                            </span>
+                                            <AppIcon name="arrow-right" size={18} className="mobile-record-chevron" />
+                                        </button>
+                                    ))}
+                                </section>
+                            ))}
+                        </div>
+                        </>
                     ) : (
                         <div className="applications-empty application-list-empty interviews-empty">
                             <span className="empty-illustration">
@@ -409,6 +499,10 @@ export function InterviewsView({
                 >
                     {selectedInterview ? (
                         <>
+                            <button type="button" className="mobile-detail-back" onClick={closeMobileDetail}>
+                                <AppIcon name="arrow-left" size={20} />
+                                Interviews
+                            </button>
                             <header className="application-detail-header interview-detail-header">
                                 <div className="application-detail-top-row">
                                     <div className="application-detail-heading">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import {
     countApplicationsByStatus,
@@ -161,6 +161,11 @@ export function ApplicationsView({
     const [isSavingNotes, setIsSavingNotes] = useState(false);
     const [openInterviewMenuId, setOpenInterviewMenuId] = useState<string | null>(null);
     const [isAppliedDateOpen, setIsAppliedDateOpen] = useState(false);
+    const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+    const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(
+        Boolean(focusedApplicationId),
+    );
+    const listScrollPosition = useRef(0);
     const [selectedApplicationId, setSelectedApplicationId] = useState<
         string | null
     >(focusedApplicationId ?? null);
@@ -260,6 +265,57 @@ export function ApplicationsView({
         )
         : [];
     const nextTask = selectedTasks[0] ?? null;
+    const activeFilterCount = [
+        filters.status,
+        filters.source,
+        filters.startDate || filters.endDate,
+    ].filter(Boolean).length;
+    const nextActionByApplication = useMemo(() => {
+        const nextActions = new Map<string, { label: string; timestamp: number }>();
+        const now = Date.now();
+
+        interviews.forEach((interview) => {
+            const timestamp = new Date(interview.scheduledAt).getTime();
+            if (!Number.isFinite(timestamp) || timestamp < now) return;
+            const current = nextActions.get(interview.applicationId);
+            if (!current || timestamp < current.timestamp) {
+                nextActions.set(interview.applicationId, {
+                    label: `Interview ${formatDisplayDate(interview.scheduledAt).replace(/, \d{4}$/, "")}`,
+                    timestamp,
+                });
+            }
+        });
+
+        tasks.filter((task) => !task.completedAt).forEach((task) => {
+            if (!task.applicationId || !task.dueDate) return;
+            const timestamp = new Date(`${task.dueDate.slice(0, 10)}T23:59:59`).getTime();
+            if (!Number.isFinite(timestamp) || timestamp < now) return;
+            const current = nextActions.get(task.applicationId);
+            if (!current || timestamp < current.timestamp) {
+                nextActions.set(task.applicationId, {
+                    label: `${task.title} ${formatDisplayDate(task.dueDate).replace(/, \d{4}$/, "")}`,
+                    timestamp,
+                });
+            }
+        });
+
+        return nextActions;
+    }, [interviews, tasks]);
+
+    function openMobileDetail(applicationId: string) {
+        listScrollPosition.current = window.scrollY;
+        setSelectedApplicationId(applicationId);
+        setIsEditingNotes(false);
+        setIsMobileDetailOpen(true);
+        requestAnimationFrame(() => window.scrollTo({ top: 0 }));
+    }
+
+    function closeMobileDetail() {
+        setIsMobileDetailOpen(false);
+        requestAnimationFrame(() =>
+            window.scrollTo({ top: listScrollPosition.current, behavior: "auto" }),
+        );
+    }
     function updateSort(nextSortKey: SortKey) {
         if (nextSortKey === sortKey) {
             setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
@@ -296,7 +352,7 @@ export function ApplicationsView({
     }
 
     return (
-        <section className="applications-page">
+        <section className={isMobileDetailOpen ? "applications-page mobile-page-detail-open" : "applications-page"}>
             <header className="applications-header">
                 <div>
                     <p>Applications</p>
@@ -315,13 +371,13 @@ export function ApplicationsView({
                     </span>
                 </div>
                 <div className="applications-actions">
-                    <button type="button" className="primary" onClick={onImportOpen}>
+                    <button type="button" className="primary desktop-secondary-action" onClick={onImportOpen}>
                         <AppIcon name="import" size={18} />
                         Import Job
                     </button>
                     <button
                         type="button"
-                        className="secondary"
+                        className="secondary mobile-page-primary-action"
                         onClick={onCreateApplication}
                     >
                         <AppIcon name="plus" size={18} />
@@ -330,7 +386,7 @@ export function ApplicationsView({
                 </div>
             </header>
 
-            <div className="applications-toolbar" aria-label="Application table filters">
+            <div className={isFiltersOpen ? "applications-toolbar mobile-filters-open" : "applications-toolbar"} aria-label="Application table filters">
                 <label className="applications-search-field">
                     <AppIcon name="search" size={18} />
                     <input
@@ -342,6 +398,15 @@ export function ApplicationsView({
                         placeholder="Search title, company, location, source"
                     />
                 </label>
+                <button
+                    type="button"
+                    className="mobile-filter-toggle"
+                    aria-expanded={isFiltersOpen}
+                    onClick={() => setIsFiltersOpen((open) => !open)}
+                >
+                    <AppIcon name="filter" size={18} />
+                    Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
+                </button>
                 <select
                     value={filters.status}
                     onChange={(event) =>
@@ -402,7 +467,7 @@ export function ApplicationsView({
                 </button>
             </div>
 
-            <div className="applications-split-panel">
+            <div className={isMobileDetailOpen ? "applications-split-panel mobile-detail-open" : "applications-split-panel"}>
                 <aside className="application-list-panel">
                     <div className="application-list-header">
                         <div>
@@ -436,28 +501,42 @@ export function ApplicationsView({
                                                 : "application-list-item applications-table-columns"
                                         }
                                         aria-current={isSelected ? "true" : undefined}
-                                        onClick={() => {
-                                            setSelectedApplicationId(application.id);
-                                            setIsEditingNotes(false);
-                                        }}
+                                        onClick={() => openMobileDetail(application.id)}
                                     >
-                                        <span className="application-primary-cell">
+                                        <span className="application-primary-cell desktop-record-cell">
                                             <InitialsBadge
                                                 label={application.companyName}
                                                 fallback={application.title}
                                             />
                                             <strong>{application.title}</strong>
                                         </span>
-                                        <span className="application-table-cell" data-label="Company">
+                                        <span className="application-table-cell desktop-record-cell" data-label="Company">
                                             {application.companyName || "Unknown company"}
                                         </span>
-                                        <span className="application-table-cell" data-label="Applied date">
+                                        <span className="application-table-cell desktop-record-cell" data-label="Applied date">
                                             {formatDisplayDate(application.dateApplied)}
                                         </span>
                                         <span
-                                            className={`status-pill ${application.status.toLowerCase()}`}
+                                            className={`status-pill desktop-record-cell ${application.status.toLowerCase()}`}
                                         >
                                             {getStatusLabel(application.status)}
+                                        </span>
+                                        <span className="mobile-record-card application-mobile-card">
+                                            <InitialsBadge
+                                                label={application.companyName}
+                                                fallback={application.title}
+                                            />
+                                            <span className="mobile-record-card-copy">
+                                                <strong>{application.title}</strong>
+                                                <span>{application.companyName || "Unknown company"}</span>
+                                                <small>
+                                                    Applied {formatDisplayDate(application.dateApplied).replace(/, \d{4}$/, "")}
+                                                </small>
+                                            </span>
+                                            <span className={`status-pill ${application.status.toLowerCase()}`}>
+                                                {getStatusLabel(application.status)}
+                                            </span>
+                                            <AppIcon name="arrow-right" size={18} className="mobile-record-chevron" />
                                         </span>
                                     </button>
                                 );
@@ -493,35 +572,15 @@ export function ApplicationsView({
                 <aside className={`application-detail-panel status-accent ${selectedApplication?.status.toLowerCase() ?? ""}`}>
                     {selectedApplication ? (
                         <>
+                            <button type="button" className="mobile-detail-back" onClick={closeMobileDetail}>
+                                <AppIcon name="arrow-left" size={20} />
+                                Applications
+                            </button>
                             <header className="application-detail-header">
                                 <div className="application-detail-top-row">
                                     <div className="application-detail-heading">
                                         <h2>{selectedApplication.title}</h2>
-                                        <p className="application-detail-company-location">
-                                            <span>{selectedApplication.companyName || "Unknown company"}</span>
-                                            <span aria-hidden="true">·</span>
-                                            <span>{selectedApplication.location || "Location not set"}</span>
-                                            <span aria-hidden="true">·</span>
-                                            <label className="application-detail-status-control">
-                                                <select
-                                                    aria-label="Application status"
-                                                    className={`status-select ${selectedApplication.status.toLowerCase()}`}
-                                                    value={selectedApplication.status}
-                                                    onChange={(event) =>
-                                                        onStatusChange(
-                                                            selectedApplication.id,
-                                                            event.target.value,
-                                                        )
-                                                    }
-                                                >
-                                                    {STATUSES.map((status) => (
-                                                        <option key={status} value={status}>
-                                                            {STATUS_LABELS[status]}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </label>
-                                        </p>
+
                                     </div>
 
                                     <div
@@ -551,9 +610,34 @@ export function ApplicationsView({
                                             )}
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="application-detail-summary" aria-label="Application summary">
+                                </div>
+                                    <p className="application-detail-company-location">
+                                        <span>{selectedApplication.companyName || "Unknown company"}</span>
+                                        <span aria-hidden="true">·</span>
+                                        <span>{selectedApplication.location || "Location not set"}</span>
+                                        <span aria-hidden="true">·</span>
+                                        <label className="application-detail-status-control">
+                                            <select
+                                                aria-label="Application status"
+                                                className={`status-select ${selectedApplication.status.toLowerCase()}`}
+                                                value={selectedApplication.status}
+                                                onChange={(event) =>
+                                                    onStatusChange(
+                                                        selectedApplication.id,
+                                                        event.target.value,
+                                                    )
+                                                }
+                                            >
+                                                {STATUSES.map((status) => (
+                                                    <option key={status} value={status}>
+                                                        {STATUS_LABELS[status]}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </label>
+                                    </p>
+                                <div className="application-detail-summary" aria-label="Application overview">
                                     <span><AppIcon name="calendar" size={17} /> Applied {formatDisplayDate(selectedApplication.dateApplied)}</span>
                                     <span><AppIcon name="source" size={17} /> {selectedApplication.source || "No source"}</span>
                                     <span><AppIcon name="salary" size={17} /> {selectedApplication.salaryMin !== null || selectedApplication.salaryMax !== null ? `Salary: ${formatSalaryRange(selectedApplication)}` : formatSalaryRange(selectedApplication)}</span>
@@ -572,7 +656,10 @@ export function ApplicationsView({
                                 <div className="application-detail-main">
                                     <section className="application-detail-section application-detail-card-section application-next-action-section">
                                         <div className="application-detail-section-heading">
-                                            <h3>Next action</h3>
+                                            <div>
+                                                <h3>Tasks</h3>
+                                                <span>Next upcoming action</span>
+                                            </div>
                                             <button type="button" className="alternative application-section-action" onClick={() => onCreateTask(selectedApplication.id)}>
                                                 <AppIcon name="plus" size={15} /> Add task
                                             </button>

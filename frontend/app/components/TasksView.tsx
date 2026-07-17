@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { TASK_TYPES } from "../lib/constants";
 import {
@@ -118,6 +118,9 @@ export function TasksView({
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     const [descriptionDraft, setDescriptionDraft] = useState("");
     const [isSavingDescription, setIsSavingDescription] = useState(false);
+    const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+    const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
+    const listScrollPosition = useRef(0);
 
     const taskSummary = useMemo(() => {
         const summary = {
@@ -173,6 +176,51 @@ export function TasksView({
         sortedTasks.find((task) => task.id === selectedTaskId) ?? sortedTasks[0] ?? null;
     const selectedDescription = selectedTask?.description?.trim() ?? "";
     const hasActiveFilters = Object.values(filters).some(Boolean);
+    const activeFilterCount = [
+        filters.type,
+        filters.status,
+        filters.applicationId,
+    ].filter(Boolean).length;
+    const taskActionGroups = useMemo(() => {
+        const groups: Array<{ label: string; tasks: Task[] }> = [
+            {
+                label: "Overdue",
+                tasks: sortedTasks.filter((task) => getTaskDueState(task) === "overdue"),
+            },
+            {
+                label: "Today",
+                tasks: sortedTasks.filter((task) => getTaskDueState(task) === "today"),
+            },
+            {
+                label: "Upcoming",
+                tasks: sortedTasks.filter((task) => {
+                    const state = getTaskDueState(task);
+                    return state === "upcoming" || state === "unscheduled";
+                }),
+            },
+            {
+                label: "Completed",
+                tasks: sortedTasks.filter((task) => getTaskDueState(task) === "completed"),
+            },
+        ];
+
+        return groups.filter((group) => group.tasks.length > 0);
+    }, [sortedTasks]);
+
+    function openMobileDetail(taskId: string) {
+        listScrollPosition.current = window.scrollY;
+        setSelectedTaskId(taskId);
+        setIsEditingDescription(false);
+        setIsMobileDetailOpen(true);
+        requestAnimationFrame(() => window.scrollTo({ top: 0 }));
+    }
+
+    function closeMobileDetail() {
+        setIsMobileDetailOpen(false);
+        requestAnimationFrame(() =>
+            window.scrollTo({ top: listScrollPosition.current, behavior: "auto" }),
+        );
+    }
 
     function updateSort(nextSortKey: SortKey) {
         if (nextSortKey === sortKey) {
@@ -235,7 +283,7 @@ export function TasksView({
     }
 
     return (
-        <section className="applications-page tasks-page">
+        <section className={isMobileDetailOpen ? "applications-page tasks-page mobile-page-detail-open" : "applications-page tasks-page"}>
             <header className="applications-header">
                 <div>
                     <p>Tasks & Follow-Ups</p>
@@ -249,7 +297,7 @@ export function TasksView({
                 <div className="applications-actions">
                     <button
                         type="button"
-                        className="primary"
+                        className="primary mobile-page-primary-action"
                         onClick={() => onCreateTask()}
                     >
                         <AppIcon name="plus" size={18} />
@@ -284,7 +332,7 @@ export function TasksView({
                 </div>
             </section>
 
-            <div className="interviews-control-panel tasks-control-panel">
+            <div className={isFiltersOpen ? "interviews-control-panel tasks-control-panel mobile-filters-open" : "interviews-control-panel tasks-control-panel"}>
                 <label className="interviews-search-field tasks-search-field">
                     <AppIcon name="search" size={18} />
                     <input
@@ -296,6 +344,15 @@ export function TasksView({
                         placeholder="Search tasks"
                     />
                 </label>
+                <button
+                    type="button"
+                    className="mobile-filter-toggle"
+                    aria-expanded={isFiltersOpen}
+                    onClick={() => setIsFiltersOpen((open) => !open)}
+                >
+                    <AppIcon name="filter" size={18} />
+                    Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
+                </button>
                 <label className="interviews-select-field">
                     <span>Type</span>
                     <select
@@ -363,7 +420,7 @@ export function TasksView({
                 </button>
             </div>
 
-            <div className="applications-split-panel tasks-split-panel">
+            <div className={isMobileDetailOpen ? "applications-split-panel tasks-split-panel mobile-detail-open" : "applications-split-panel tasks-split-panel"}>
                 <aside className="application-list-panel tasks-list-panel">
                     <div className="application-list-header">
                         <div>
@@ -375,7 +432,8 @@ export function TasksView({
                     </div>
 
                     {sortedTasks.length > 0 ? (
-                        <div className="application-list" role="list">
+                        <>
+                        <div className="application-list desktop-record-list" role="list">
                             <div className="application-table-header tasks-table-columns" role="row" aria-label="Task columns and sorting">
                                 {renderSortButton("Task", "title")}
                                 {renderSortButton("Application", "applicationTitle")}
@@ -399,11 +457,11 @@ export function TasksView({
                                                 : "application-list-item task-list-item tasks-table-columns"
                                         }
                                         aria-current={isSelected ? "true" : undefined}
-                                        onClick={() => setSelectedTaskId(task.id)}
+                                        onClick={() => openMobileDetail(task.id)}
                                         onKeyDown={(event) => {
                                             if (event.key === "Enter" || event.key === " ") {
                                                 event.preventDefault();
-                                                setSelectedTaskId(task.id);
+                                                openMobileDetail(task.id);
                                             }
                                         }}
                                     >
@@ -436,6 +494,52 @@ export function TasksView({
                                 );
                             })}
                         </div>
+                        <div className="mobile-grouped-list" role="list" aria-label="Tasks by due state">
+                            {taskActionGroups.map((group) => (
+                                <section key={group.label} className="mobile-record-group">
+                                    <h3>{group.label}</h3>
+                                    {group.tasks.map((task) => {
+                                        const state = getTaskDueState(task);
+                                        const isCompleted = !isOpenTask(task);
+                                        return (
+                                            <div
+                                                key={task.id}
+                                                role="button"
+                                                tabIndex={0}
+                                                className={`mobile-task-card status-accent ${getTaskStatusClass(task)}`}
+                                                onClick={() => openMobileDetail(task.id)}
+                                                onKeyDown={(event) => {
+                                                    if (event.key === "Enter" || event.key === " ") {
+                                                        event.preventDefault();
+                                                        openMobileDetail(task.id);
+                                                    }
+                                                }}
+                                            >
+                                                <span className="mobile-task-checkbox-target" onClick={(event) => event.stopPropagation()}>
+                                                    <input
+                                                        type="checkbox"
+                                                        className="task-list-checkbox"
+                                                        checked={isCompleted}
+                                                        aria-label={`Mark ${task.title} ${isCompleted ? "not completed" : "completed"}`}
+                                                        onChange={() => onCompleteTask(task.id)}
+                                                    />
+                                                </span>
+                                                <span className="mobile-agenda-copy">
+                                                    <strong>{task.title}</strong>
+                                                    <span>{task.companyName ?? "No linked company"}</span>
+                                                    <small>{formatTaskDueDate(task.dueDate)} · {getTaskTypeLabel(task.type)}</small>
+                                                </span>
+                                                <span className={`status-pill ${getTaskStatusClass(task)}`}>
+                                                    {TASK_STATUS_LABELS[state]}
+                                                </span>
+                                                <AppIcon name="arrow-right" size={18} className="mobile-record-chevron" />
+                                            </div>
+                                        );
+                                    })}
+                                </section>
+                            ))}
+                        </div>
+                        </>
                     ) : (
                         <div className="applications-empty application-list-empty tasks-empty">
                             <span className="empty-illustration">
@@ -469,6 +573,10 @@ export function TasksView({
                 >
                     {selectedTask ? (
                         <>
+                            <button type="button" className="mobile-detail-back" onClick={closeMobileDetail}>
+                                <AppIcon name="arrow-left" size={20} />
+                                Tasks
+                            </button>
                             <header className="application-detail-header task-detail-header">
                                 <div className="application-detail-top-row">
                                     <div className="application-detail-heading">
