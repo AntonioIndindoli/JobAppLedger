@@ -271,10 +271,6 @@ button {
     box-shadow: none;
 }
 
-.add-interview-action {
-    width: 100%;
-}
-
 .add-interview-action.is-disabled {
     cursor: not-allowed;
 }

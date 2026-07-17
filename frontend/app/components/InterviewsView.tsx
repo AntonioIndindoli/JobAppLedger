@@ -301,6 +301,7 @@ export function InterviewsView({
                 <div className="applications-actions">
                     <AddInterviewButton
                         className="primary mobile-page-primary-action"
+                        iconSize={20}
                         onClick={onCreateInterview}
                         disabled={!canCreateInterview}
                     />
