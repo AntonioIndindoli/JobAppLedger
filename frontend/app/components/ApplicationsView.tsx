@@ -715,18 +715,6 @@ export function ApplicationsView({
                                                                     interview.scheduledAt,
                                                                 )}
                                                             </span>
-                                                            <small>
-                                                                {formatInterviewDuration(
-                                                                    interview.durationMinutes,
-                                                                )}
-                                                                {" - "}
-                                                                {interview.interviewerName ||
-                                                                    "Interviewer not set"}
-                                                                {" - "}
-                                                                {getInterviewLocationLabel(
-                                                                    interview,
-                                                                )}
-                                                            </small>
                                                         </div>
                                                         <span
                                                             className={`status-pill ${interview.outcome.toLowerCase()}`}

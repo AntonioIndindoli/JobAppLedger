@@ -144,6 +144,12 @@ export function DashboardShell({
                     >
                         <AppIcon name="menu" size={23} />
                     </button>
+                    <strong className="mobile-topbar-title">
+                        {currentView === "dashboard"
+                            ? "Dashboard"
+                            : currentView.charAt(0).toUpperCase() +
+                              currentView.slice(1)}
+                    </strong>
                     <div className="search">
                         <AppIcon name="search" size={18} />
                         <span>Search jobs, companies, contacts...</span>

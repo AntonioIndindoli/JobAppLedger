@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { DASHBOARD_STATUSES, SOURCES, STATUSES, STATUS_LABELS } from "../../lib/constants";
 import {
@@ -99,6 +99,38 @@ export function ApplicationTracker({
     onViewApplication,
 }: ApplicationTrackerProps) {
     const [openCardMenuId, setOpenCardMenuId] = useState<string | null>(null);
+    const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+    const [mobileActiveStatus, setMobileActiveStatus] =
+        useState<DashboardStatus>(
+            () =>
+                DASHBOARD_STATUSES.find(
+                    (status) => groupedApplications[status].length > 0,
+                ) ?? "APPLIED",
+        );
+    const mobileFiltersToggleRef = useRef<HTMLButtonElement>(null);
+    const mobileFiltersCloseRef = useRef<HTMLButtonElement>(null);
+    const activeFilterCount = Object.values(filters).filter(Boolean).length;
+
+    useEffect(() => {
+        if (!isMobileFiltersOpen) return;
+
+        const previousOverflow = document.body.style.overflow;
+        const filterToggle = mobileFiltersToggleRef.current;
+        document.body.style.overflow = "hidden";
+        mobileFiltersCloseRef.current?.focus();
+
+        function handleKeyDown(event: KeyboardEvent) {
+            if (event.key === "Escape") setIsMobileFiltersOpen(false);
+        }
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            window.removeEventListener("keydown", handleKeyDown);
+            filterToggle?.focus();
+        };
+    }, [isMobileFiltersOpen]);
     const interviewByApplicationId = useMemo(() => {
         const groupedInterviews = new Map<string, Interview[]>();
 
@@ -118,7 +150,7 @@ export function ApplicationTracker({
 
     return (
         <section className="panel tracker-panel">
-            <div className="panel-title">
+            <div className="panel-title tracker-heading-row">
                 <div>
                     <h2>
                         <span className="heading-icon">
@@ -131,18 +163,57 @@ export function ApplicationTracker({
                         />
                     </h2>
                 </div>
-                <div className="panel-title">
-                    <button className="primary" onClick={onImportOpen}>
-                        <AppIcon name="import" size={18} />
-                        Import Job
-                    </button>
-                    <button className="secondary" onClick={onCreateApplication}>
+                <div className="panel-title tracker-actions">
+                    <button className="primary" onClick={onCreateApplication}>
                         <AppIcon name="plus" size={18} />
                         Add Application
                     </button>
+                    <button className="secondary" onClick={onImportOpen}>
+                        <AppIcon name="import" size={18} />
+                        Import Job
+                    </button>
                 </div>
             </div>
-            <div className="filter-row" aria-label="Application filters">
+            <button
+                ref={mobileFiltersToggleRef}
+                type="button"
+                className="dashboard-filter-toggle"
+                aria-controls="dashboard-application-filters"
+                aria-expanded={isMobileFiltersOpen}
+                onClick={() => setIsMobileFiltersOpen(true)}
+            >
+                <AppIcon name="filter" size={17} />
+                Filters
+                {activeFilterCount > 0 && <span>{activeFilterCount}</span>}
+            </button>
+            {isMobileFiltersOpen && (
+                <button
+                    type="button"
+                    className="dashboard-filter-backdrop"
+                    aria-label="Close application filters"
+                    onClick={() => setIsMobileFiltersOpen(false)}
+                />
+            )}
+            <div
+                id="dashboard-application-filters"
+                className={
+                    isMobileFiltersOpen
+                        ? "filter-row dashboard-filters-open"
+                        : "filter-row"
+                }
+                aria-label="Application filters"
+            >
+                <div className="dashboard-filter-sheet-header">
+                    <strong>Filter applications</strong>
+                    <button
+                        ref={mobileFiltersCloseRef}
+                        type="button"
+                        aria-label="Close application filters"
+                        onClick={() => setIsMobileFiltersOpen(false)}
+                    >
+                        <AppIcon name="x" size={20} />
+                    </button>
+                </div>
                 <select
                     value={filters.status}
                     onChange={(event) =>
@@ -190,16 +261,48 @@ export function ApplicationTracker({
                         onFiltersChange({ ...filters, endDate: event.target.value })
                     }
                 />
-                <button onClick={onApplyFilters}>
+                <button
+                    onClick={() => {
+                        onApplyFilters();
+                        if (
+                            DASHBOARD_STATUSES.includes(
+                                filters.status as DashboardStatus,
+                            )
+                        ) {
+                            setMobileActiveStatus(
+                                filters.status as DashboardStatus,
+                            );
+                        }
+                        setIsMobileFiltersOpen(false);
+                    }}
+                >
                     <AppIcon name="filter" size={16} />
                     Apply filters
                 </button>
+            </div>
+            <div
+                className="mobile-stage-tabs"
+                aria-label="Application stages"
+            >
+                {DASHBOARD_STATUSES.map((status) => (
+                    <button
+                        key={status}
+                        type="button"
+                        aria-pressed={mobileActiveStatus === status}
+                        onClick={() => setMobileActiveStatus(status)}
+                    >
+                        {STATUS_LABELS[status]}
+                        <span>{groupedApplications[status].length}</span>
+                    </button>
+                ))}
             </div>
             <div className="kanban">
                 {DASHBOARD_STATUSES.map((status) => (
                     <section
                         key={status}
-                        className={`lane ${status.toLowerCase()}`}
+                        className={`lane ${status.toLowerCase()}${
+                            mobileActiveStatus === status ? " mobile-active" : ""
+                        }`}
                         onDragOver={(event) => event.preventDefault()}
                         onDrop={(event) => {
                             const id = event.dataTransfer.getData("text/plain");
@@ -357,6 +460,34 @@ export function ApplicationTracker({
                                                         application.dateApplied,
                                                     )}
                                                 </small>
+                                                <label className="mobile-status-control">
+                                                    <span>Status</span>
+                                                    <select
+                                                        aria-label={`Change status for ${application.title}`}
+                                                        value={application.status}
+                                                        onChange={(event) =>
+                                                            onTransitionStatus(
+                                                                application.id,
+                                                                event.target.value,
+                                                            )
+                                                        }
+                                                    >
+                                                        {DASHBOARD_STATUSES.map(
+                                                            (nextStatus) => (
+                                                                <option
+                                                                    key={nextStatus}
+                                                                    value={nextStatus}
+                                                                >
+                                                                    {
+                                                                        STATUS_LABELS[
+                                                                            nextStatus
+                                                                        ]
+                                                                    }
+                                                                </option>
+                                                            ),
+                                                        )}
+                                                    </select>
+                                                </label>
                                             </div>
                                             {openTimelineId === application.id && (
                                                 <ul className="job-card-history">

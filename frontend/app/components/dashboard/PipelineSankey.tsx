@@ -430,6 +430,27 @@ export function PipelineSankey({
                             </g>
                         </svg>
                     </div>
+                    <dl
+                        className="pipeline-mobile-summary"
+                        aria-label="Application pipeline summary"
+                    >
+                        <div>
+                            <dt>Applied</dt>
+                            <dd>{pipeline.counts.APPLIED}</dd>
+                        </div>
+                        <div>
+                            <dt>Interviewing</dt>
+                            <dd>{pipeline.counts.INTERVIEWING}</dd>
+                        </div>
+                        <div>
+                            <dt>Offers</dt>
+                            <dd>{pipeline.counts.OFFER}</dd>
+                        </div>
+                        <div>
+                            <dt>Closed</dt>
+                            <dd>{pipeline.exitCount}</dd>
+                        </div>
+                    </dl>
                 </>
             ) : (
                 <div className="pipeline-empty-state">

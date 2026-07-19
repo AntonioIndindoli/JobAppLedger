@@ -3160,7 +3160,7 @@ button {
 
 .applications-split-panel {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 2fr 1fr;
     gap: 16px;
     align-items: start;
 }
@@ -3666,6 +3666,9 @@ button {
     align-items: center;
     height: 18px;
     text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .application-interview-copy strong {
@@ -5154,6 +5157,11 @@ button {
     cursor: pointer;
 }
 
+.status-select option {
+    background-color: #ffffff;
+    color: #26334d;
+}
+
 .status-select.applied,
 .status-select.interviewing {
     border-color: #b9d5ff;
@@ -5644,6 +5652,529 @@ button {
 .task-list-checkbox:focus-visible {
     outline: 3px solid rgba(11, 107, 255, .24);
     outline-offset: 3px;
+}
+
+/* Dashboard-specific responsive system. Keep these selectors scoped so the
+   collection-page headers and filters can evolve independently. */
+.dashboard-hero-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.dashboard-hero-header h1 {
+    margin: 0 0 7px;
+    color: #14213d;
+    font-size: 31px;
+    line-height: 1.08;
+    font-weight: 850;
+    letter-spacing: -.02em;
+}
+
+.dashboard-hero-header p {
+    margin: 0 0 5px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.dashboard-hero-header span {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.dashboard-hero-action {
+    flex: 0 0 auto;
+}
+
+.pipeline-mobile-summary,
+.mobile-topbar-title,
+.dashboard-filter-toggle,
+.dashboard-filter-backdrop,
+.dashboard-filter-sheet-header,
+.mobile-stage-tabs,
+.mobile-status-control {
+    display: none;
+}
+
+@media (max-width: 1100px) {
+    .stats-panel .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tracker-panel .kanban,
+    .tracker-panel .filter-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 35;
+        height: 62px;
+        padding-right: calc(12px + env(safe-area-inset-right));
+        padding-left: calc(12px + env(safe-area-inset-left));
+        background: rgba(255, 255, 255, .96);
+        backdrop-filter: blur(14px);
+    }
+
+    .profile {
+        gap: 8px;
+    }
+
+    .mobile-topbar-title {
+        display: block;
+        flex: 1 1 auto;
+        min-width: 0;
+        margin-left: 11px;
+        overflow: hidden;
+        color: #14213d;
+        font-size: 16px;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .profile-trigger {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 3px;
+    }
+
+    .profile-trigger>strong,
+    .profile-trigger>svg {
+        display: none;
+    }
+
+    .avatar {
+        width: 38px;
+        height: 38px;
+    }
+
+    .bell {
+        width: 40px;
+        height: 40px;
+    }
+
+    .dashboard-hero {
+        margin-right: 12px;
+        margin-left: 12px;
+        padding: 18px 0 10px;
+    }
+
+    .dashboard-hero-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+        gap: 14px;
+    }
+
+    .dashboard-hero-header h1 {
+        margin-bottom: 5px;
+        font-size: 26px;
+    }
+
+    .dashboard-hero-header span {
+        display: block;
+        max-width: 34ch;
+        font-size: 13px;
+        line-height: 1.45;
+    }
+
+    .dashboard-hero-action {
+        width: 100%;
+        min-height: 46px;
+    }
+
+    .pipeline-stats-container {
+        gap: 12px;
+        margin: 0 12px 12px;
+    }
+
+    .stats-panel {
+        order: 1;
+    }
+
+    .pipeline-graph {
+        order: 2;
+        min-height: 0;
+        padding: 16px;
+    }
+
+    .stats-panel h2 {
+        padding: 16px 14px 7px;
+    }
+
+    .stats-panel .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        padding: 8px 12px 14px;
+    }
+
+    .stats-panel .stat-card {
+        min-height: 82px;
+        gap: 8px;
+        padding: 11px;
+    }
+
+    .stats-panel .stat-card p {
+        margin-bottom: 5px;
+        font-size: 11px;
+        line-height: 1.25;
+    }
+
+    .stats-panel .stat-card strong {
+        font-size: 20px;
+    }
+
+    .stats-panel .metric-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .stats-panel .metric-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .weekly-goal-summary {
+        padding: 15px 14px 17px;
+    }
+
+    .weekly-goal-copy {
+        align-items: center;
+        flex-direction: row;
+        gap: 10px;
+        font-size: 12px;
+    }
+
+    .weekly-goal-copy strong {
+        font-size: 12px;
+    }
+
+    .goal-edit-button {
+        width: 44px;
+        height: 44px;
+    }
+
+    .sankey-frame {
+        display: none;
+    }
+
+    .pipeline-mobile-summary {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 14px 0 0;
+    }
+
+    .pipeline-mobile-summary>div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 54px;
+        padding: 11px 12px;
+        border: 1px solid #e1eaf5;
+        border-radius: 9px;
+        background: #f8fbff;
+    }
+
+    .pipeline-mobile-summary dt {
+        color: #53617b;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .pipeline-mobile-summary dd {
+        margin: 0;
+        color: #14213d;
+        font-size: 20px;
+        font-weight: 850;
+    }
+
+    .tracker-panel {
+        margin: 12px 12px calc(28px + env(safe-area-inset-bottom));
+        padding: 12px;
+    }
+
+    .tracker-heading-row {
+        gap: 14px;
+    }
+
+    .tracker-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: 8px;
+    }
+
+    .tracker-actions .primary,
+    .tracker-actions .secondary {
+        min-width: 0;
+        min-height: 44px;
+        padding: 9px 10px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .dashboard-filter-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        width: 100%;
+        min-height: 44px;
+        margin-top: 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        color: #26334d;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .dashboard-filter-toggle>span {
+        display: grid;
+        place-items: center;
+        min-width: 21px;
+        height: 21px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: #eaf3ff;
+        color: #0b56c7;
+        font-size: 11px;
+    }
+
+    .dashboard-filter-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 75;
+        border: 0;
+        padding: 0;
+        background: rgba(15, 23, 42, .48);
+    }
+
+    .tracker-panel>.filter-row {
+        display: none;
+    }
+
+    .tracker-panel>.filter-row.dashboard-filters-open {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 80;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        max-height: min(82dvh, 620px);
+        margin: 0;
+        padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+        overflow-y: auto;
+        border: 1px solid #dce5f2;
+        border-radius: 18px 18px 0 0;
+        background: #fff;
+        box-shadow: 0 -18px 44px rgba(20, 33, 61, .22);
+        overscroll-behavior: contain;
+    }
+
+    .dashboard-filter-sheet-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: #14213d;
+        font-size: 16px;
+    }
+
+    .dashboard-filter-sheet-header>button {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border: 0;
+        border-radius: 9px;
+        background: #f3f8ff;
+        color: #14213d;
+    }
+
+    .tracker-panel>.filter-row.dashboard-filters-open input,
+    .tracker-panel>.filter-row.dashboard-filters-open select,
+    .tracker-panel>.filter-row.dashboard-filters-open>button {
+        width: 100%;
+        min-height: 46px;
+    }
+
+    .tracker-panel>.filter-row.dashboard-filters-open>button:last-child {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #fff;
+        font-weight: 800;
+    }
+
+    .mobile-stage-tabs {
+        display: flex;
+        gap: 8px;
+        margin: 14px -12px 10px;
+        padding: 0 12px 4px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        overscroll-behavior-inline: contain;
+    }
+
+    .mobile-stage-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mobile-stage-tabs button {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        flex: 0 0 auto;
+        min-height: 42px;
+        padding: 9px 12px;
+        border: 1px solid #dbe5f2;
+        border-radius: 999px;
+        background: #fff;
+        color: #53617b;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .mobile-stage-tabs button>span {
+        display: grid;
+        place-items: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: #eef3f8;
+        font-size: 11px;
+    }
+
+    .mobile-stage-tabs button[aria-pressed="true"] {
+        border-color: #9fc6ff;
+        background: #eaf3ff;
+        color: #0b56c7;
+    }
+
+    .tracker-panel .kanban {
+        display: block;
+    }
+
+    .tracker-panel .lane {
+        display: none;
+    }
+
+    .tracker-panel .lane.mobile-active {
+        display: block;
+    }
+
+    .tracker-panel .lane-header {
+        justify-content: space-between;
+        min-height: 44px;
+        padding: 9px 12px;
+    }
+
+    .tracker-panel .dropzone {
+        min-height: 120px;
+        padding: 9px;
+    }
+
+    .tracker-panel .job-card {
+        gap: 10px;
+        padding: 13px 12px;
+        margin-bottom: 9px;
+    }
+
+    .tracker-panel .job-card b {
+        font-size: 14px;
+    }
+
+    .tracker-panel .job-card-company,
+    .tracker-panel .job-card .applied-date {
+        font-size: 12px;
+    }
+
+    .tracker-panel .job-card-menu-trigger {
+        width: 44px;
+        height: 44px;
+        margin: -8px -8px 0 0;
+    }
+
+    .tracker-panel .job-card-menu-popover {
+        min-width: 180px;
+    }
+
+    .tracker-panel .job-card-menu-popover button {
+        min-height: 44px;
+    }
+
+    .tracker-panel .job-card-footer {
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .mobile-status-control {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-left: auto;
+    }
+
+    .mobile-status-control>span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .mobile-status-control select {
+        min-height: 40px;
+        max-width: 132px;
+        border: 1px solid #c9dcfb;
+        border-radius: 8px;
+        padding: 0 8px;
+        background: #f4f8ff;
+        color: #0b56c7;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .empty-tracker {
+        position: static;
+        transform: none;
+        width: 100%;
+        margin: 12px 0 0;
+    }
+}
+
+@media (max-width: 380px) {
+    .stats-panel .metric-icon {
+        display: none;
+    }
+
+    .stats-panel .stat-card {
+        grid-template-columns: 1fr;
+    }
+
+    .tracker-actions {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Responsive collection/detail navigation shared by Applications, Interviews, and Tasks. */

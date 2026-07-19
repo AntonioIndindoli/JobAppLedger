@@ -18,6 +18,7 @@ import type {
     Interview,
     Task,
 } from "../../lib/types";
+import { AppIcon } from "../AppIcon";
 import { ApplicationTracker } from "./ApplicationTracker";
 import { DashboardCards } from "./DashboardCards";
 import { DashboardStats } from "./DashboardStats";
@@ -99,14 +100,19 @@ export function DashboardHome({
 
     return (
         <>
-            <section className="hero">
-                <header className="page-header">
+            <section className="hero dashboard-hero">
+                <header className="dashboard-hero-header">
                     <div>
-                        <p>Your job search at a glance</p>
-                        <span>
-                            TODO: put some something here
-                        </span>
+                        <p>Dashboard</p>
                     </div>
+                    <button
+                        type="button"
+                        className="primary dashboard-hero-action"
+                        onClick={onCreateApplication}
+                    >
+                        <AppIcon name="plus" size={18} />
+                        Add application
+                    </button>
                 </header>
             </section>
             <DashboardStats
