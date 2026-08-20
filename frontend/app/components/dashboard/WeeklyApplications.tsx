@@ -50,7 +50,7 @@ export function WeeklyApplications({
         .join(" ");
 
     return (
-        <div className="panel weekly">
+        <div className="weekly">
             <h2>
                 <span className="heading-icon">
                     <AppIcon name="trend" size={16} />

@@ -229,41 +229,41 @@ export function DashboardStats({
         icon: AppIconName;
         tone?: IconTone;
     }> = [
-        {
-            label: "Total Applications",
-            value: applications.length,
-            icon: "applications",
-        },
-        {
-            label: "Active Applications",
-            value: activePipeline,
-            icon: "trend",
-            tone: "green",
-        },
-        {
-            label: "Response Rate",
-            value: `${responseRate}%`,
-            icon: "clock",
-        },
-        {
-            label: "Interview Rate",
-            value: `${interviewRate}%`,
-            icon: "contacts",
-            tone: "purple",
-        },
-        {
-            label: "Interviews Scheduled",
-            value: upcomingInterviewCount,
-            icon: "calendar",
-            tone: "orange",
-        },
-        {
-            label: "Tasks & Follow-ups Due",
-            value: dueTaskCount,
-            icon: "checklist",
-            tone: "slate",
-        },
-    ];
+            {
+                label: "Total Applications",
+                value: applications.length,
+                icon: "applications",
+            },
+            {
+                label: "Active Applications",
+                value: activePipeline,
+                icon: "trend",
+                tone: "green",
+            },
+            {
+                label: "Response Rate",
+                value: `${responseRate}%`,
+                icon: "clock",
+            },
+            {
+                label: "Interview Rate",
+                value: `${interviewRate}%`,
+                icon: "contacts",
+                tone: "purple",
+            },
+            {
+                label: "Interviews Scheduled",
+                value: upcomingInterviewCount,
+                icon: "calendar",
+                tone: "orange",
+            },
+            {
+                label: "Tasks & Follow-ups Due",
+                value: dueTaskCount,
+                icon: "checklist",
+                tone: "slate",
+            },
+        ];
 
     return (
         <section className="pipeline-stats-container">
@@ -276,11 +276,12 @@ export function DashboardStats({
                 <div className="stat-grid">
                     {stats.map((stat) => (
                         <article className="stat-card" key={stat.label}>
+                            <MetricIcon name={stat.icon} tone={stat.tone} />
                             <div>
                                 <p>{stat.label}</p>
                                 <strong>{stat.value}</strong>
                             </div>
-                            <MetricIcon name={stat.icon} tone={stat.tone} />
+
                         </article>
                     ))}
                 </div>

@@ -539,10 +539,12 @@ export function InterviewsView({
                             </header>
 
                             <div className="interview-detail-body">
-                                <dl
-                                    className="interview-detail-facts"
-                                    aria-label="Interview schedule and logistics"
+                                <section
+                                    className="detail-facts-section"
+                                    aria-labelledby="interview-details-heading"
                                 >
+                                    <h3 id="interview-details-heading">Interview details</h3>
+                                    <dl className="interview-detail-facts">
                                     <div className="interview-detail-fact interview-detail-fact-primary">
                                         <dt>
                                             <span className="interview-detail-fact-icon">
@@ -631,7 +633,8 @@ export function InterviewsView({
                                             )}
                                         </dd>
                                     </div>
-                                </dl>
+                                    </dl>
+                                </section>
 
                                 <div className="interview-detail-content-grid">
                                     <section className="application-detail-section application-detail-card-section interview-notes-card">

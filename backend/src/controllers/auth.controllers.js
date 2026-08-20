@@ -1,4 +1,15 @@
-import { login, refreshSession, revokeSession, signup } from "../services/auth.services.js";
+import {
+  buildAccountExport,
+  changePassword,
+  createApplicationsCsv,
+  deleteAccount,
+  getAccountUser,
+  login,
+  refreshSession,
+  revokeSession,
+  signup,
+  updateProfile,
+} from "../services/auth.services.js";
 import { env } from "../config/env.js";
 
 const REFRESH_COOKIE_NAME = "refresh_token";
@@ -56,6 +67,44 @@ export async function logoutController(req, res) {
   return res.status(204).send();
 }
 
-export function meController(req, res) {
-  return res.status(200).json({ user: req.auth });
+export async function meController(req, res) {
+  const user = await getAccountUser(req.auth.sub);
+  if (!user) return res.status(404).json({ message: "Account not found." });
+  return res.status(200).json({ user });
+}
+
+export async function updateProfileController(req, res) {
+  const result = await updateProfile(req.auth.sub, req.body);
+  return res.status(result.status).json(result.body);
+}
+
+export async function changePasswordController(req, res) {
+  const result = await changePassword(
+    req.auth.sub,
+    req.body.currentPassword,
+    req.body.newPassword,
+  );
+  return sendSessionResponse(res, result);
+}
+
+export async function exportAccountController(req, res) {
+  const accountExport = await buildAccountExport(req.auth.sub);
+  if (!accountExport.user) return res.status(404).json({ message: "Account not found." });
+
+  const date = new Date().toISOString().slice(0, 10);
+  if (req.query.format === "csv") {
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="jobappledger-applications-${date}.csv"`);
+    return res.status(200).send(createApplicationsCsv(accountExport.applications));
+  }
+
+  res.setHeader("Content-Disposition", `attachment; filename="jobappledger-data-${date}.json"`);
+  return res.status(200).json(accountExport);
+}
+
+export async function deleteAccountController(req, res) {
+  const result = await deleteAccount(req.auth.sub, req.body.password);
+  if (result.status !== 204) return res.status(result.status).json(result.body);
+  res.clearCookie(REFRESH_COOKIE_NAME, { path: "/auth" });
+  return res.status(204).send();
 }

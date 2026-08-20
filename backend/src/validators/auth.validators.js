@@ -50,3 +50,57 @@ export const loginSchema = {
     return issues.length ? resultError(issues) : resultSuccess({ email, password });
   },
 };
+
+export const profileSchema = {
+  safeParse(input = {}) {
+    const issues = [];
+    const data = {};
+
+    if (input.name === undefined && input.email === undefined) {
+      issues.push({ path: [], message: "Name or email is required." });
+    }
+
+    if (input.name !== undefined) {
+      const name = String(input.name).trim();
+      if (!name) issues.push({ path: ["name"], message: "Name cannot be empty." });
+      if (name.length > 100) issues.push({ path: ["name"], message: "Name must be 100 characters or less." });
+      data.name = name;
+    }
+
+    if (input.email !== undefined) {
+      const email = normalizeEmail(input.email);
+      if (!isValidEmail(email)) issues.push({ path: ["email"], message: "Email must be valid." });
+      data.email = email;
+    }
+
+    return issues.length ? resultError(issues) : resultSuccess(data);
+  },
+};
+
+export const passwordChangeSchema = {
+  safeParse(input = {}) {
+    const issues = [];
+    const currentPassword = String(input.currentPassword ?? "");
+    const newPassword = String(input.newPassword ?? "");
+
+    if (!currentPassword) issues.push({ path: ["currentPassword"], message: "Current password is required." });
+    if (newPassword.length < 8) issues.push({ path: ["newPassword"], message: "New password must be at least 8 characters." });
+    if (currentPassword && currentPassword === newPassword) {
+      issues.push({ path: ["newPassword"], message: "New password must be different from the current password." });
+    }
+
+    return issues.length
+      ? resultError(issues)
+      : resultSuccess({ currentPassword, newPassword });
+  },
+};
+
+export const deleteAccountSchema = {
+  safeParse(input = {}) {
+    const password = String(input.password ?? "");
+    if (!password) {
+      return resultError([{ path: ["password"], message: "Password is required." }]);
+    }
+    return resultSuccess({ password });
+  },
+};

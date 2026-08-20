@@ -280,21 +280,23 @@ export function ApplicationTracker({
                     Apply filters
                 </button>
             </div>
-            <div
-                className="mobile-stage-tabs"
-                aria-label="Application stages"
-            >
-                {DASHBOARD_STATUSES.map((status) => (
-                    <button
-                        key={status}
-                        type="button"
-                        aria-pressed={mobileActiveStatus === status}
-                        onClick={() => setMobileActiveStatus(status)}
-                    >
-                        {STATUS_LABELS[status]}
-                        <span>{groupedApplications[status].length}</span>
-                    </button>
-                ))}
+            <div className="mobile-stage-tabs-shell">
+                <div
+                    className="mobile-stage-tabs"
+                    aria-label="Application stages"
+                >
+                    {DASHBOARD_STATUSES.map((status) => (
+                        <button
+                            key={status}
+                            type="button"
+                            aria-pressed={mobileActiveStatus === status}
+                            onClick={() => setMobileActiveStatus(status)}
+                        >
+                            {STATUS_LABELS[status]}
+                            <span>{groupedApplications[status].length}</span>
+                        </button>
+                    ))}
+                </div>
             </div>
             <div className="kanban">
                 {DASHBOARD_STATUSES.map((status) => (

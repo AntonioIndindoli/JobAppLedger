@@ -122,5 +122,6 @@
 
     .application-map-legend {
         gap: 6px 10px;
+        display: none;
     }
 }

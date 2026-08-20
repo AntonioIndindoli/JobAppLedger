@@ -7,6 +7,7 @@ const KEYLEN = 64;
 const DIGEST = "sha512";
 const ITERATIONS = 120000;
 const REFRESH_TOKEN_BYTES = 48;
+const SAFE_USER_SELECT = { id: true, name: true, email: true, createdAt: true };
 
 function hashPassword(password, salt = crypto.randomBytes(SALT_BYTES).toString("hex")) {
   const hash = crypto.pbkdf2Sync(password, salt, ITERATIONS, KEYLEN, DIGEST).toString("hex");
@@ -91,7 +92,7 @@ export async function signup({ name, email, password }) {
 
   const user = await prisma.user.create({
     data: { name: name?.trim() || null, email, passwordHash: hashPassword(password) },
-    select: { id: true, name: true, email: true, createdAt: true },
+    select: SAFE_USER_SELECT,
   });
 
   const session = await issueSession(user);
@@ -136,4 +137,147 @@ export async function revokeSession(rawRefreshToken) {
     where: { tokenHash: hashRefreshToken(rawRefreshToken), revokedAt: null },
     data: { revokedAt: new Date() },
   });
+}
+
+export async function getAccountUser(userId) {
+  const prisma = await getPrismaAsync();
+  return prisma.user.findUnique({ where: { id: userId }, select: SAFE_USER_SELECT });
+}
+
+export async function updateProfile(userId, payload) {
+  const prisma = await getPrismaAsync();
+
+  if (payload.email) {
+    const existing = await prisma.user.findUnique({ where: { email: payload.email }, select: { id: true } });
+    if (existing && existing.id !== userId) {
+      return { status: 409, body: { message: "Email already in use." } };
+    }
+  }
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: payload,
+    select: SAFE_USER_SELECT,
+  });
+
+  return { status: 200, body: { user, accessToken: signAccessToken(user) } };
+}
+
+export async function changePassword(userId, currentPassword, newPassword) {
+  const prisma = await getPrismaAsync();
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user || !verifyPassword(currentPassword, user.passwordHash)) {
+    return { status: 400, body: { message: "Current password is incorrect." } };
+  }
+
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: userId }, data: { passwordHash: hashPassword(newPassword) } }),
+    prisma.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    }),
+  ]);
+
+  const safeUser = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    createdAt: user.createdAt,
+  };
+  const session = await issueSession(safeUser);
+  return { status: 200, body: session };
+}
+
+export async function deleteAccount(userId, password) {
+  const prisma = await getPrismaAsync();
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user || !verifyPassword(password, user.passwordHash)) {
+    return { status: 400, body: { message: "Password is incorrect." } };
+  }
+
+  await prisma.user.delete({ where: { id: userId } });
+  return { status: 204, body: null };
+}
+
+export async function buildAccountExport(userId) {
+  const prisma = await getPrismaAsync();
+  const [user, companies, applications, contacts, interviews, tasks, resumeVersions, importDrafts, activityLogs] =
+    await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          autoCreateFollowUpTasks: true,
+          autoCreateThankYouTasks: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      prisma.company.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
+      prisma.application.findMany({
+        where: { userId },
+        include: {
+          company: { select: { name: true } },
+          resumeVersion: { select: { name: true } },
+        },
+        orderBy: { createdAt: "asc" },
+      }),
+      prisma.contact.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
+      prisma.interview.findMany({ where: { userId }, orderBy: { scheduledAt: "asc" } }),
+      prisma.task.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
+      prisma.resumeVersion.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
+      prisma.importDraft.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
+      prisma.activityLog.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
+    ]);
+
+  return {
+    exportedAt: new Date().toISOString(),
+    user,
+    companies,
+    applications,
+    contacts,
+    interviews,
+    tasks,
+    resumeVersions,
+    importDrafts,
+    activityLogs,
+  };
+}
+
+function escapeCsv(value) {
+  if (value === null || value === undefined) return "";
+  const normalized = value instanceof Date ? value.toISOString() : String(value);
+  return /[",\r\n]/.test(normalized) ? `"${normalized.replaceAll('"', '""')}"` : normalized;
+}
+
+export function createApplicationsCsv(applications) {
+  const columns = [
+    ["title", (application) => application.title],
+    ["company", (application) => application.company?.name],
+    ["status", (application) => application.status],
+    ["source", (application) => application.source],
+    ["source_url", (application) => application.sourceUrl],
+    ["location", (application) => application.location],
+    ["workplace_type", (application) => application.workplaceType],
+    ["employment_type", (application) => application.employmentType],
+    ["salary_min", (application) => application.salaryMin],
+    ["salary_max", (application) => application.salaryMax],
+    ["currency", (application) => application.currency],
+    ["priority", (application) => application.priority],
+    ["date_saved", (application) => application.dateSaved],
+    ["date_applied", (application) => application.dateApplied],
+    ["resume_version", (application) => application.resumeVersion?.name],
+    ["notes", (application) => application.notes],
+    ["created_at", (application) => application.createdAt],
+    ["updated_at", (application) => application.updatedAt],
+  ];
+
+  const rows = applications.map((application) =>
+    columns.map(([, getValue]) => escapeCsv(getValue(application))).join(","),
+  );
+  return [columns.map(([header]) => header).join(","), ...rows].join("\r\n");
 }

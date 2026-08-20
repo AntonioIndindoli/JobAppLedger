@@ -306,32 +306,6 @@ export function TasksView({
                 </div>
             </header>
 
-            <section className="task-automation-panel" aria-label="Task automation">
-                <div className="task-automation-title">
-                    <span>
-                        <AppIcon name="checklist" size={18} />
-                    </span>
-                    <div>
-                        <h2>Automation</h2>
-                        <p>Follow-ups and thank-you notes can be created from job activity.</p>
-                    </div>
-                </div>
-                <div className="task-automation-switches">
-                    {renderPreferenceSwitch(
-                        "Applied follow-ups",
-                        "7 days after Applied",
-                        preferences.autoCreateFollowUpTasks,
-                        "autoCreateFollowUpTasks",
-                    )}
-                    {renderPreferenceSwitch(
-                        "Interview thank-you notes",
-                        "1 day after interview",
-                        preferences.autoCreateThankYouTasks,
-                        "autoCreateThankYouTasks",
-                    )}
-                </div>
-            </section>
-
             <div className={isFiltersOpen ? "interviews-control-panel tasks-control-panel mobile-filters-open" : "interviews-control-panel tasks-control-panel"}>
                 <label className="interviews-search-field tasks-search-field">
                     <AppIcon name="search" size={18} />
@@ -601,7 +575,12 @@ export function TasksView({
                             </header>
 
                             <div className="interview-detail-body task-detail-body">
-                                <dl className="interview-detail-facts task-detail-facts">
+                                <section
+                                    className="detail-facts-section"
+                                    aria-labelledby="task-details-heading"
+                                >
+                                    <h3 id="task-details-heading">Task details</h3>
+                                    <dl className="interview-detail-facts task-detail-facts">
                                     <div className="interview-detail-fact interview-detail-fact-primary">
                                         <dt>
                                             <span className="interview-detail-fact-icon">
@@ -662,7 +641,8 @@ export function TasksView({
                                             </span>
                                         </dd>
                                     </div>
-                                </dl>
+                                    </dl>
+                                </section>
 
                                 <section className="application-detail-section application-detail-card-section interview-notes-card task-notes-card">
                                     <div className="interview-detail-section-title">

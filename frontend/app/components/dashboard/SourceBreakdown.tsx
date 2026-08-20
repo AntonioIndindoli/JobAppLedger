@@ -56,7 +56,7 @@ export function SourceBreakdown({ applications }: SourceBreakdownProps) {
         : undefined;
 
     return (
-        <div className="panel sources">
+        <div className="sources">
             <h2>
                 <span className="heading-icon">
                     <AppIcon name="source" size={16} />

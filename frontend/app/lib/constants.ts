@@ -155,6 +155,7 @@ export const NAV_ITEMS: Array<{ label: string; icon: AppIconName }> = [
     { label: "Tasks", icon: "checklist" },
     { label: "Contacts", icon: "contacts" },
     { label: "Settings", icon: "settings" },
+    { label: "Account", icon: "account" },
 ];
 
 export const EMPTY_APPLICATION_FORM: ApplicationFormValues = {

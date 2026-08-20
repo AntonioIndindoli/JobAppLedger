@@ -31,7 +31,7 @@ export function SourceQualityTable({
     );
 
     return (
-        <div className="panel source-quality-panel">
+        <div className="source-quality-panel">
             <h2>
                 <span className="heading-icon">
                     <AppIcon name="analytics" size={16} />
@@ -65,30 +65,30 @@ export function SourceQualityTable({
                                             {row.source}
                                         </span>
                                     </th>
-                                    <td>
+                                    <td data-label="Applications">
                                         <strong>{row.applications}</strong>
                                         <span>
                                             {row.submittedApplications} submitted
                                         </span>
                                     </td>
-                                    <td>
+                                    <td data-label="Response rate">
                                         <strong>{formatRate(row.responseRate)}</strong>
                                         <span>
                                             {row.responses} of{" "}
                                             {row.submittedApplications} submitted
                                         </span>
                                     </td>
-                                    <td>
+                                    <td data-label="Interview rate">
                                         <strong>{formatRate(row.interviewRate)}</strong>
                                         <span>{row.interviews} interviews</span>
                                     </td>
-                                    <td>
+                                    <td data-label="Offers">
                                         <strong>{row.offers}</strong>
                                         <span>
                                             {row.offers === 1 ? "offer" : "offers"}
                                         </span>
                                     </td>
-                                    <td>
+                                    <td data-label="Avg. days to response">
                                         <strong>
                                             {formatDaysToResponse(
                                                 row.averageDaysToResponse,

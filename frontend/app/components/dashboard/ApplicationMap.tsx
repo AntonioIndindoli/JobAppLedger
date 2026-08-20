@@ -626,7 +626,7 @@ export function ApplicationMap({
     const isGeocoding = geocodingState.phase === "loading";
 
     return (
-        <div className="panel application-map-panel">
+        <div className="application-map-panel">
             <h2>
                 <span className="heading-icon">
                     <AppIcon name="location" size={16} />

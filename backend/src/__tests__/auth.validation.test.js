@@ -4,7 +4,13 @@ import express from "express";
 
 import { validateBody } from "../middleware/validate.middleware.js";
 import { errorHandler, notFoundHandler } from "../middleware/error.middleware.js";
-import { loginSchema, signupSchema } from "../validators/auth.validators.js";
+import {
+  deleteAccountSchema,
+  loginSchema,
+  passwordChangeSchema,
+  profileSchema,
+  signupSchema,
+} from "../validators/auth.validators.js";
 
 async function withServer(app, fn) {
   const server = app.listen(0);
@@ -21,6 +27,9 @@ function createTestAuthApp() {
   app.use(express.json());
   app.post("/auth/signup", validateBody(signupSchema), (req, res) => res.status(201).json({ user: req.body.email }));
   app.post("/auth/login", validateBody(loginSchema), (req, res) => res.status(200).json({ user: req.body.email }));
+  app.patch("/auth/profile", validateBody(profileSchema), (req, res) => res.status(200).json(req.body));
+  app.patch("/auth/password", validateBody(passwordChangeSchema), (_req, res) => res.status(204).send());
+  app.delete("/auth/account", validateBody(deleteAccountSchema), (_req, res) => res.status(204).send());
   app.use(notFoundHandler);
   app.use(errorHandler);
   return app;
@@ -74,5 +83,44 @@ test("central middleware returns 404 and 500 failure modes", async () => {
   await withServer(app500, async (baseUrl) => {
     const response = await fetch(`${baseUrl}/boom`);
     assert.equal(response.status, 500);
+  });
+});
+
+test("profile validation normalizes valid updates and rejects empty payloads", async () => {
+  const app = createTestAuthApp();
+  await withServer(app, async (baseUrl) => {
+    const valid = await fetch(`${baseUrl}/auth/profile`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "  Taylor Doe  ", email: "Taylor@Example.com" }),
+    });
+    assert.equal(valid.status, 200);
+    assert.deepEqual(await valid.json(), { name: "Taylor Doe", email: "taylor@example.com" });
+
+    const empty = await fetch(`${baseUrl}/auth/profile`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    assert.equal(empty.status, 400);
+  });
+});
+
+test("password and account deletion require secure confirmation fields", async () => {
+  const app = createTestAuthApp();
+  await withServer(app, async (baseUrl) => {
+    const reusedPassword = await fetch(`${baseUrl}/auth/password`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ currentPassword: "password123", newPassword: "password123" }),
+    });
+    assert.equal(reusedPassword.status, 400);
+
+    const missingConfirmation = await fetch(`${baseUrl}/auth/account`, {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    assert.equal(missingConfirmation.status, 400);
   });
 });

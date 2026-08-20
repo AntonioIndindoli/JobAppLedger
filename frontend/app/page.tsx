@@ -2,8 +2,13 @@
 
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 
-import { AccountView } from "./components/AccountView";
+import {
+    AccountView,
+    type AccountActionResult,
+} from "./components/AccountView";
+import { AddInterviewButton } from "./components/AddInterviewButton";
 import { AnalyticsView } from "./components/AnalyticsView";
+import { AppIcon } from "./components/AppIcon";
 import { ApplicationsView } from "./components/ApplicationsView";
 import { ApplicationDrawer } from "./components/ApplicationDrawer";
 import { AuthPanel } from "./components/AuthPanel";
@@ -113,6 +118,8 @@ export default function MainPage() {
     const [mode, setMode] = useState<Mode>("signup");
     const [email, setEmail] = useState("");
     const [userEmail, setUserEmail] = useState("");
+    const [userName, setUserName] = useState("");
+    const [memberSince, setMemberSince] = useState("");
     const [password, setPassword] = useState("");
     const [token, setToken] = useState("");
     const [authStatus, setAuthStatus] = useState<AuthStatus>("checking");
@@ -171,10 +178,15 @@ export default function MainPage() {
         null,
     );
 
-    const firstName = useMemo(() => {
-        const name = (userEmail || email).split("@")[0]?.split(/[._-]/)[0];
-        return name ? name.charAt(0).toUpperCase() + name.slice(1) : "Antonio";
-    }, [email, userEmail]);
+    const accountName = useMemo(() => {
+        if (userName.trim()) return userName.trim();
+        const emailName = (userEmail || email).split("@")[0]?.split(/[._-]/)[0];
+        return emailName
+            ? emailName.charAt(0).toUpperCase() + emailName.slice(1)
+            : "Account";
+    }, [email, userEmail, userName]);
+
+    const firstName = accountName.split(/\s+/)[0];
 
     const activePipeline = useMemo(
         () => countActiveApplications(applications),
@@ -232,6 +244,8 @@ export default function MainPage() {
                     const data = await res.json().catch(() => ({}));
                     setToken(storedToken);
                     setUserEmail(data.user?.email ?? storedEmail);
+                    setUserName(data.user?.name ?? "");
+                    setMemberSince(data.user?.createdAt ?? "");
                     setAuthStatus("signedIn");
                     return;
                 }
@@ -247,12 +261,16 @@ export default function MainPage() {
                 const data = await refreshRes.json().catch(() => ({}));
                 setToken(data.accessToken ?? "");
                 setUserEmail(data.user?.email ?? "");
+                setUserName(data.user?.name ?? "");
+                setMemberSince(data.user?.createdAt ?? "");
                 setAuthStatus(data.accessToken ? "signedIn" : "signedOut");
                 return;
             }
 
             setToken("");
             setUserEmail("");
+            setUserName("");
+            setMemberSince("");
             setAuthStatus("signedOut");
         }
 
@@ -260,6 +278,8 @@ export default function MainPage() {
             if (ignore) return;
             setToken("");
             setUserEmail("");
+            setUserName("");
+            setMemberSince("");
             setAuthStatus("signedOut");
         });
 
@@ -290,6 +310,8 @@ export default function MainPage() {
         if (!response.ok) return setMessage(data.message ?? "Auth failed");
         setToken(data.accessToken);
         setUserEmail(data.user.email);
+        setUserName(data.user.name ?? "");
+        setMemberSince(data.user.createdAt ?? "");
         setAuthStatus("signedIn");
         setMessage(`Welcome ${data.user.email}`);
         loadApplications(data.accessToken);
@@ -303,8 +325,14 @@ export default function MainPage() {
             method: "POST",
             credentials: "include",
         }).catch(() => undefined);
+        clearSession("Signed out successfully.");
+    }
+
+    function clearSession(nextMessage: string) {
         setToken("");
         setUserEmail("");
+        setUserName("");
+        setMemberSince("");
         setPassword("");
         setApplications([]);
         setInterviews([]);
@@ -324,7 +352,7 @@ export default function MainPage() {
         setIsProfileMenuOpen(false);
         setCurrentView("dashboard");
         setAuthStatus("signedOut");
-        setMessage("Signed out successfully.");
+        setMessage(nextMessage);
     }
 
     async function authedFetch(path: string, init: RequestInit = {}) {
@@ -341,9 +369,103 @@ export default function MainPage() {
             setMessage("Unauthorized. Log in again.");
             setToken("");
             setUserEmail("");
+            setUserName("");
+            setMemberSince("");
             setAuthStatus("signedOut");
         }
         return res;
+    }
+
+    async function saveAccountProfile(values: {
+        name: string;
+        email: string;
+    }): Promise<AccountActionResult> {
+        try {
+            const res = await authedFetch("/auth/profile", {
+                method: "PATCH",
+                body: JSON.stringify(values),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                return { ok: false, message: data.message ?? "Profile update failed." };
+            }
+
+            setToken(data.accessToken ?? token);
+            setUserName(data.user?.name ?? values.name);
+            setUserEmail(data.user?.email ?? values.email);
+            setMemberSince(data.user?.createdAt ?? memberSince);
+            return { ok: true, message: "Profile updated." };
+        } catch {
+            return { ok: false, message: "Could not connect to the server." };
+        }
+    }
+
+    async function changeAccountPassword(values: {
+        currentPassword: string;
+        newPassword: string;
+    }): Promise<AccountActionResult> {
+        try {
+            const res = await authedFetch("/auth/password", {
+                method: "PATCH",
+                body: JSON.stringify(values),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                return { ok: false, message: data.message ?? "Password update failed." };
+            }
+
+            setToken(data.accessToken ?? token);
+            return { ok: true, message: "Password updated. Other sessions were signed out." };
+        } catch {
+            return { ok: false, message: "Could not connect to the server." };
+        }
+    }
+
+    async function exportAccountData(
+        format: "json" | "csv",
+    ): Promise<AccountActionResult> {
+        try {
+            const res = await authedFetch(`/auth/export?format=${format}`);
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                return { ok: false, message: data.message ?? "Export failed." };
+            }
+
+            const blob = await res.blob();
+            const disposition = res.headers.get("Content-Disposition") ?? "";
+            const filename =
+                disposition.match(/filename="?([^";]+)"?/i)?.[1] ??
+                `jobappledger-export.${format}`;
+            const objectUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = objectUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(objectUrl);
+            return { ok: true, message: `${filename} downloaded.` };
+        } catch {
+            return { ok: false, message: "Could not prepare your export." };
+        }
+    }
+
+    async function deleteUserAccount(passwordConfirmation: string): Promise<AccountActionResult> {
+        try {
+            const res = await authedFetch("/auth/account", {
+                method: "DELETE",
+                body: JSON.stringify({ password: passwordConfirmation }),
+            });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                return { ok: false, message: data.message ?? "Account deletion failed." };
+            }
+
+            clearSession("Your account and all associated data were deleted.");
+            return { ok: true, message: "Account deleted." };
+        } catch {
+            return { ok: false, message: "Could not connect to the server." };
+        }
     }
 
     async function loadApplications(activeToken = token) {
@@ -979,25 +1101,33 @@ export default function MainPage() {
 
     async function updateTaskAutomationPreferences(
         nextPreferences: Partial<TaskAutomationPreferences>,
-    ) {
+    ): Promise<AccountActionResult> {
         const previousPreferences = taskPreferences;
         setTaskPreferences((current) => ({ ...current, ...nextPreferences }));
-        const res = await authedFetch("/tasks/preferences", {
-            method: "PATCH",
-            body: JSON.stringify(nextPreferences),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-            setTaskPreferences(previousPreferences);
-            return setMessage(data.message ?? "Task preference update failed");
-        }
+        try {
+            const res = await authedFetch("/tasks/preferences", {
+                method: "PATCH",
+                body: JSON.stringify(nextPreferences),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setTaskPreferences(previousPreferences);
+                const failureMessage = data.message ?? "Task preference update failed";
+                setMessage(failureMessage);
+                return { ok: false, message: failureMessage };
+            }
 
-        setTaskPreferences({
-            autoCreateFollowUpTasks:
-                data.preferences?.autoCreateFollowUpTasks ?? false,
-            autoCreateThankYouTasks:
-                data.preferences?.autoCreateThankYouTasks ?? false,
-        });
+            setTaskPreferences({
+                autoCreateFollowUpTasks:
+                    data.preferences?.autoCreateFollowUpTasks ?? false,
+                autoCreateThankYouTasks:
+                    data.preferences?.autoCreateThankYouTasks ?? false,
+            });
+            return { ok: true, message: "Automation preference updated." };
+        } catch {
+            setTaskPreferences(previousPreferences);
+            return { ok: false, message: "Could not connect to the server." };
+        }
     }
 
     async function transitionStatus(id: string, nextStatus: string) {
@@ -1141,13 +1271,100 @@ export default function MainPage() {
             onImportOpen={openImportDrawer}
             onProfileMenuChange={setIsProfileMenuOpen}
             onSignOut={signOut}
+            topbarPageControls={
+                currentView === "dashboard" ? (
+                    <>
+                        <strong className="topbar-page-title">Dashboard</strong>
+                        <div className="topbar-page-actions">
+                            <button
+                                type="button"
+                                className="primary"
+                                aria-label="Import job"
+                                onClick={openImportDrawer}
+                            >
+                                <AppIcon name="import" size={18} />
+                                <span>Import Job</span>
+                            </button>
+                            <button
+                                type="button"
+                                className="secondary"
+                                aria-label="Add application"
+                                onClick={openCreateApplication}
+                            >
+                                <AppIcon name="plus" size={18} />
+                                <span>Add Application</span>
+                            </button>
+                        </div>
+                    </>
+                ) : currentView === "analytics" ? (
+                    <strong className="topbar-page-title">Analytics</strong>
+                ) : currentView === "applications" ? (
+                    <>
+                        <strong className="topbar-page-title">Applications</strong>
+                        <div className="topbar-page-actions">
+                            <button
+                                type="button"
+                                className="primary"
+                                aria-label="Import job"
+                                onClick={openImportDrawer}
+                            >
+                                <AppIcon name="import" size={18} />
+                                <span>Import Job</span>
+                            </button>
+                            <button
+                                type="button"
+                                className="secondary"
+                                aria-label="Add application"
+                                onClick={openCreateApplication}
+                            >
+                                <AppIcon name="plus" size={18} />
+                                <span>Add Application</span>
+                            </button>
+                        </div>
+                    </>
+                ) : currentView === "interviews" ? (
+                    <>
+                        <strong className="topbar-page-title">Interviews</strong>
+                        <div className="topbar-page-actions">
+                            <AddInterviewButton
+                                className="primary"
+                                iconSize={18}
+                                onClick={() => openCreateInterview()}
+                                disabled={applications.length === 0}
+                            />
+                        </div>
+                    </>
+                ) : currentView === "tasks" ? (
+                    <>
+                        <strong className="topbar-page-title">Tasks &amp; Follow-Ups</strong>
+                        <div className="topbar-page-actions">
+                            <button
+                                type="button"
+                                className="primary"
+                                aria-label="Create task"
+                                onClick={() => openCreateTask()}
+                            >
+                                <AppIcon name="plus" size={18} />
+                                <span>Create Task</span>
+                            </button>
+                        </div>
+                    </>
+                ) : undefined
+            }
         >
             {currentView === "account" ? (
                 <AccountView
                     activePipeline={activePipeline}
                     applicationCount={applications.length}
                     email={userEmail || email}
-                    firstName={firstName}
+                    memberSince={memberSince}
+                    name={accountName}
+                    preferences={taskPreferences}
+                    onDeleteAccount={deleteUserAccount}
+                    onExport={exportAccountData}
+                    onPasswordChange={changeAccountPassword}
+                    onPreferenceChange={updateTaskAutomationPreferences}
+                    onProfileSave={saveAccountProfile}
                     onReturnToDashboard={() => setCurrentView("dashboard")}
                     onSignOut={signOut}
                 />
@@ -1199,7 +1416,9 @@ export default function MainPage() {
                     tasks={tasks}
                     onCompleteTask={completeTask}
                     onCreateTask={openCreateTask}
-                    onPreferenceChange={updateTaskAutomationPreferences}
+                    onPreferenceChange={(nextPreferences) => {
+                        void updateTaskAutomationPreferences(nextPreferences);
+                    }}
                     onRemoveTask={removeTask}
                     onStartEdit={startEditTask}
                     onUpdateDescription={updateTaskDescription}

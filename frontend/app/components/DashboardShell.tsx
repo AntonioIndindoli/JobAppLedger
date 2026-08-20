@@ -15,6 +15,7 @@ type DashboardShellProps = {
     onImportOpen: () => void;
     onProfileMenuChange: (isOpen: boolean | ((isOpen: boolean) => boolean)) => void;
     onSignOut: () => void;
+    topbarPageControls?: ReactNode;
 };
 
 export function DashboardShell({
@@ -26,6 +27,7 @@ export function DashboardShell({
     onImportOpen,
     onProfileMenuChange,
     onSignOut,
+    topbarPageControls,
 }: DashboardShellProps) {
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
     const mobileNavToggleRef = useRef<HTMLButtonElement>(null);
@@ -75,6 +77,7 @@ export function DashboardShell({
         if (label === "Analytics") return "analytics";
         if (label === "Interviews") return "interviews";
         if (label === "Tasks") return "tasks";
+        if (label === "Account") return "account";
         return null;
     }
 
@@ -132,7 +135,7 @@ export function DashboardShell({
                 })}
             </aside>
             <main className="dashboard-main">
-                <header className="topbar">
+                <header className={topbarPageControls ? "topbar has-page-controls" : "topbar"}>
                     <button
                         ref={mobileNavToggleRef}
                         type="button"
@@ -150,6 +153,11 @@ export function DashboardShell({
                             : currentView.charAt(0).toUpperCase() +
                               currentView.slice(1)}
                     </strong>
+                    {topbarPageControls && (
+                        <div className="topbar-page-controls">
+                            {topbarPageControls}
+                        </div>
+                    )}
                     <div className="search">
                         <AppIcon name="search" size={18} />
                         <span>Search jobs, companies, contacts...</span>
@@ -165,10 +173,6 @@ export function DashboardShell({
                                 onProfileMenuChange(false);
                         }}
                     >
-                        <span className="bell">
-                            <AppIcon name="bell" size={21} />
-                            <b>2</b>
-                        </span>
                         <button
                             type="button"
                             className="profile-trigger"
