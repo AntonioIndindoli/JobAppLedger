@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { getApplicationTimestamp } from "../../lib/application-analytics";
 import { APPLICATION_GOAL_PERIOD_OPTIONS } from "../../lib/constants";
+import { hasRetainedMilestone } from "../../lib/dashboard-metrics";
 import { AppIcon, MetricIcon } from "../AppIcon";
 import { PipelineSankey } from "./PipelineSankey";
 import { isUpcomingInterview } from "../../lib/interview-utils";
@@ -21,6 +22,7 @@ import type {
 
 const RESPONSE_STATUSES = new Set(["INTERVIEWING", "OFFER", "REJECTED", "WITHDRAWN"]);
 const INTERVIEW_STATUSES = new Set(["INTERVIEWING", "OFFER"]);
+const OFFER_STATUSES = new Set(["OFFER"]);
 const GOAL_PERIOD_COPY: Record<
     ApplicationGoalPeriod,
     { ariaLabel: string; countLabel: string; title: string }
@@ -57,24 +59,6 @@ type ApplicationGoalControlsProps = {
     onApplicationGoalChange: (goal: ApplicationGoalSettings) => void;
 };
 
-function getMetadataObject(metadata: ActivityLog["metadata"]) {
-    if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
-        return null;
-    }
-
-    return metadata as Record<string, unknown>;
-}
-
-function historyIncludesStatus(history: ActivityLog[], statuses: Set<string>) {
-    return history.some((entry) => {
-        const metadata = getMetadataObject(entry.metadata);
-        return (
-            statuses.has(String(metadata?.from ?? "")) ||
-            statuses.has(String(metadata?.to ?? ""))
-        );
-    });
-}
-
 function getPercent(value: number, total: number) {
     if (!total) return 0;
     return Math.round((value / total) * 100);
@@ -101,6 +85,17 @@ function getGoalPeriodRange(period: ApplicationGoalPeriod) {
     if (period === "daily") end.setDate(start.getDate() + 1);
     if (period === "weekly") end.setDate(start.getDate() + 7);
     if (period === "monthly") end.setMonth(start.getMonth() + 1);
+
+    return { end: end.getTime(), start: start.getTime() };
+}
+
+function getCurrentWeekRange() {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - start.getDay());
+
+    const end = new Date(start);
+    end.setDate(start.getDate() + 7);
 
     return { end: end.getTime(), start: start.getTime() };
 }
@@ -192,23 +187,41 @@ export function DashboardStats({
     const upcomingInterviewCount = interviews.filter(isUpcomingInterview).length;
     const dueTaskCount = tasks.filter(isTaskNeedingAttention).length;
     const responseCount = applications.filter(
-        (application) =>
-            RESPONSE_STATUSES.has(application.status) ||
-            historyIncludesStatus(
-                historyByApp[application.id] ?? [],
-                RESPONSE_STATUSES,
-            ),
+        (application) => RESPONSE_STATUSES.has(application.status),
     ).length;
-    const interviewCount = applications.filter(
+    const submittedApplications = applications.filter(
+        (application) => application.status !== "SAVED",
+    );
+    const interviewCount = submittedApplications.filter(
         (application) =>
-            INTERVIEW_STATUSES.has(application.status) ||
-            historyIncludesStatus(
+            hasRetainedMilestone(
+                application,
                 historyByApp[application.id] ?? [],
                 INTERVIEW_STATUSES,
             ),
     ).length;
+    const offerCount = submittedApplications.filter(
+        (application) =>
+            hasRetainedMilestone(
+                application,
+                historyByApp[application.id] ?? [],
+                OFFER_STATUSES,
+            ),
+    ).length;
     const responseRate = getPercent(responseCount, applications.length);
-    const interviewRate = getPercent(interviewCount, applications.length);
+    const interviewRate = getPercent(
+        interviewCount,
+        submittedApplications.length,
+    );
+    const offerRate = getPercent(offerCount, submittedApplications.length);
+    const currentWeekRange = getCurrentWeekRange();
+    const applicationsThisWeek = submittedApplications.filter((application) => {
+        const applicationTime = getApplicationTimestamp(application);
+        return (
+            applicationTime >= currentWeekRange.start &&
+            applicationTime < currentWeekRange.end
+        );
+    }).length;
     const goalPeriodRange = getGoalPeriodRange(applicationGoal.period);
     const goalTarget = getGoalTarget(applicationGoal.target);
     const goalApplications = applications.filter((application) => {
@@ -228,6 +241,7 @@ export function DashboardStats({
         value: string | number;
         icon: AppIconName;
         tone?: IconTone;
+        detail?: string;
     }> = [
             {
                 label: "Total Applications",
@@ -241,6 +255,12 @@ export function DashboardStats({
                 tone: "green",
             },
             {
+                label: "Applications This Week",
+                value: applicationsThisWeek,
+                icon: "calendar",
+                tone: "orange",
+            },
+            {
                 label: "Response Rate",
                 value: `${responseRate}%`,
                 icon: "clock",
@@ -250,6 +270,13 @@ export function DashboardStats({
                 value: `${interviewRate}%`,
                 icon: "contacts",
                 tone: "purple",
+            },
+            {
+                label: "Offers Received",
+                value: offerCount,
+                detail: `${offerRate}% offer rate`,
+                icon: "check",
+                tone: "green",
             },
             {
                 label: "Interviews Scheduled",
@@ -280,6 +307,9 @@ export function DashboardStats({
                             <div>
                                 <p>{stat.label}</p>
                                 <strong>{stat.value}</strong>
+                                {stat.detail && (
+                                    <small className="stat-detail">{stat.detail}</small>
+                                )}
                             </div>
 
                         </article>

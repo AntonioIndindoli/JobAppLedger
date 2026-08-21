@@ -385,97 +385,88 @@ export function ApplicationsView({
                 </div>
             </header>
 
-            <div className={isFiltersOpen ? "applications-toolbar mobile-filters-open" : "applications-toolbar"} aria-label="Application table filters">
-                <label className="applications-search-field">
-                    <AppIcon name="search" size={18} />
-                    <input
-                        aria-label="Search applications"
-                        value={filters.query}
-                        onChange={(event) =>
-                            setFilters({ ...filters, query: event.target.value })
-                        }
-                        placeholder="Search title, company, location, source"
-                    />
-                </label>
-                <button
-                    type="button"
-                    className="mobile-filter-toggle"
-                    aria-expanded={isFiltersOpen}
-                    onClick={() => setIsFiltersOpen((open) => !open)}
-                >
-                    <AppIcon name="filter" size={18} />
-                    Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
-                </button>
-                <select
-                    value={filters.status}
-                    onChange={(event) =>
-                        setFilters({ ...filters, status: event.target.value })
-                    }
-                >
-                    <option value="">All statuses</option>
-                    {STATUSES.map((status) => (
-                        <option key={status} value={status}>
-                            {STATUS_LABELS[status]}
-                        </option>
-                    ))}
-                </select>
-                <select
-                    value={filters.source}
-                    onChange={(event) =>
-                        setFilters({ ...filters, source: event.target.value })
-                    }
-                >
-                    <option value="">All sources</option>
-                    {sourceOptions.map((source) => (
-                        <option key={source} value={source}>
-                            {source}
-                        </option>
-                    ))}
-                </select>
-                <div className="applications-date-filter" onBlur={(event) => {
-                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsAppliedDateOpen(false);
-                }}>
-                    <button type="button" className="applications-date-filter-trigger" aria-haspopup="dialog" aria-expanded={isAppliedDateOpen} onClick={() => setIsAppliedDateOpen((open) => !open)}>
-                        <span><strong>Applied date:</strong> {filters.startDate || filters.endDate
-                            ? `${filters.startDate ? formatFilterDate(filters.startDate) : "Any"} – ${filters.endDate ? formatFilterDate(filters.endDate) : "Any"}`
-                            : "Any time"}</span>
-                        <AppIcon name="chevron-down" size={14} />
-                    </button>
-                    {isAppliedDateOpen && (
-                        <div className="applications-date-filter-popover" role="dialog" aria-label="Applied date range">
-                            <div className="applications-date-filter-heading">
-                                <strong>Applied date</strong>
-                                <span>Choose a date range</span>
-                            </div>
-                            <label>From<input type="date" value={filters.startDate} max={filters.endDate || undefined} onChange={(event) => setFilters({ ...filters, startDate: event.target.value })} /></label>
-                            <label>To<input type="date" value={filters.endDate} min={filters.startDate || undefined} onChange={(event) => setFilters({ ...filters, endDate: event.target.value })} /></label>
-                            <div className="applications-date-filter-actions">
-                                <button type="button" className="application-detail-posting-link" onClick={() => setFilters({ ...filters, startDate: "", endDate: "" })}>Clear</button>
-                                <button type="button" className="primary" onClick={() => setIsAppliedDateOpen(false)}>Done</button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <button
-                    type="button"
-                    className="interviews-reset-button"
-                    onClick={() => setFilters(INITIAL_FILTERS)}
-                >
-                    <AppIcon name="history" size={15} />
-                    Reset
-                </button>
-            </div>
-
             <div className={isMobileDetailOpen ? "applications-split-panel mobile-detail-open" : "applications-split-panel"}>
                 <aside className="application-list-panel">
-                    <div className="application-list-header">
-                        <div>
-                            <h2>Applications</h2>
-                            <span>
-                                {sortedApplications.length} shown from{" "}
-                                {applications.length} total
-                            </span>
+
+                    <div className={isFiltersOpen ? "applications-toolbar mobile-filters-open" : "applications-toolbar"} aria-label="Application table filters">
+                        <label className="applications-search-field">
+                            <AppIcon name="search" size={18} />
+                            <input
+                                aria-label="Search applications"
+                                value={filters.query}
+                                onChange={(event) =>
+                                    setFilters({ ...filters, query: event.target.value })
+                                }
+                                placeholder="Search title, company, location, source"
+                            />
+                        </label>
+                        <button
+                            type="button"
+                            className="mobile-filter-toggle"
+                            aria-expanded={isFiltersOpen}
+                            onClick={() => setIsFiltersOpen((open) => !open)}
+                        >
+                            <AppIcon name="filter" size={18} />
+                            Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
+                        </button>
+                        <select
+                            value={filters.status}
+                            onChange={(event) =>
+                                setFilters({ ...filters, status: event.target.value })
+                            }
+                        >
+                            <option value="">All statuses</option>
+                            {STATUSES.map((status) => (
+                                <option key={status} value={status}>
+                                    {STATUS_LABELS[status]}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            value={filters.source}
+                            onChange={(event) =>
+                                setFilters({ ...filters, source: event.target.value })
+                            }
+                        >
+                            <option value="">All sources</option>
+                            {sourceOptions.map((source) => (
+                                <option key={source} value={source}>
+                                    {source}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="applications-date-filter" onBlur={(event) => {
+                            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsAppliedDateOpen(false);
+                        }}>
+                            <button type="button" className="applications-date-filter-trigger" aria-haspopup="dialog" aria-expanded={isAppliedDateOpen} onClick={() => setIsAppliedDateOpen((open) => !open)}>
+                                <span><strong>Applied date:</strong> {filters.startDate || filters.endDate
+                                    ? `${filters.startDate ? formatFilterDate(filters.startDate) : "Any"} – ${filters.endDate ? formatFilterDate(filters.endDate) : "Any"}`
+                                    : "Any time"}</span>
+                                <AppIcon name="chevron-down" size={14} />
+                            </button>
+                            {isAppliedDateOpen && (
+                                <div className="applications-date-filter-popover" role="dialog" aria-label="Applied date range">
+                                    <div className="applications-date-filter-heading">
+                                        <strong>Applied date</strong>
+                                        <span>Choose a date range</span>
+                                    </div>
+                                    <label>From<input type="date" value={filters.startDate} max={filters.endDate || undefined} onChange={(event) => setFilters({ ...filters, startDate: event.target.value })} /></label>
+                                    <label>To<input type="date" value={filters.endDate} min={filters.startDate || undefined} onChange={(event) => setFilters({ ...filters, endDate: event.target.value })} /></label>
+                                    <div className="applications-date-filter-actions">
+                                        <button type="button" className="application-detail-posting-link" onClick={() => setFilters({ ...filters, startDate: "", endDate: "" })}>Clear</button>
+                                        <button type="button" className="primary" onClick={() => setIsAppliedDateOpen(false)}>Done</button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
+                        <button
+                            type="button"
+                            className="interviews-reset-button"
+                            onClick={() => setFilters(INITIAL_FILTERS)}
+                        >
+                            <AppIcon name="history" size={15} />
+                            Reset
+                        </button>
                     </div>
 
                     {sortedApplications.length > 0 ? (
@@ -603,31 +594,31 @@ export function ApplicationsView({
                                     </div>
 
                                 </div>
-                                    <p className="application-detail-company-location">
-                                        <span>{selectedApplication.companyName || "Unknown company"}</span>
-                                        <span aria-hidden="true">·</span>
-                                        <span>{selectedApplication.location || "Location not set"}</span>
-                                        <span aria-hidden="true">·</span>
-                                        <label className="application-detail-status-control">
-                                            <select
-                                                aria-label="Application status"
-                                                className={`status-select ${selectedApplication.status.toLowerCase()}`}
-                                                value={selectedApplication.status}
-                                                onChange={(event) =>
-                                                    onStatusChange(
-                                                        selectedApplication.id,
-                                                        event.target.value,
-                                                    )
-                                                }
-                                            >
-                                                {STATUSES.map((status) => (
-                                                    <option key={status} value={status}>
-                                                        {STATUS_LABELS[status]}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </label>
-                                    </p>
+                                <p className="application-detail-company-location">
+                                    <span>{selectedApplication.companyName || "Unknown company"}</span>
+                                    <span aria-hidden="true">·</span>
+                                    <span>{selectedApplication.location || "Location not set"}</span>
+                                    <span aria-hidden="true">·</span>
+                                    <label className="application-detail-status-control">
+                                        <select
+                                            aria-label="Application status"
+                                            className={`status-select ${selectedApplication.status.toLowerCase()}`}
+                                            value={selectedApplication.status}
+                                            onChange={(event) =>
+                                                onStatusChange(
+                                                    selectedApplication.id,
+                                                    event.target.value,
+                                                )
+                                            }
+                                        >
+                                            {STATUSES.map((status) => (
+                                                <option key={status} value={status}>
+                                                    {STATUS_LABELS[status]}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                </p>
                                 <div className="application-detail-summary" aria-label="Application overview">
                                     <span><AppIcon name="calendar" size={17} /> Applied {formatDisplayDate(selectedApplication.dateApplied)}</span>
                                     <span><AppIcon name="source" size={17} /> {selectedApplication.source || "No source"}</span>

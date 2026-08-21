@@ -1,0 +1,30 @@
+/* Design tokens and document defaults. */
+
+:root {
+  --background: #f8fbff;
+  --foreground: #111827;
+  --blue: #0b6bff;
+  --border: #dce5f2;
+  --muted: #63708a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+  cursor: pointer;
+}

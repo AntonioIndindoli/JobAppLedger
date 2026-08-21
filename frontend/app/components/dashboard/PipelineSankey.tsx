@@ -7,9 +7,8 @@ import {
     type SankeyLink,
     type SankeyNode,
 } from "d3-sankey";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { PIPELINE_HEIGHT, PIPELINE_WIDTH } from "../../lib/constants";
 import {
     buildApplicationPipelinePath,
     countApplicationsByStatus,
@@ -31,6 +30,11 @@ type PipelineLinkDatum = {
 };
 
 type PipelineGraph = SankeyGraph<PipelineNodeDatum, PipelineLinkDatum>;
+
+type SankeySize = {
+    width: number;
+    height: number;
+};
 
 const PIPELINE_NODE_ORDER: PipelineNodeId[] = [
     "APPLIED",
@@ -218,6 +222,7 @@ function compareLinks(
 function buildPipelineSankey(
     applications: Application[],
     historyByApp: Record<string, ActivityLog[]>,
+    size: SankeySize | null,
 ) {
     const counts = countApplicationsByStatus(applications);
     const total =
@@ -226,7 +231,18 @@ function buildPipelineSankey(
         counts.OFFER +
         counts.REJECTED +
         counts.WITHDRAWN;
-    if (!total) return { counts, total, graph: null, offerRate: 0, exitCount: 0 };
+    if (!total || !size) {
+        return { counts, total, graph: null, offerRate: 0, exitCount: 0 };
+    }
+
+    const layoutWidth = Math.max(
+        size.width,
+        SANKEY_MARGIN.left + SANKEY_MARGIN.right + SANKEY_NODE_WIDTH,
+    );
+    const layoutHeight = Math.max(
+        size.height,
+        SANKEY_MARGIN.top + SANKEY_MARGIN.bottom + 1,
+    );
 
     const exitCount = counts.REJECTED + counts.WITHDRAWN;
     const linkTotals = new Map<
@@ -276,7 +292,7 @@ function buildPipelineSankey(
     if (!graphInput.links.length) {
         const node = graphInput.nodes[0];
         const y0 = SANKEY_MARGIN.top;
-        const y1 = PIPELINE_HEIGHT - SANKEY_MARGIN.bottom;
+        const y1 = layoutHeight - SANKEY_MARGIN.bottom;
         return {
             counts,
             total,
@@ -301,35 +317,32 @@ function buildPipelineSankey(
         };
     }
 
-const layoutTop = SANKEY_MARGIN.top;
-const layoutBottom = PIPELINE_HEIGHT - SANKEY_MARGIN.bottom;
+    const layoutTop = SANKEY_MARGIN.top;
+    const layoutBottom = layoutHeight - SANKEY_MARGIN.bottom;
 
-const sankeyGenerator =
-    sankey<PipelineNodeDatum, PipelineLinkDatum>()
-        .nodeId((node) => node.id)
-        .nodeWidth(SANKEY_NODE_WIDTH)
-        .nodePadding(SANKEY_NODE_PADDING)
-        .nodeAlign((node, columns) =>
-            Math.min(NODE_COLUMN[node.id], columns - 1)
-        )
-        .nodeSort(compareNodes)
-        .linkSort(compareLinks)
-        .iterations(64)
-        .extent([
-            [SANKEY_MARGIN.left, layoutTop],
-            [
-                PIPELINE_WIDTH - SANKEY_MARGIN.right,
-                layoutBottom,
-            ],
-        ]);
+    const sankeyGenerator =
+        sankey<PipelineNodeDatum, PipelineLinkDatum>()
+            .nodeId((node) => node.id)
+            .nodeWidth(SANKEY_NODE_WIDTH)
+            .nodePadding(SANKEY_NODE_PADDING)
+            .nodeAlign((node, columns) =>
+                Math.min(NODE_COLUMN[node.id], columns - 1)
+            )
+            .nodeSort(compareNodes)
+            .linkSort(compareLinks)
+            .iterations(64)
+            .extent([
+                [SANKEY_MARGIN.left, layoutTop],
+                [layoutWidth - SANKEY_MARGIN.right, layoutBottom],
+            ]);
 
-const graph = sankeyGenerator(graphInput);
+    const graph = sankeyGenerator(graphInput);
 
-// Move nodes apart vertically.
-spreadSankeyNodes(graph, layoutTop, layoutBottom);
+    // Move nodes apart vertically.
+    spreadSankeyNodes(graph, layoutTop, layoutBottom);
 
-// Recalculate where the links connect after moving the nodes.
-sankeyGenerator.update(graph);
+    // Recalculate where the links connect after moving the nodes.
+    sankeyGenerator.update(graph);
 
     return {
         counts,
@@ -355,9 +368,49 @@ export function PipelineSankey({
     applications,
     historyByApp,
 }: PipelineSankeyProps) {
+    const [frameElement, setFrameElement] = useState<HTMLDivElement | null>(null);
+    const [frameSize, setFrameSize] = useState<SankeySize | null>(null);
+
+    useEffect(() => {
+        if (!frameElement) return;
+
+        let animationFrame = 0;
+
+        const updateSize = (width: number, height: number) => {
+            if (width <= 0 || height <= 0) return;
+
+            cancelAnimationFrame(animationFrame);
+            animationFrame = requestAnimationFrame(() => {
+                const nextSize = {
+                    width: Math.round(width),
+                    height: Math.round(height),
+                };
+
+                setFrameSize((currentSize) =>
+                    currentSize?.width === nextSize.width &&
+                    currentSize.height === nextSize.height
+                        ? currentSize
+                        : nextSize,
+                );
+            });
+        };
+
+        updateSize(frameElement.clientWidth, frameElement.clientHeight);
+
+        const resizeObserver = new ResizeObserver(([entry]) => {
+            updateSize(entry.contentRect.width, entry.contentRect.height);
+        });
+        resizeObserver.observe(frameElement);
+
+        return () => {
+            cancelAnimationFrame(animationFrame);
+            resizeObserver.disconnect();
+        };
+    }, [frameElement]);
+
     const pipeline = useMemo(
-        () => buildPipelineSankey(applications, historyByApp),
-        [applications, historyByApp],
+        () => buildPipelineSankey(applications, historyByApp, frameSize),
+        [applications, frameSize, historyByApp],
     );
     const linkPath = useMemo(
         () => sankeyLinkHorizontal<PipelineNodeDatum, PipelineLinkDatum>(),
@@ -372,63 +425,65 @@ export function PipelineSankey({
                     <h2 id="pipeline-heading">Application Flow</h2>
                 </div>
             </header>
-            {pipeline.graph ? (
+            {pipeline.total ? (
                 <>
-                    <div className="sankey-frame">
-                        <svg
-                            className="sankey-canvas"
-                            viewBox={`0 0 ${PIPELINE_WIDTH} ${PIPELINE_HEIGHT}`}
-                            role="img"
-                            aria-label="Sankey diagram of applications flowing through applied, no response, interview, offer, and exit statuses"
-                            preserveAspectRatio="xMidYMid meet"
-                        >
-                            <g className="sankey-links">
-                                {pipeline.graph.links.map((link) => {
-                                    const source = getSankeyEndLabel(link.source);
-                                    const target = getSankeyEndLabel(link.target);
-                                    return (
-                                        <path
-                                            key={`${source}-${target}`}
-                                            d={linkPath(link) ?? undefined}
-                                            stroke={link.color}
-                                            strokeWidth={Math.max(1, link.width ?? 1)}
-                                            className="sankey-link"
-                                        >
-                                            <title>{`${source} to ${target}: ${link.value}`}</title>
-                                        </path>
-                                    );
-                                })}
-                            </g>
-                            <g className="sankey-nodes">
-                                {pipeline.graph.nodes.map((node) => {
-                                    const x0 = node.x0 ?? 0;
-                                    const x1 = node.x1 ?? 0;
-                                    const y0 = node.y0 ?? 0;
-                                    const y1 = node.y1 ?? 0;
-                                    const labelOnRight = x0 < PIPELINE_WIDTH - 180;
-                                    return (
-                                        <g key={node.id} className="sankey-node">
-                                            <rect
-                                                x={x0}
-                                                y={y0}
-                                                width={Math.max(2, x1 - x0)}
-                                                height={Math.max(2, y1 - y0)}
-                                                rx="0"
-                                                fill={node.color}
-                                            />
-                                            <text
-                                                x={labelOnRight ? x1 + 8 : x0 - 8}
-                                                y={(y0 + y1) / 2}
-                                                textAnchor={labelOnRight ? "start" : "end"}
-                                                dominantBaseline="middle"
+                    <div ref={setFrameElement} className="sankey-frame">
+                        {pipeline.graph && frameSize ? (
+                            <svg
+                                className="sankey-canvas"
+                                viewBox={`0 0 ${frameSize.width} ${frameSize.height}`}
+                                role="img"
+                                aria-label="Sankey diagram of applications flowing through applied, no response, interview, offer, and exit statuses"
+                                preserveAspectRatio="xMidYMid meet"
+                            >
+                                <g className="sankey-links">
+                                    {pipeline.graph.links.map((link) => {
+                                        const source = getSankeyEndLabel(link.source);
+                                        const target = getSankeyEndLabel(link.target);
+                                        return (
+                                            <path
+                                                key={`${source}-${target}`}
+                                                d={linkPath(link) ?? undefined}
+                                                stroke={link.color}
+                                                strokeWidth={Math.max(1, link.width ?? 1)}
+                                                className="sankey-link"
                                             >
-                                                <tspan className="sankey-label">{node.label}: {node.value ?? 0}</tspan>
-                                            </text>
-                                        </g>
-                                    );
-                                })}
-                            </g>
-                        </svg>
+                                                <title>{`${source} to ${target}: ${link.value}`}</title>
+                                            </path>
+                                        );
+                                    })}
+                                </g>
+                                <g className="sankey-nodes">
+                                    {pipeline.graph.nodes.map((node) => {
+                                        const x0 = node.x0 ?? 0;
+                                        const x1 = node.x1 ?? 0;
+                                        const y0 = node.y0 ?? 0;
+                                        const y1 = node.y1 ?? 0;
+                                        const labelOnRight = x0 < frameSize.width - 180;
+                                        return (
+                                            <g key={node.id} className="sankey-node">
+                                                <rect
+                                                    x={x0}
+                                                    y={y0}
+                                                    width={Math.max(2, x1 - x0)}
+                                                    height={Math.max(2, y1 - y0)}
+                                                    rx="0"
+                                                    fill={node.color}
+                                                />
+                                                <text
+                                                    x={labelOnRight ? x1 + 8 : x0 - 8}
+                                                    y={(y0 + y1) / 2}
+                                                    textAnchor={labelOnRight ? "start" : "end"}
+                                                    dominantBaseline="middle"
+                                                >
+                                                    <tspan className="sankey-label">{node.label}: {node.value ?? 0}</tspan>
+                                                </text>
+                                            </g>
+                                        );
+                                    })}
+                                </g>
+                            </svg>
+                        ) : null}
                     </div>
                     <dl
                         className="pipeline-mobile-summary"

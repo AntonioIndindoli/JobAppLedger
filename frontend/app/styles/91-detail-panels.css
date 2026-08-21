@@ -1,0 +1,546 @@
+/* Shared application, interview, and task detail-panel refinements. */
+
+.application-detail-heading {
+  display: grid;
+  justify-items: start;
+  min-width: 0;
+}
+
+.application-detail-company-location,
+.application-detail-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0;
+  color: #53617b;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.application-detail-company-location span {
+  padding-right: 6px;
+}
+
+.application-detail-company-location span:first-child {
+  color: #26334d;
+  font-weight: 750;
+}
+
+.application-detail-company-location span:last-of-type {
+  padding-right: 2px;
+}
+
+.application-detail-status-control {
+  display: inline-flex;
+}
+
+.status-select {
+  color: #26334d;
+  cursor: pointer;
+}
+
+.status-select option {
+  background-color: #ffffff;
+  color: #26334d;
+}
+
+.status-select.applied,
+.status-select.interviewing {
+  border-color: #b9d5ff;
+  color: #0b56c7;
+}
+
+.application-detail-summary {
+  color: #66738b;
+  font-size: 13px;
+}
+
+.application-detail-header-actions {
+  align-self: start;
+}
+
+.application-detail-menu {
+  position: relative;
+}
+
+.application-detail-menu-trigger {
+  display: grid;
+  place-items: center;
+}
+
+.application-detail-menu-trigger:hover {
+  background: #f5f8fc;
+  color: #14213d;
+}
+
+.application-detail-menu-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 180px;
+  padding: 5px;
+  border: 1px solid #dfe7f1;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(20, 33, 61, .14);
+}
+
+.application-detail-menu-popover button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #334155;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: left;
+}
+
+.application-detail-menu-popover button:hover {
+  background: #f5f8fc;
+}
+
+.application-detail-menu-popover button.danger-text {
+  color: #b42318;
+}
+
+.application-detail-menu-popover button.danger-text:hover {
+  background: #fff1f0;
+}
+
+.application-interview-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.application-interview-icon-button {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  background: #fff;
+  color: #53617b;
+}
+
+
+.application-interview-icon-button:hover {
+  border-color: #b9d5ff;
+  background: #f5f9ff;
+  color: #0b6bff;
+}
+
+.application-interview-menu-popover {
+  min-width: 170px;
+}
+
+.application-section-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 11px;
+  font-size: 12px;
+}
+
+.application-detail-main:has(.application-detail-card-section) {
+  gap: 12px;
+}
+
+.application-detail-card-section .application-detail-section-heading,
+.application-detail-card-section>.interview-detail-section-title {
+  min-height: 34px;
+  margin-bottom: 12px;
+}
+
+.application-task-checkbox {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid #8ca8c9;
+  border-radius: 5px;
+  background: #fff;
+  color: transparent;
+}
+
+.application-task-checkbox:hover {
+  border-color: #0b6bff;
+  color: #0b6bff;
+}
+
+.application-task-checkbox.overdue {
+  border-color: #d14a4a;
+}
+
+.application-interviews-empty {
+  min-height: 48px;
+  border: 0;
+  padding: 13px 14px;
+  background: #f7f9fc;
+  color: #66738b;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.application-notes-card .interview-detail-section-title {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.application-notes-editor {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.application-notes-editor textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  padding: 11px 12px;
+  border: 1px solid #b8cbe2;
+  border-radius: 8px;
+  background: #fff;
+  color: #26334d;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.application-notes-editor textarea:focus {
+  border-color: #0b6bff;
+  outline: 3px solid rgba(11, 107, 255, .12);
+}
+
+.application-notes-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.application-notes-editor-actions button {
+  min-height: 34px;
+  padding: 7px 12px;
+  font-size: 12px;
+}
+
+/* Reference-aligned application header. */
+.application-detail-heading h2 {
+  margin: 0;
+  color: #10203b;
+  font-size: 24px;
+  font-weight: 850;
+}
+
+.application-detail-company-location {
+  margin-top: 2px;
+  font-size: 15px;
+}
+
+.application-detail-header .status-select {
+  min-width: 0;
+  width: fit-content;
+  field-sizing: content;
+  padding-right: 6px;
+}
+
+.status-select.saved {
+  color: #475569;
+}
+
+.status-select.applied {
+  color: #0b56c7;
+}
+
+.status-select.interviewing {
+  color: #6d3bd1;
+}
+
+.status-select.offer {
+  color: #18794e;
+}
+
+.status-select.rejected {
+  color: #d64545;
+}
+
+.status-select.withdrawn {
+  color: #9a5b13;
+}
+
+.application-detail-header-actions .secondary {
+  border-color: #c9dcfb;
+  color: #0b6bff;
+  font-size: 14px;
+}
+
+.application-detail-summary {
+  gap: 16px;
+  font-size: 14px;
+}
+
+.application-detail-summary>span:not([aria-hidden]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.application-detail-card-section.interview-notes-card p {
+  margin: 0;
+  min-height: 48px;
+  padding: 13px 14px;
+  border: 0;
+  background: #f7f9fc;
+}
+
+.application-next-action-section>.application-detail-empty-copy {
+  min-height: 48px;
+  margin: 0;
+  padding: 13px 14px;
+  border-radius: 8px;
+  background: #f7f9fc;
+  color: #66738b;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.applications-date-filter {
+  position: relative;
+  min-width: 0;
+}
+
+.applications-date-filter-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  height: 44px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #fbfdff;
+  color: #53617b;
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.applications-date-filter-trigger strong {
+  color: #26334d;
+}
+
+.applications-date-filter-popover {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 340px;
+  padding: 16px;
+  border: 1px solid #dfe7f1;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(20, 33, 61, .16);
+}
+
+.applications-date-filter-heading {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 2px;
+}
+
+.applications-date-filter-heading strong {
+  color: #14213d;
+  font-size: 14px;
+}
+
+.applications-date-filter-heading span {
+  color: #66738b;
+  font-size: 12px;
+}
+
+.applications-date-filter-popover label {
+  display: grid;
+  gap: 6px;
+  color: #53617b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.applications-date-filter-popover input {
+  min-width: 0;
+  width: 100%;
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #fbfdff;
+  color: #14213d;
+  font: inherit;
+}
+
+.applications-date-filter-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 3px;
+}
+
+.applications-date-filter-actions .primary {
+  min-height: 34px;
+  padding: 7px 13px;
+  font-size: 12px;
+}
+
+/* Shared detail-panel system for applications, interviews, and tasks. */
+.task-detail-header {
+  gap: 8px;
+}
+
+.application-detail-header .status-select,
+.detail-status-control {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+.detail-status-control {
+  width: fit-content;
+  cursor: default;
+}
+
+.detail-status-control.scheduled,
+.detail-status-control.upcoming {
+  color: #0b56c7;
+}
+
+.detail-status-control.completed {
+  color: #03a179;
+}
+
+.detail-status-control.passed {
+  color: #15803d;
+}
+
+.detail-status-control.failed,
+.detail-status-control.overdue {
+  color: #dc2626;
+}
+
+.detail-status-control.canceled,
+.detail-status-control.no-due-date {
+  color: #64748b;
+}
+
+.detail-status-control.today {
+  color: #c2410c;
+}
+
+.status-select.scheduled,
+.status-select.upcoming {
+  color: #0b56c7;
+}
+
+.status-select.completed {
+  color: #03a110;
+}
+
+.status-select.passed {
+  color: #15803d;
+}
+
+.status-select.failed,
+.status-select.overdue {
+  color: #dc2626;
+}
+
+.status-select.canceled,
+.status-select.no-due-date {
+  color: #64748b;
+}
+
+.status-select.today {
+  color: #c2410c;
+}
+
+.interview-detail-header .application-detail-summary>span,
+.task-detail-header .application-detail-summary>span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.interview-detail-body,
+.task-detail-body {
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.interview-detail-facts,
+.task-detail-facts {
+  gap: 0;
+}
+
+.interview-detail-fact,
+.interview-detail-fact-primary,
+.interview-detail-fact.is-missing {
+  min-height: 0;
+  padding: 15px 0;
+  border-width: 0 0 1px;
+  border-style: solid;
+  border-color: #edf1f6;
+  border-radius: 0;
+  background: transparent;
+}
+
+.interview-detail-fact:last-child,
+.interview-detail-fact-primary:last-child,
+.interview-detail-fact.is-missing:last-child {
+  border-bottom: 0;
+}
+
+.interview-detail-content-grid>.application-detail-card-section .interview-detail-section-title,
+.task-detail-body>.application-detail-card-section .interview-detail-section-title {
+  min-height: 34px;
+  margin-bottom: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.interview-detail-content-grid>.application-detail-card-section p,
+.task-detail-body>.application-detail-card-section p {
+  min-height: 48px;
+  margin: 0;
+  padding: 13px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #f7f9fc;
+}
+
+.task-list-checkbox {
+  width: 20px;
+  height: 20px;
+  margin: 0 0 0 7px;
+  accent-color: #15803d;
+  cursor: pointer;
+}
+
+.task-list-checkbox:focus-visible {
+  outline: 3px solid rgba(11, 107, 255, .24);
+  outline-offset: 3px;
+}

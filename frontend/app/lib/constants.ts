@@ -213,7 +213,5 @@ export const EMPTY_IMPORT_REVIEW: ImportReviewValues = {
     dateApplied: "",
 };
 
-export const PIPELINE_WIDTH = 960;
-export const PIPELINE_HEIGHT = 320;
 export const WEEKLY_CHART_HEIGHT = 132;
 export const WEEKLY_CHART_WIDTH = 540;
