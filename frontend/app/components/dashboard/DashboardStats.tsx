@@ -255,12 +255,6 @@ export function DashboardStats({
                 tone: "green",
             },
             {
-                label: "Applications This Week",
-                value: applicationsThisWeek,
-                icon: "calendar",
-                tone: "orange",
-            },
-            {
                 label: "Response Rate",
                 value: `${responseRate}%`,
                 icon: "clock",
@@ -270,13 +264,6 @@ export function DashboardStats({
                 value: `${interviewRate}%`,
                 icon: "contacts",
                 tone: "purple",
-            },
-            {
-                label: "Offers Received",
-                value: offerCount,
-                detail: `${offerRate}% offer rate`,
-                icon: "check",
-                tone: "green",
             },
             {
                 label: "Interviews Scheduled",
