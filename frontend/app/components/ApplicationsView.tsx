@@ -598,7 +598,8 @@ export function ApplicationsView({
                                     <span>{selectedApplication.companyName || "Unknown company"}</span>
                                     <span aria-hidden="true">·</span>
                                     <span>{selectedApplication.location || "Location not set"}</span>
-                                    <span aria-hidden="true">·</span>
+                                </p>
+                                <div className="application-detail-status-row">
                                     <label className="application-detail-status-control">
                                         <select
                                             aria-label="Application status"
@@ -618,7 +619,7 @@ export function ApplicationsView({
                                             ))}
                                         </select>
                                     </label>
-                                </p>
+                                </div>
                                 <div className="application-detail-summary" aria-label="Application overview">
                                     <span><AppIcon name="calendar" size={17} /> Applied {formatDisplayDate(selectedApplication.dateApplied)}</span>
                                     <span><AppIcon name="source" size={17} /> {selectedApplication.source || "No source"}</span>

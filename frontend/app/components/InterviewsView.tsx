@@ -504,13 +504,14 @@ export function InterviewsView({
                                         <h2>{selectedInterview.applicationTitle ?? "Unknown role"}</h2>
                                         <p className="application-detail-company-location">
                                             <span>{selectedInterview.companyName ?? "Unknown company"}</span>
-                                            <span aria-hidden="true">·</span>
+                                        </p>
+                                        <div className="application-detail-status-row">
                                             <label className="application-detail-status-control">
                                                 <select aria-label="Interview status" className={`status-select ${selectedInterview.outcome.toLowerCase()}`} value={selectedInterview.outcome} onChange={(event) => onOutcomeChange(selectedInterview.id, event.target.value)}>
                                                     {INTERVIEW_OUTCOMES.map((outcome) => <option key={outcome} value={outcome}>{getInterviewOutcomeLabel(outcome)}</option>)}
                                                 </select>
                                             </label>
-                                        </p>
+                                        </div>
                                     </div>
                                     <div
                                         className="application-detail-header-actions"

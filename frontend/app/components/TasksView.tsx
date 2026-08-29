@@ -544,7 +544,8 @@ export function TasksView({
                                             )}
                                             <span aria-hidden="true">·</span>
                                             <span>{selectedTask.companyName ?? getTaskTypeLabel(selectedTask.type)}</span>
-                                            <span aria-hidden="true">·</span>
+                                        </p>
+                                        <div className="application-detail-status-row">
                                             <label className="application-detail-status-control">
                                                 <select aria-label="Task status" className={`status-select ${getTaskStatusClass(selectedTask)}`} value={getTaskDueState(selectedTask)} onChange={(event) => { if (event.target.value === "completed") onCompleteTask(selectedTask.id); if (event.target.value === "edit") onStartEdit(selectedTask); }}>
                                                     <option value={getTaskDueState(selectedTask)}>{TASK_STATUS_LABELS[getTaskDueState(selectedTask)]}</option>
@@ -552,7 +553,7 @@ export function TasksView({
                                                     <option value="edit">Edit task details…</option>
                                                 </select>
                                             </label>
-                                        </p>
+                                        </div>
                                     </div>
                                     <div className="application-detail-header-actions">
                                         <button

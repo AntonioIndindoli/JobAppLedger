@@ -35,6 +35,14 @@
     display: inline-flex;
 }
 
+.application-detail-status-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-top: 6px;
+    padding-bottom: 12px;
+}
+
 .status-select {
     color: #26334d;
     cursor: pointer;
@@ -248,31 +256,49 @@
     min-width: 0;
     width: fit-content;
     field-sizing: content;
-    padding-right: 6px;
+    min-height: 28px;
+    padding: 4px 28px 4px 11px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background-color: #f1f5f9;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.application-detail-header .status-select:focus-visible {
+    border-color: currentColor;
+    outline: 3px solid rgba(11, 107, 255, .14);
 }
 
 .status-select.saved {
+    background-color: #f1f5f9;
     color: #475569;
 }
 
 .status-select.applied {
+    background-color: #eaf3ff;
     color: #0b56c7;
 }
 
 .status-select.interviewing {
+    background-color: #eef2ff;
     color: #6d3bd1;
 }
 
 .status-select.offer {
+    background-color: #dcfce7;
     color: #18794e;
 }
 
 .status-select.rejected {
+    background-color: #fee2e2;
     color: #d64545;
 }
 
 .status-select.withdrawn {
-    color: #9a5b13;
+    background-color: #e2e8f0;
+    color: #475569;
 }
 
 .application-detail-header-actions .secondary {
@@ -450,28 +476,34 @@
 
 .status-select.scheduled,
 .status-select.upcoming {
+    background-color: #eaf3ff;
     color: #0b56c7;
 }
 
 .status-select.completed {
+    background-color: #e0fefa;
     color: #03a110;
 }
 
 .status-select.passed {
+    background-color: #dcfce7;
     color: #15803d;
 }
 
 .status-select.failed,
 .status-select.overdue {
+    background-color: #fee2e2;
     color: #dc2626;
 }
 
 .status-select.canceled,
 .status-select.no-due-date {
+    background-color: #e2e8f0;
     color: #64748b;
 }
 
 .status-select.today {
+    background-color: #fff7ed;
     color: #c2410c;
 }
 
