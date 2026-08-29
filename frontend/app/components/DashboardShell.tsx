@@ -56,7 +56,11 @@ export function DashboardShell({
     }, [isMobileNavOpen]);
 
     useEffect(() => {
-        const desktopQuery = window.matchMedia("(min-width: 701px)");
+        const desktopQuery = window.matchMedia(
+            currentView === "dashboard"
+                ? "(min-width: 1401px)"
+                : "(min-width: 1101px)",
+        );
 
         function closeNavOnDesktop(event: MediaQueryListEvent) {
             if (event.matches) setIsMobileNavOpen(false);
@@ -64,7 +68,7 @@ export function DashboardShell({
 
         desktopQuery.addEventListener("change", closeNavOnDesktop);
         return () => desktopQuery.removeEventListener("change", closeNavOnDesktop);
-    }, []);
+    }, [currentView]);
 
     function closeMobileNav({ restoreFocus = false } = {}) {
         setIsMobileNavOpen(false);
@@ -82,7 +86,7 @@ export function DashboardShell({
     }
 
     return (
-        <div className="dashboard-shell">
+        <div className={`dashboard-shell view-${currentView}`}>
             <button
                 type="button"
                 className={isMobileNavOpen ? "sidebar-backdrop open" : "sidebar-backdrop"}
