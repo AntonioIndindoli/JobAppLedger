@@ -168,11 +168,10 @@ export type ImportReviewValues = {
 };
 
 export type ApplicationFilters = {
+    query: string;
     status: string;
     source: string;
     company: string;
-    startDate: string;
-    endDate: string;
 };
 
 export type AppIconName =

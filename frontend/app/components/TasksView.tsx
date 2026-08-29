@@ -174,6 +174,9 @@ export function TasksView({
 
     const selectedTask =
         sortedTasks.find((task) => task.id === selectedTaskId) ?? sortedTasks[0] ?? null;
+    const selectedTaskApplication = selectedTask?.applicationId
+        ? applications.find((application) => application.id === selectedTask.applicationId) ?? null
+        : null;
     const selectedDescription = selectedTask?.description?.trim() ?? "";
     const hasActiveFilters = Object.values(filters).some(Boolean);
     const activeFilterCount = [
@@ -534,16 +537,9 @@ export function TasksView({
                                     <div className="application-detail-heading">
                                         <h2>{selectedTask.title}</h2>
                                         <p className="application-detail-company-location">
-                                            {selectedTask.applicationId ? (
-                                                <button type="button" className="application-detail-posting-link" onClick={() => onViewApplication(selectedTask.applicationId!)}>
-                                                    <AppIcon name="applications" size={15} />
-                                                    View application
-                                                </button>
-                                            ) : (
-                                                <span>No linked application</span>
-                                            )}
+                                            <span>{selectedTask.companyName ?? "Unknown company"}</span>
                                             <span aria-hidden="true">·</span>
-                                            <span>{selectedTask.companyName ?? getTaskTypeLabel(selectedTask.type)}</span>
+                                            <span>{selectedTaskApplication?.location || "Location not set"}</span>
                                         </p>
                                         <div className="application-detail-status-row">
                                             <label className="application-detail-status-control">
@@ -572,6 +568,19 @@ export function TasksView({
                                             </div>}
                                         </div>
                                     </div>
+                                </div>
+                                <div className="application-detail-summary" aria-label="Task summary">
+                                    <span>{getTaskTypeLabel(selectedTask.type)} task</span>
+                                    {selectedTask.applicationId && (
+                                        <button
+                                            type="button"
+                                            className="application-detail-posting-link"
+                                            onClick={() => onViewApplication(selectedTask.applicationId!)}
+                                        >
+                                            <AppIcon name="applications" size={15} />
+                                            View application
+                                        </button>
+                                    )}
                                 </div>
                             </header>
 

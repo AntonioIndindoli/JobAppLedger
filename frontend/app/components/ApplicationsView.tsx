@@ -614,7 +614,7 @@ export function ApplicationsView({
                                         >
                                             {STATUSES.map((status) => (
                                                 <option key={status} value={status}>
-                                                    Status: {STATUS_LABELS[status]}
+                                                    {STATUS_LABELS[status]}
                                                 </option>
                                             ))}
                                         </select>

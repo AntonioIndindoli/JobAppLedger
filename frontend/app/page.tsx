@@ -62,11 +62,10 @@ import type {
 } from "./lib/types";
 
 const INITIAL_FILTERS: ApplicationFilters = {
+    query: "",
     status: "",
     source: "",
     company: "",
-    startDate: "",
-    endDate: "",
 };
 
 function isApplicationGoalPeriod(value: unknown): value is ApplicationGoalPeriod {
@@ -159,8 +158,6 @@ export default function MainPage() {
     const [importDuplicates, setImportDuplicates] = useState<Application[]>([]);
     const [isImportSubmitting, setIsImportSubmitting] = useState(false);
     const [filters, setFilters] = useState<ApplicationFilters>(INITIAL_FILTERS);
-    const [appliedTrackerFilters, setAppliedTrackerFilters] =
-        useState<ApplicationFilters>(INITIAL_FILTERS);
     const [historyByApp, setHistoryByApp] = useState<Record<string, ActivityLog[]>>(
         {},
     );
@@ -1429,13 +1426,11 @@ export default function MainPage() {
                     activePipeline={activePipeline}
                     applicationGoal={applicationGoal}
                     applications={applications}
-                    appliedTrackerFilters={appliedTrackerFilters}
                     filters={filters}
                     historyByApp={historyByApp}
                     interviews={interviews}
                     openTimelineId={openTimelineId}
                     tasks={tasks}
-                    onApplyTrackerFilters={() => setAppliedTrackerFilters(filters)}
                     onApplicationGoalChange={updateApplicationGoal}
                     onCreateApplication={openCreateApplication}
                     onCreateInterview={openCreateInterview}

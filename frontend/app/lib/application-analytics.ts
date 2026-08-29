@@ -580,15 +580,21 @@ export function filterApplications(
     applications: Application[],
     filters: ApplicationFilters,
 ) {
+    const queryFilter = filters.query.trim().toLowerCase();
     const companyFilter = filters.company.trim().toLowerCase();
-    const startTime = filters.startDate
-        ? new Date(`${filters.startDate}T00:00:00`).getTime()
-        : null;
-    const endTime = filters.endDate
-        ? new Date(`${filters.endDate}T23:59:59`).getTime()
-        : null;
 
     return applications.filter((app) => {
+        const searchableText = [
+            app.title,
+            app.companyName,
+            app.location,
+            app.source,
+        ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+        if (queryFilter && !searchableText.includes(queryFilter)) return false;
         if (filters.status && app.status !== filters.status) return false;
         if (
             filters.source &&
@@ -597,13 +603,13 @@ export function filterApplications(
             return false;
         if (
             companyFilter &&
-            !(app.companyName ?? "").toLowerCase().includes(companyFilter)
+            ![app.companyName, app.title]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase()
+                .includes(companyFilter)
         )
             return false;
-
-        const applicationTime = getApplicationTimestamp(app);
-        if (startTime !== null && applicationTime < startTime) return false;
-        if (endTime !== null && applicationTime > endTime) return false;
 
         return true;
     });

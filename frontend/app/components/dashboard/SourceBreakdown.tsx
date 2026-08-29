@@ -88,11 +88,9 @@ export function SourceBreakdown({ applications }: SourceBreakdownProps) {
                     ))}
                 </div>
             </div>
-            <p>
-                {totalSourceCount
-                    ? "Your source breakdown updates as applications are added or edited."
-                    : "Import jobs or add sources to see your source breakdown."}
-            </p>
+            {totalSourceCount
+                ? undefined
+                : <p>"Import jobs or add sources to see your source breakdown."</p>}
         </div>
     );
 }

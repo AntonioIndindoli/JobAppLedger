@@ -114,26 +114,8 @@
         height: 44px;
     }
 
-
-
     .tracker-heading-row {
         gap: 14px;
-    }
-
-    .tracker-actions {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        width: 100%;
-        gap: 8px;
-    }
-
-    .tracker-actions .primary,
-    .tracker-actions .secondary {
-        min-width: 0;
-        min-height: 44px;
-        padding: 9px 10px;
-        font-size: 12px;
-        white-space: nowrap;
     }
 
     .dashboard-filter-toggle {
@@ -401,6 +383,10 @@
     .tracker-panel .filter-row {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .tracker-actions {
+        display: none;
+    }
 }
 
 @media (min-width: 700px) and (max-width: 1600px) {
@@ -479,8 +465,85 @@
     .stats-panel .stat-card {
         grid-template-columns: 1fr;
     }
+}
 
-    .tracker-actions {
-        grid-template-columns: 1fr;
+/* Keep the full reference-style board visible on laptop and desktop widths.
+   The single-stage tabs and filter sheet remain the compact-screen treatment. */
+@media (min-width: 901px) and (max-width: 1600px) {
+    .tracker-heading-row {
+        gap: 20px;
+    }
+
+    .dashboard-filter-toggle,
+    .mobile-stage-tabs-shell {
+        display: none;
+    }
+
+    .tracker-panel > .filter-row {
+        display: grid;
+        grid-template-columns: minmax(190px, 1.08fr) minmax(165px, 1fr) minmax(165px, 1fr) minmax(180px, 1fr);
+    }
+
+    .tracker-panel .kanban {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(168px, 1fr));
+    }
+
+    .tracker-panel .lane,
+    .tracker-panel .lane.mobile-active {
+        display: block;
+    }
+
+    .tracker-panel .lane-header {
+        justify-content: flex-start;
+        min-height: 40px;
+        padding: 9px 12px 10px;
+    }
+
+    .tracker-panel .dropzone {
+        min-height: 285px;
+        padding: 6px;
+    }
+
+    .tracker-panel .job-card {
+        gap: 6px;
+        margin-bottom: 6px;
+        padding: 9px 10px 10px;
+    }
+
+    .tracker-panel .job-card b {
+        font-size: 12px;
+    }
+
+    .tracker-panel .job-card-company,
+    .tracker-panel .job-card .applied-date {
+        font-size: 11px;
+    }
+
+    .tracker-panel .job-card-menu-trigger {
+        width: 24px;
+        height: 24px;
+        margin: 0;
+    }
+
+    .mobile-status-control {
+        display: none;
+    }
+
+    .empty-tracker {
+        position: absolute;
+        width: min(50%, 500px);
+        margin: 0;
+        transform: translate(-50%, -50%);
+    }
+}
+
+@media (max-width: 900px) {
+    .tracker-panel > .filter-row.dashboard-filters-open .tracker-search-field {
+        min-height: 46px;
+    }
+
+    .tracker-panel > .filter-row.dashboard-filters-open .dashboard-filter-done {
+        display: inline-flex !important;
     }
 }

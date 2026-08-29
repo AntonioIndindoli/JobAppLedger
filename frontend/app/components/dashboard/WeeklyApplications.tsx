@@ -119,11 +119,6 @@ export function WeeklyApplications({
                 <span>applications</span>
                 <em>{weeklyApplications.trend}</em>
             </aside>
-            <p>
-                {weeklyApplications.total
-                    ? "Showing applications by applied date (or created date when applied date is missing)."
-                    : "Your weekly application trend will appear here."}
-            </p>
         </div>
     );
 }

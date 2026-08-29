@@ -25,7 +25,6 @@ type ApplicationTrackerProps = {
     interviews: Interview[];
     openTimelineId: string | null;
     trackerApplications: Application[];
-    onApplyFilters: () => void;
     onImportOpen: () => void;
     onCreateApplication: () => void;
     onFiltersChange: (filters: ApplicationFilters) => void;
@@ -87,7 +86,6 @@ export function ApplicationTracker({
     interviews,
     openTimelineId,
     trackerApplications,
-    onApplyFilters,
     onImportOpen,
     onCreateApplication,
     onFiltersChange,
@@ -214,6 +212,17 @@ export function ApplicationTracker({
                         <AppIcon name="x" size={20} />
                     </button>
                 </div>
+                <label className="tracker-search-field">
+                    <AppIcon name="search" size={17} />
+                    <input
+                        aria-label="Search applications"
+                        placeholder="Search applications..."
+                        value={filters.query}
+                        onChange={(event) =>
+                            onFiltersChange({ ...filters, query: event.target.value })
+                        }
+                    />
+                </label>
                 <select
                     value={filters.status}
                     onChange={(event) =>
@@ -239,31 +248,16 @@ export function ApplicationTracker({
                     ))}
                 </select>
                 <input
-                    placeholder="Company"
+                    aria-label="Filter by company or job title"
+                    placeholder="Company or job title"
                     value={filters.company}
                     onChange={(event) =>
                         onFiltersChange({ ...filters, company: event.target.value })
                     }
                 />
-                <input
-                    type="date"
-                    aria-label="Start date"
-                    value={filters.startDate}
-                    onChange={(event) =>
-                        onFiltersChange({ ...filters, startDate: event.target.value })
-                    }
-                />
-                <input
-                    type="date"
-                    aria-label="End date"
-                    value={filters.endDate}
-                    onChange={(event) =>
-                        onFiltersChange({ ...filters, endDate: event.target.value })
-                    }
-                />
                 <button
+                    className="dashboard-filter-done"
                     onClick={() => {
-                        onApplyFilters();
                         if (
                             DASHBOARD_STATUSES.includes(
                                 filters.status as DashboardStatus,
@@ -276,8 +270,7 @@ export function ApplicationTracker({
                         setIsMobileFiltersOpen(false);
                     }}
                 >
-                    <AppIcon name="filter" size={16} />
-                    Apply filters
+                    Show results
                 </button>
             </div>
             <div className="mobile-stage-tabs-shell">
@@ -321,7 +314,15 @@ export function ApplicationTracker({
                         <div className={`dropzone ${status.toLowerCase()}`}>
                             {groupedApplications[status].length === 0 &&
                                 trackerApplications.length > 0 && (
-                                    <p className="lane-empty">No applications</p>
+                                    <div className="lane-empty">
+                                        <span aria-hidden="true">
+                                            <AppIcon
+                                                name="x"
+                                                size={23}
+                                            />
+                                        </span>
+                                        <p>No applications yet</p>
+                                    </div>
                                 )}
                             {groupedApplications[status].map((application) => (
                                 (() => {

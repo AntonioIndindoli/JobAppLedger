@@ -504,6 +504,8 @@ export function InterviewsView({
                                         <h2>{selectedInterview.applicationTitle ?? "Unknown role"}</h2>
                                         <p className="application-detail-company-location">
                                             <span>{selectedInterview.companyName ?? "Unknown company"}</span>
+                                            <span aria-hidden="true">·</span>
+                                            <span>{selectedInterview.location || "Location not set"}</span>
                                         </p>
                                         <div className="application-detail-status-row">
                                             <label className="application-detail-status-control">

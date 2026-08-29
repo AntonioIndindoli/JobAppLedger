@@ -10,7 +10,7 @@
 }
 
 .hero {
-  padding: 30px 0 18px;
+  padding: 34px 0 10px;
 }
 
 .hero h1 {
@@ -1568,4 +1568,209 @@
   border-radius: 7px;
   padding: 10px;
   background: white;
+}
+
+/* Reference-style application board. Scoped to the dashboard tracker so the
+   full Applications page keeps its independent table layout. */
+.tracker-panel {
+  padding: 16px 15px 15px;
+  border-color: #e3e8ef;
+  border-radius: 13px;
+  box-shadow: 0 8px 24px rgba(31, 60, 100, .04);
+}
+
+.tracker-heading-row {
+  gap: 20px;
+}
+
+.tracker-heading-row h2 {
+  gap: 7px;
+  color: #111827;
+  font-size: 16px;
+}
+
+.tracker-actions {
+  align-items: center;
+  width: auto;
+}
+
+.tracker-actions .primary,
+.tracker-actions .secondary {
+  min-height: 38px;
+  border-radius: 7px;
+  padding: 8px 14px;
+  font-size: 12px;
+}
+
+.tracker-panel > .filter-row {
+  grid-template-columns: minmax(190px, 1.08fr) minmax(165px, 1fr) minmax(165px, 1fr) minmax(180px, 1fr);
+  gap: 10px;
+  max-width: 890px;
+  margin: 14px 0 20px;
+}
+
+.tracker-panel > .filter-row input,
+.tracker-panel > .filter-row select,
+.tracker-search-field {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid #d8dee8;
+  border-radius: 7px;
+  background: #fff;
+  color: #273248;
+  font-size: 12px;
+}
+
+.tracker-panel > .filter-row > input,
+.tracker-panel > .filter-row > select {
+  padding: 8px 11px;
+}
+
+.tracker-search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 11px;
+  color: #7a8699;
+}
+
+.tracker-search-field:focus-within {
+  border-color: #8cb9ff;
+  box-shadow: 0 0 0 3px rgba(11, 107, 255, .1);
+}
+
+.tracker-search-field input {
+  min-width: 0;
+  min-height: 36px;
+  border: 0 !important;
+  padding: 0 !important;
+  outline: 0;
+  box-shadow: none !important;
+}
+
+.dashboard-filter-done {
+  display: none !important;
+}
+
+.tracker-panel .kanban {
+  grid-template-columns: repeat(6, minmax(168px, 1fr));
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 1px;
+}
+
+.tracker-panel .lane {
+  position: relative;
+  min-width: 0;
+  min-height: 330px;
+  border-radius: 11px 11px 8px 8px;
+  background: linear-gradient(180deg, #f8fafc 0%, #fbfcfd 100%);
+}
+
+.tracker-panel .lane-header {
+  position: relative;
+  justify-content: flex-start;
+  gap: 7px;
+  min-height: 40px;
+  padding: 9px 12px 10px;
+  background: transparent !important;
+  color: #111827;
+  font-size: 12px;
+}
+
+.tracker-panel .lane-header::after {
+  position: absolute;
+  right: 10px;
+  bottom: 0;
+  left: 10px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--lane-color);
+  content: "";
+}
+
+.tracker-panel .lane-title {
+  gap: 7px;
+  color: #111827;
+  font-weight: 800;
+}
+
+.tracker-panel .lane-dot {
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lane-color) 10%, transparent);
+}
+
+.tracker-panel .lane-header strong {
+  color: #667085;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tracker-panel .dropzone {
+  min-height: 285px;
+  padding: 6px;
+  background: transparent !important;
+}
+
+.tracker-panel .job-card {
+  gap: 6px;
+  margin-bottom: 6px;
+  padding: 9px 10px 10px;
+  border-color: #dfe4eb;
+  border-left: 3px solid var(--lane-color);
+  border-radius: 0 7px 7px 0;
+  box-shadow: 0 2px 6px rgba(20, 46, 80, .035);
+}
+
+.tracker-panel .job-card:hover {
+  border-color: #c8d5e6;
+  box-shadow: 0 5px 12px rgba(20, 46, 80, .07);
+}
+
+.tracker-panel .job-card b {
+  margin-bottom: 4px;
+  color: #111827;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.tracker-panel .job-card-company,
+.tracker-panel .job-card .applied-date {
+  color: #344054;
+  font-size: 11px;
+}
+
+.tracker-panel .job-card .applied-date {
+  gap: 4px;
+  font-weight: 500;
+}
+
+.tracker-panel .job-card-menu-trigger {
+  color: #344054;
+}
+
+.tracker-panel .lane-empty {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 13px;
+  min-height: 245px;
+  margin: 0;
+  color: #64748b;
+}
+
+.tracker-panel .lane-empty > span {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.tracker-panel .lane-empty p {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 500;
 }

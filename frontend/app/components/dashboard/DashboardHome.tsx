@@ -27,13 +27,11 @@ type DashboardHomeProps = {
     activePipeline: number;
     applicationGoal: ApplicationGoalSettings;
     applications: Application[];
-    appliedTrackerFilters: ApplicationFilters;
     filters: ApplicationFilters;
     historyByApp: Record<string, ActivityLog[]>;
     interviews: Interview[];
     openTimelineId: string | null;
     tasks: Task[];
-    onApplyTrackerFilters: () => void;
     onApplicationGoalChange: (goal: ApplicationGoalSettings) => void;
     onCreateApplication: () => void;
     onCreateInterview: (applicationId?: string) => void;
@@ -58,13 +56,11 @@ export function DashboardHome({
     activePipeline,
     applicationGoal,
     applications,
-    appliedTrackerFilters,
     filters,
     historyByApp,
     interviews,
     openTimelineId,
     tasks,
-    onApplyTrackerFilters,
     onApplicationGoalChange,
     onCreateApplication,
     onCreateInterview,
@@ -82,8 +78,8 @@ export function DashboardHome({
     onViewTasks,
 }: DashboardHomeProps) {
     const trackerApplications = useMemo(
-        () => filterApplications(applications, appliedTrackerFilters),
-        [applications, appliedTrackerFilters],
+        () => filterApplications(applications, filters),
+        [applications, filters],
     );
     const groupedApplications = useMemo(
         () => groupDashboardApplications(trackerApplications),
@@ -105,14 +101,6 @@ export function DashboardHome({
                     <div>
                         <p className="page-header-text">Dashboard</p>
                     </div>
-                    <button
-                        type="button"
-                        className="primary dashboard-hero-action"
-                        onClick={onCreateApplication}
-                    >
-                        <AppIcon name="plus" size={18} />
-                        Add application
-                    </button>
                 </header>
             </section>
             <DashboardStats
@@ -132,7 +120,6 @@ export function DashboardHome({
                 interviews={interviews}
                 openTimelineId={openTimelineId}
                 trackerApplications={trackerApplications}
-                onApplyFilters={onApplyTrackerFilters}
                 onImportOpen={onImportOpen}
                 onCreateApplication={onCreateApplication}
                 onFiltersChange={onFiltersChange}
