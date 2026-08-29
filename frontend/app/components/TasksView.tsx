@@ -286,7 +286,7 @@ export function TasksView({
         <section className={isMobileDetailOpen ? "applications-page tasks-page mobile-page-detail-open" : "applications-page tasks-page"}>
             <header className="page-header">
                 <div>
-                    <p>Tasks & Follow-Ups</p>
+                    <p className="page-header-text">Tasks & Follow-Ups</p>
                     <span className="tasks-header-meta" aria-label="Task summary">
                         <strong>{taskSummary.open} open</strong>
                         <strong>{taskSummary.overdue} overdue</strong>

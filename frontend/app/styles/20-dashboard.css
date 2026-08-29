@@ -21,7 +21,11 @@
   letter-spacing: -.04em;
 }
 
-.hero p,
+.page-header-text {
+  font-size: 24px;
+  font-weight: 700;
+}
+
 .panel p,
 .stat-card span {
   color: var(--muted);

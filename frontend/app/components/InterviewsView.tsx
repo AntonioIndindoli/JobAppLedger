@@ -283,7 +283,7 @@ export function InterviewsView({
         <section className={isMobileDetailOpen ? "applications-page interviews-page mobile-page-detail-open" : "applications-page interviews-page"}>
             <header className="page-header">
                 <div>
-                    <p>Interviews</p>
+                    <p className="page-header-text">Interviews</p>
                     <span
                         className="interviews-header-meta"
                         aria-label="Interview totals by status"

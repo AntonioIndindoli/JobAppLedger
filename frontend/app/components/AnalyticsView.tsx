@@ -41,7 +41,7 @@ export function AnalyticsView({
         <section className="applications-page analytics-page">
             <header className="page-header">
                 <div>
-                    <p>Analytics</p>
+                    <p className="page-header-text">Analytics</p>
                     <span>
                         Source mix and application activity across{" "}
                         {applications.length} tracked{" "}

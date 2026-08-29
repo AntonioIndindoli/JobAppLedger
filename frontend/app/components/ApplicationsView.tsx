@@ -354,7 +354,7 @@ export function ApplicationsView({
         <section className={isMobileDetailOpen ? "applications-page mobile-page-detail-open" : "applications-page"}>
             <header className="page-header">
                 <div>
-                    <p>Applications</p>
+                    <p className="page-header-text">Applications</p>
                     <span
                         className="applications-status-meta"
                         aria-label="Application totals by status"
@@ -614,14 +614,17 @@ export function ApplicationsView({
                                         >
                                             {STATUSES.map((status) => (
                                                 <option key={status} value={status}>
-                                                    {STATUS_LABELS[status]}
+                                                    Status: {STATUS_LABELS[status]}
                                                 </option>
                                             ))}
                                         </select>
                                     </label>
+                                    <span className="application-detail-status-date">
+                                        <AppIcon name="calendar" size={15} />
+                                        Applied {formatDisplayDate(selectedApplication.dateApplied)}
+                                    </span>
                                 </div>
                                 <div className="application-detail-summary" aria-label="Application overview">
-                                    <span><AppIcon name="calendar" size={17} /> Applied {formatDisplayDate(selectedApplication.dateApplied)}</span>
                                     <span><AppIcon name="source" size={17} /> {selectedApplication.source || "No source"}</span>
                                     <span><AppIcon name="salary" size={17} /> {selectedApplication.salaryMin !== null || selectedApplication.salaryMax !== null ? `Salary: ${formatSalaryRange(selectedApplication)}` : formatSalaryRange(selectedApplication)}</span>
                                     {selectedApplication.sourceUrl && (

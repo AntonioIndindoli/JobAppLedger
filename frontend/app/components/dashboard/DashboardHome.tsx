@@ -103,7 +103,7 @@ export function DashboardHome({
             <section className="hero dashboard-hero">
                 <header className="dashboard-hero-header">
                     <div>
-                        <p>Dashboard</p>
+                        <p className="page-header-text">Dashboard</p>
                     </div>
                     <button
                         type="button"
