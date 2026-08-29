@@ -475,13 +475,33 @@
     }
 
     .dashboard-filter-toggle,
+    .dashboard-filter-backdrop,
+    .dashboard-filter-sheet-header,
     .mobile-stage-tabs-shell {
         display: none;
     }
 
-    .tracker-panel > .filter-row {
+    .tracker-panel > .filter-row,
+    .tracker-panel > .filter-row.dashboard-filters-open {
+        position: static;
+        z-index: auto;
         display: grid;
         grid-template-columns: minmax(190px, 1.08fr) minmax(165px, 1fr) minmax(165px, 1fr) minmax(180px, 1fr);
+        gap: 10px;
+        max-height: none;
+        margin: 14px 0 20px;
+        padding: 0;
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .tracker-panel > .filter-row.dashboard-filters-open input,
+    .tracker-panel > .filter-row.dashboard-filters-open select,
+    .tracker-panel > .filter-row.dashboard-filters-open .tracker-search-field {
+        min-height: 38px;
     }
 
     .tracker-panel .kanban {

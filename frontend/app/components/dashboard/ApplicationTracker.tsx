@@ -129,6 +129,22 @@ export function ApplicationTracker({
             filterToggle?.focus();
         };
     }, [isMobileFiltersOpen]);
+
+    useEffect(() => {
+        const desktopQuery = window.matchMedia("(min-width: 901px)");
+
+        function closeMobileFiltersOnDesktop(event: MediaQueryListEvent) {
+            if (event.matches) setIsMobileFiltersOpen(false);
+        }
+
+        desktopQuery.addEventListener("change", closeMobileFiltersOnDesktop);
+        return () =>
+            desktopQuery.removeEventListener(
+                "change",
+                closeMobileFiltersOnDesktop,
+            );
+    }, []);
+
     const interviewByApplicationId = useMemo(() => {
         const groupedInterviews = new Map<string, Interview[]>();
 
