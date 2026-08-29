@@ -309,81 +309,71 @@ export function TasksView({
                 </div>
             </header>
 
-            <div className={isFiltersOpen ? "interviews-control-panel tasks-control-panel mobile-filters-open" : "interviews-control-panel tasks-control-panel"}>
-                <label className="interviews-search-field tasks-search-field">
-                    <AppIcon name="search" size={18} />
-                    <input
-                        aria-label="Search tasks"
-                        value={filters.query}
-                        onChange={(event) =>
-                            setFilters({ ...filters, query: event.target.value })
-                        }
-                        placeholder="Search tasks"
-                    />
-                </label>
-                <button
-                    type="button"
-                    className="mobile-filter-toggle"
-                    aria-expanded={isFiltersOpen}
-                    onClick={() => setIsFiltersOpen((open) => !open)}
-                >
-                    <AppIcon name="filter" size={18} />
-                    Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
-                </button>
-                <label className="interviews-select-field">
-                    <span>Type</span>
-                    <select
-                        value={filters.type}
-                        onChange={(event) =>
-                            setFilters({ ...filters, type: event.target.value })
-                        }
-                    >
-                        <option value="">All types</option>
-                        {TASK_TYPES.map((type) => (
-                            <option key={type} value={type}>
-                                {getTaskTypeLabel(type)}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <label className="interviews-select-field">
-                    <span>Status</span>
-                    <select
-                        value={filters.status}
-                        onChange={(event) =>
-                            setFilters({
-                                ...filters,
-                                status: event.target.value as TaskFilters["status"],
-                            })
-                        }
-                    >
-                        {TASK_STATUS_FILTERS.map((status) => (
-                            <option key={status.value || "all"} value={status.value}>
-                                {status.label}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <button
-                    type="button"
-                    className="interviews-reset-button"
-                    disabled={!hasActiveFilters}
-                    onClick={() => setFilters(INITIAL_FILTERS)}
-                >
-                    <AppIcon name="history" size={15} />
-                    Reset
-                </button>
-            </div>
-
             <div className={isMobileDetailOpen ? "applications-split-panel tasks-split-panel mobile-detail-open" : "applications-split-panel tasks-split-panel"}>
                 <aside className="application-list-panel tasks-list-panel">
-                    <div className="application-list-header">
-                        <div>
-                            <h2>Tasks</h2>
-                            <span>
-                                {sortedTasks.length} shown from {tasks.length} total
-                            </span>
-                        </div>
+                    <div
+                        className={isFiltersOpen ? "applications-toolbar collection-filter-toolbar mobile-filters-open" : "applications-toolbar collection-filter-toolbar"}
+                        aria-label="Task table filters"
+                    >
+                        <label className="applications-search-field">
+                            <AppIcon name="search" size={18} />
+                            <input
+                                aria-label="Search tasks"
+                                value={filters.query}
+                                onChange={(event) =>
+                                    setFilters({ ...filters, query: event.target.value })
+                                }
+                                placeholder="Search tasks"
+                            />
+                        </label>
+                        <button
+                            type="button"
+                            className="mobile-filter-toggle"
+                            aria-expanded={isFiltersOpen}
+                            onClick={() => setIsFiltersOpen((open) => !open)}
+                        >
+                            <AppIcon name="filter" size={18} />
+                            Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
+                        </button>
+                        <select
+                            aria-label="Filter tasks by type"
+                            value={filters.type}
+                            onChange={(event) =>
+                                setFilters({ ...filters, type: event.target.value })
+                            }
+                        >
+                            <option value="">All types</option>
+                            {TASK_TYPES.map((type) => (
+                                <option key={type} value={type}>
+                                    {getTaskTypeLabel(type)}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            aria-label="Filter tasks by status"
+                            value={filters.status}
+                            onChange={(event) =>
+                                setFilters({
+                                    ...filters,
+                                    status: event.target.value as TaskFilters["status"],
+                                })
+                            }
+                        >
+                            {TASK_STATUS_FILTERS.map((status) => (
+                                <option key={status.value || "all"} value={status.value}>
+                                    {status.label}
+                                </option>
+                            ))}
+                        </select>
+                        <button
+                            type="button"
+                            className="interviews-reset-button"
+                            disabled={!hasActiveFilters}
+                            onClick={() => setFilters(INITIAL_FILTERS)}
+                        >
+                            <AppIcon name="history" size={15} />
+                            Reset
+                        </button>
                     </div>
 
                     {sortedTasks.length > 0 ? (

@@ -308,82 +308,69 @@ export function InterviewsView({
                 </div>
             </header>
 
-            <div
-                className={isFiltersOpen ? "interviews-control-panel mobile-filters-open" : "interviews-control-panel"}
-                aria-label="Interview table filters"
-            >
-                <label className="interviews-search-field">
-                    <AppIcon name="search" size={18} />
-                    <input
-                        aria-label="Search interviews"
-                        value={filters.query}
-                        onChange={(event) =>
-                            setFilters({ ...filters, query: event.target.value })
-                        }
-                        placeholder="Search interviews"
-                    />
-                </label>
-                <button
-                    type="button"
-                    className="mobile-filter-toggle"
-                    aria-expanded={isFiltersOpen}
-                    onClick={() => setIsFiltersOpen((open) => !open)}
-                >
-                    <AppIcon name="filter" size={18} />
-                    Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
-                </button>
-                <label className="interviews-select-field">
-                    <span>Type</span>
-                    <select
-                        value={filters.type}
-                        onChange={(event) =>
-                            setFilters({ ...filters, type: event.target.value })
-                        }
-                    >
-                        <option value="">All types</option>
-                        {INTERVIEW_TYPES.map((type) => (
-                            <option key={type} value={type}>
-                                {getInterviewTypeLabel(type)}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <label className="interviews-select-field">
-                    <span>Status</span>
-                    <select
-                        value={filters.outcome}
-                        onChange={(event) =>
-                            setFilters({ ...filters, outcome: event.target.value })
-                        }
-                    >
-                        <option value="">All statuses</option>
-                        {INTERVIEW_OUTCOMES.map((outcome) => (
-                            <option key={outcome} value={outcome}>
-                                {getInterviewOutcomeLabel(outcome)}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <button
-                    type="button"
-                    className="interviews-reset-button"
-                    onClick={() => setFilters(INITIAL_FILTERS)}
-                >
-                    <AppIcon name="history" size={15} />
-                    Reset
-                </button>
-            </div>
-
             <div className={isMobileDetailOpen ? "applications-split-panel interviews-split-panel mobile-detail-open" : "applications-split-panel interviews-split-panel"}>
                 <aside className="application-list-panel interviews-list-panel">
-                    <div className="application-list-header">
-                        <div>
-                            <h2>Interviews</h2>
-                            <span>
-                                {sortedInterviews.length} shown from {interviews.length}{" "}
-                                total
-                            </span>
-                        </div>
+                    <div
+                        className={isFiltersOpen ? "applications-toolbar collection-filter-toolbar mobile-filters-open" : "applications-toolbar collection-filter-toolbar"}
+                        aria-label="Interview table filters"
+                    >
+                        <label className="applications-search-field">
+                            <AppIcon name="search" size={18} />
+                            <input
+                                aria-label="Search interviews"
+                                value={filters.query}
+                                onChange={(event) =>
+                                    setFilters({ ...filters, query: event.target.value })
+                                }
+                                placeholder="Search interviews"
+                            />
+                        </label>
+                        <button
+                            type="button"
+                            className="mobile-filter-toggle"
+                            aria-expanded={isFiltersOpen}
+                            onClick={() => setIsFiltersOpen((open) => !open)}
+                        >
+                            <AppIcon name="filter" size={18} />
+                            Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
+                        </button>
+                        <select
+                            aria-label="Filter interviews by type"
+                            value={filters.type}
+                            onChange={(event) =>
+                                setFilters({ ...filters, type: event.target.value })
+                            }
+                        >
+                            <option value="">All types</option>
+                            {INTERVIEW_TYPES.map((type) => (
+                                <option key={type} value={type}>
+                                    {getInterviewTypeLabel(type)}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            aria-label="Filter interviews by status"
+                            value={filters.outcome}
+                            onChange={(event) =>
+                                setFilters({ ...filters, outcome: event.target.value })
+                            }
+                        >
+                            <option value="">All statuses</option>
+                            {INTERVIEW_OUTCOMES.map((outcome) => (
+                                <option key={outcome} value={outcome}>
+                                    {getInterviewOutcomeLabel(outcome)}
+                                </option>
+                            ))}
+                        </select>
+                        <button
+                            type="button"
+                            className="interviews-reset-button"
+                            disabled={!hasActiveFilters}
+                            onClick={() => setFilters(INITIAL_FILTERS)}
+                        >
+                            <AppIcon name="history" size={15} />
+                            Reset
+                        </button>
                     </div>
 
                     {sortedInterviews.length > 0 ? (
@@ -513,6 +500,7 @@ export function InterviewsView({
                                                     {INTERVIEW_OUTCOMES.map((outcome) => <option key={outcome} value={outcome}>{getInterviewOutcomeLabel(outcome)}</option>)}
                                                 </select>
                                             </label>
+                                            <span>{getInterviewTypeLabel(selectedInterview.type)} interview</span>
                                         </div>
                                     </div>
                                     <div
@@ -536,7 +524,7 @@ export function InterviewsView({
                                     </div>
                                 </div>
                                 <div className="application-detail-summary" aria-label="Interview summary">
-                                    <span>{getInterviewTypeLabel(selectedInterview.type)} interview</span>
+
                                     <button type="button" className="application-detail-posting-link" onClick={() => onViewApplication(selectedInterview.applicationId)}><AppIcon name="applications" size={15} /> View application</button>
                                 </div>
                             </header>
@@ -548,94 +536,94 @@ export function InterviewsView({
                                 >
                                     <h3 id="interview-details-heading">Interview details</h3>
                                     <dl className="interview-detail-facts">
-                                    <div className="interview-detail-fact interview-detail-fact-primary">
-                                        <dt>
-                                            <span className="interview-detail-fact-icon">
-                                                <AppIcon name="calendar" size={18} />
-                                            </span>
-                                            Date
-                                        </dt>
-                                        <dd>
-                                            <strong>
-                                                {formatInterviewDateLabel(
-                                                    selectedInterview.scheduledAt,
-                                                    true,
-                                                )}
-                                            </strong>
-                                            <span>
-                                                {formatInterviewTimeLabel(
-                                                    selectedInterview.scheduledAt,
-                                                )}
-                                                {" - "}
-                                                {formatInterviewDuration(
-                                                    selectedInterview.durationMinutes,
-                                                )}
-                                            </span>
-                                        </dd>
-                                    </div>
-
-                                    <div
-                                        className={
-                                            selectedHasInterviewer
-                                                ? "interview-detail-fact"
-                                                : "interview-detail-fact is-missing"
-                                        }
-                                    >
-                                        <dt>
-                                            <span className="interview-detail-fact-icon">
-                                                <AppIcon name="account" size={18} />
-                                            </span>
-                                            Interviewer
-                                        </dt>
-                                        <dd>
-                                            <strong>
-                                                {selectedInterviewerName || "Not set"}
-                                            </strong>
-                                            <span>
-                                                {selectedHasInterviewer
-                                                    ? "Contact saved"
-                                                    : "Needs a name"}
-                                            </span>
-                                        </dd>
-                                    </div>
-
-                                    <div
-                                        className={
-                                            selectedHasLocation
-                                                ? "interview-detail-fact"
-                                                : "interview-detail-fact is-missing"
-                                        }
-                                    >
-                                        <dt>
-                                            <span className="interview-detail-fact-icon">
-                                                <AppIcon name="location" size={18} />
-                                            </span>
-                                            Location
-                                        </dt>
-                                        <dd>
-                                            <strong>
-                                                {getInterviewLocationLabel(
-                                                    selectedInterview,
-                                                )}
-                                            </strong>
-                                            {selectedMeetingUrl ? (
-                                                <a
-                                                    className="interview-detail-link"
-                                                    href={selectedMeetingUrl}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                >
-                                                    Open meeting link
-                                                </a>
-                                            ) : (
-                                                <span>
-                                                    {selectedHasLocation
-                                                        ? "Location saved"
-                                                        : "Needs a location or link"}
+                                        <div className="interview-detail-fact interview-detail-fact-primary">
+                                            <dt>
+                                                <span className="interview-detail-fact-icon">
+                                                    <AppIcon name="calendar" size={18} />
                                                 </span>
-                                            )}
-                                        </dd>
-                                    </div>
+                                                Date
+                                            </dt>
+                                            <dd>
+                                                <strong>
+                                                    {formatInterviewDateLabel(
+                                                        selectedInterview.scheduledAt,
+                                                        true,
+                                                    )}
+                                                </strong>
+                                                <span>
+                                                    {formatInterviewTimeLabel(
+                                                        selectedInterview.scheduledAt,
+                                                    )}
+                                                    {" - "}
+                                                    {formatInterviewDuration(
+                                                        selectedInterview.durationMinutes,
+                                                    )}
+                                                </span>
+                                            </dd>
+                                        </div>
+
+                                        <div
+                                            className={
+                                                selectedHasInterviewer
+                                                    ? "interview-detail-fact"
+                                                    : "interview-detail-fact is-missing"
+                                            }
+                                        >
+                                            <dt>
+                                                <span className="interview-detail-fact-icon">
+                                                    <AppIcon name="account" size={18} />
+                                                </span>
+                                                Interviewer
+                                            </dt>
+                                            <dd>
+                                                <strong>
+                                                    {selectedInterviewerName || "Not set"}
+                                                </strong>
+                                                <span>
+                                                    {selectedHasInterviewer
+                                                        ? "Contact saved"
+                                                        : "Needs a name"}
+                                                </span>
+                                            </dd>
+                                        </div>
+
+                                        <div
+                                            className={
+                                                selectedHasLocation
+                                                    ? "interview-detail-fact"
+                                                    : "interview-detail-fact is-missing"
+                                            }
+                                        >
+                                            <dt>
+                                                <span className="interview-detail-fact-icon">
+                                                    <AppIcon name="location" size={18} />
+                                                </span>
+                                                Location
+                                            </dt>
+                                            <dd>
+                                                <strong>
+                                                    {getInterviewLocationLabel(
+                                                        selectedInterview,
+                                                    )}
+                                                </strong>
+                                                {selectedMeetingUrl ? (
+                                                    <a
+                                                        className="interview-detail-link"
+                                                        href={selectedMeetingUrl}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                    >
+                                                        Open meeting link
+                                                    </a>
+                                                ) : (
+                                                    <span>
+                                                        {selectedHasLocation
+                                                            ? "Location saved"
+                                                            : "Needs a location or link"}
+                                                    </span>
+                                                )}
+                                            </dd>
+                                        </div>
                                     </dl>
                                 </section>
 

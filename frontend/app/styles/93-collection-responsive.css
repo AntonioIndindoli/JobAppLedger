@@ -309,7 +309,6 @@ margin-bottom: 12px;
     .mobile-agenda-date {
         display: grid;
         gap: 4px;
-        align-self: start;
         min-width: 0;
     }
 
@@ -620,13 +619,9 @@ margin-bottom: 12px;
 
     .mobile-agenda-card {
         grid-template-columns: 76px minmax(0, 1fr) 18px;
-        align-items: start;
+
         gap: 10px;
         padding: 13px 12px;
-    }
-
-    .mobile-agenda-card>.mobile-agenda-date {
-        grid-row: 1 / span 2;
     }
 
     .mobile-agenda-card>.mobile-agenda-copy {
@@ -643,12 +638,6 @@ margin-bottom: 12px;
         grid-column: 3;
         grid-row: 1 / span 2;
         align-self: center;
-    }
-
-    .mobile-task-card {
-        grid-template-columns: 44px minmax(0, 1fr) 18px;
-        gap: 10px;
-        padding: 12px;
     }
 
     .mobile-task-card>.mobile-task-checkbox-target {

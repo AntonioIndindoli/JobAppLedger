@@ -81,6 +81,10 @@
   background: #f8fcff;
 }
 
+.collection-filter-toolbar {
+  grid-template-columns: minmax(160px, 2fr) minmax(120px, 1fr) minmax(120px, 1fr) auto;
+}
+
 .applications-toolbar>input,
 .applications-toolbar>select {
   min-width: 0;
