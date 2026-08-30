@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { FormEvent } from "react";
 
 import type { AuthStatus, Mode } from "../lib/types";
@@ -29,7 +30,17 @@ export function AuthPanel({
 }: AuthPanelProps) {
     return (
         <main className="p-8 max-w-xl mx-auto">
-            <h1 className="text-2xl font-semibold mb-4">JobAppLedger</h1>
+            <div className="flex items-center gap-3 mb-4">
+                <Image
+                    src="/JobHazelIcon.png"
+                    alt=""
+                    width={38}
+                    height={38}
+                    className="shrink-0"
+                    priority
+                />
+                <h1 className="text-2xl font-semibold">JobHazel</h1>
+            </div>
             <form onSubmit={onSubmit} className="space-y-3">
                 <div className="flex gap-2">
                     <button

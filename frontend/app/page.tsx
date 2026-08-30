@@ -1271,7 +1271,7 @@ export default function MainPage() {
             topbarPageControls={
                 currentView === "dashboard" ? (
                     <>
-                        <strong className="topbar-page-title">Dashboard</strong>
+                        <h1 className="topbar-page-title">Dashboard</h1>
                         <div className="topbar-page-actions">
                             <button
                                 type="button"
@@ -1294,10 +1294,10 @@ export default function MainPage() {
                         </div>
                     </>
                 ) : currentView === "analytics" ? (
-                    <strong className="topbar-page-title">Analytics</strong>
+                    <h1 className="topbar-page-title">Analytics</h1>
                 ) : currentView === "applications" ? (
                     <>
-                        <strong className="topbar-page-title">Applications</strong>
+                        <h1 className="topbar-page-title">Applications</h1>
                         <div className="topbar-page-actions">
                             <button
                                 type="button"
@@ -1321,7 +1321,7 @@ export default function MainPage() {
                     </>
                 ) : currentView === "interviews" ? (
                     <>
-                        <strong className="topbar-page-title">Interviews</strong>
+                        <h1 className="topbar-page-title">Interviews</h1>
                         <div className="topbar-page-actions">
                             <AddInterviewButton
                                 className="primary"
@@ -1333,7 +1333,7 @@ export default function MainPage() {
                     </>
                 ) : currentView === "tasks" ? (
                     <>
-                        <strong className="topbar-page-title">Tasks &amp; Follow-Ups</strong>
+                        <h1 className="topbar-page-title">Tasks &amp; Follow-Ups</h1>
                         <div className="topbar-page-actions">
                             <button
                                 type="button"
@@ -1346,7 +1346,9 @@ export default function MainPage() {
                             </button>
                         </div>
                     </>
-                ) : undefined
+                ) : (
+                    <h1 className="topbar-page-title">Account</h1>
+                )
             }
         >
             {currentView === "account" ? (
@@ -1375,7 +1377,6 @@ export default function MainPage() {
                     onCreateInterview={openCreateInterview}
                     onCreateTask={openCreateTask}
                     onCompleteTask={completeTask}
-                    onImportOpen={openImportDrawer}
                     onRemoveApplication={removeApplication}
                     onRemoveInterview={removeInterview}
                     onStartEdit={startEdit}
@@ -1432,11 +1433,9 @@ export default function MainPage() {
                     openTimelineId={openTimelineId}
                     tasks={tasks}
                     onApplicationGoalChange={updateApplicationGoal}
-                    onCreateApplication={openCreateApplication}
                     onCreateInterview={openCreateInterview}
                     onCreateTask={() => openCreateTask()}
                     onFiltersChange={setFilters}
-                    onImportOpen={openImportDrawer}
                     onRemoveApplication={removeApplication}
                     onRemoveHistoryEvent={removeHistoryEvent}
                     onStartEdit={startEdit}

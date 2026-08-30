@@ -179,7 +179,7 @@
 
 .interviews-reset-button:hover:not(:disabled),
 .interviews-reset-button:focus-visible:not(:disabled) {
-  color: #0b56c7;
+  color: var(--green);
   background: #eef6ff;
   outline: none;
 }
@@ -360,7 +360,7 @@
 .interview-menu-trigger:hover,
 .interview-menu-trigger:focus-visible,
 .interview-menu-trigger[aria-expanded="true"] {
-  color: #0b56c7;
+  color: var(--green);
   background: #eef6ff;
   outline: none;
 }
@@ -459,7 +459,7 @@
 }
 
 .interview-list-icon {
-  color: #0b56c7;
+  color: var(--green);
   background: #eaf3ff;
 }
 

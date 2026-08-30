@@ -25,8 +25,6 @@ type ApplicationTrackerProps = {
     interviews: Interview[];
     openTimelineId: string | null;
     trackerApplications: Application[];
-    onImportOpen: () => void;
-    onCreateApplication: () => void;
     onFiltersChange: (filters: ApplicationFilters) => void;
     onRemoveApplication: (id: string) => void;
     onRemoveHistoryEvent: (
@@ -86,8 +84,6 @@ export function ApplicationTracker({
     interviews,
     openTimelineId,
     trackerApplications,
-    onImportOpen,
-    onCreateApplication,
     onFiltersChange,
     onRemoveApplication,
     onRemoveHistoryEvent,
@@ -176,16 +172,6 @@ export function ApplicationTracker({
                             tooltip="Filter applications and move cards between stages to keep your pipeline current."
                         />
                     </h2>
-                </div>
-                <div className="panel-title tracker-actions">
-                    <button className="primary" onClick={onCreateApplication}>
-                        <AppIcon name="plus" size={18} />
-                        Add Application
-                    </button>
-                    <button className="secondary" onClick={onImportOpen}>
-                        <AppIcon name="import" size={18} />
-                        Import Job
-                    </button>
                 </div>
             </div>
             <button

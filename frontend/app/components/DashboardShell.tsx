@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { NAV_ITEMS } from "../lib/constants";
@@ -101,9 +102,15 @@ export function DashboardShell({
             >
                 <div className="brand">
                     <span className="brand-mark">
-                        <AppIcon name="ledger" size={19} strokeWidth={1.9} />
+                        <Image
+                            src="/JobHazelIcon.png"
+                            alt=""
+                            width={31}
+                            height={31}
+                            priority
+                        />
                     </span>
-                    <strong>JobAppLedger</strong>
+                    <strong>JobHazel</strong>
                     <button
                         ref={mobileNavCloseRef}
                         type="button"
@@ -114,29 +121,83 @@ export function DashboardShell({
                         <AppIcon name="x" size={21} />
                     </button>
                 </div>
-                {NAV_ITEMS.map((item) => {
-                    const view = getNavItemView(item.label);
+                <nav className="sidebar-nav" aria-label="Workspace">
+                    {NAV_ITEMS.map((item) => {
+                        const view = getNavItemView(item.label);
 
-                    return (
-                        <button
-                            key={item.label}
-                            type="button"
-                            className={
-                                view && currentView === view
-                                    ? "nav-item active"
-                                    : "nav-item"
-                            }
-                            onClick={() => {
-                                if (view) onCurrentViewChange(view);
-                                if (item.label === "Import Job") onImportOpen();
-                                closeMobileNav();
-                            }}
-                        >
-                            <AppIcon name={item.icon} size={18} />
-                            <span>{item.label}</span>
-                        </button>
-                    );
-                })}
+                        return (
+                            <button
+                                key={item.label}
+                                type="button"
+                                className={
+                                    view && currentView === view
+                                        ? "nav-item active"
+                                        : "nav-item"
+                                }
+                                onClick={() => {
+                                    if (view) onCurrentViewChange(view);
+                                    if (item.label === "Import Job") onImportOpen();
+                                    closeMobileNav();
+                                }}
+                            >
+                                <AppIcon name={item.icon} size={18} />
+                                <span>{item.label}</span>
+                            </button>
+                        );
+                    })}
+                </nav>
+                <div
+                    className="profile sidebar-profile"
+                    onBlur={(event) => {
+                        if (
+                            !event.currentTarget.contains(
+                                event.relatedTarget as Node | null,
+                            )
+                        )
+                            onProfileMenuChange(false);
+                    }}
+                >
+                    <button
+                        type="button"
+                        className={
+                            currentView === "account"
+                                ? "profile-trigger active"
+                                : "profile-trigger"
+                        }
+                        aria-haspopup="menu"
+                        aria-expanded={isProfileMenuOpen}
+                        onClick={() => onProfileMenuChange((open) => !open)}
+                    >
+                        <span className="avatar">
+                            <AppIcon name="account" size={21} />
+                        </span>
+                        <span className="sidebar-profile-copy">
+                            <strong>{firstName}</strong>
+                            <small>Account</small>
+                        </span>
+                        <AppIcon name="chevron-down" size={16} />
+                    </button>
+                    {isProfileMenuOpen && (
+                        <div className="profile-menu" role="menu">
+                            <button
+                                type="button"
+                                role="menuitem"
+                                onClick={() => {
+                                    onCurrentViewChange("account");
+                                    onProfileMenuChange(false);
+                                    closeMobileNav();
+                                }}
+                            >
+                                <AppIcon name="account" size={16} />
+                                View account
+                            </button>
+                            <button type="button" role="menuitem" onClick={onSignOut}>
+                                <AppIcon name="logout" size={16} />
+                                Sign out
+                            </button>
+                        </div>
+                    )}
+                </div>
             </aside>
             <main className="dashboard-main">
                 <header className={topbarPageControls ? "topbar has-page-controls" : "topbar"}>
@@ -151,65 +212,11 @@ export function DashboardShell({
                     >
                         <AppIcon name="menu" size={23} />
                     </button>
-                    <strong className="mobile-topbar-title">
-                        {currentView === "dashboard"
-                            ? "Dashboard"
-                            : currentView.charAt(0).toUpperCase() +
-                              currentView.slice(1)}
-                    </strong>
                     {topbarPageControls && (
                         <div className="topbar-page-controls">
                             {topbarPageControls}
                         </div>
                     )}
-                    <div className="search">
-                        <AppIcon name="search" size={18} />
-                        <span>Search jobs, companies, contacts...</span>
-                    </div>
-                    <div
-                        className="profile"
-                        onBlur={(event) => {
-                            if (
-                                !event.currentTarget.contains(
-                                    event.relatedTarget as Node | null,
-                                )
-                            )
-                                onProfileMenuChange(false);
-                        }}
-                    >
-                        <button
-                            type="button"
-                            className="profile-trigger"
-                            aria-haspopup="menu"
-                            aria-expanded={isProfileMenuOpen}
-                            onClick={() => onProfileMenuChange((open) => !open)}
-                        >
-                            <span className="avatar">
-                                <AppIcon name="account" size={21} />
-                            </span>
-                            <strong>{firstName}</strong>
-                            <AppIcon name="chevron-down" size={16} />
-                        </button>
-                        {isProfileMenuOpen && (
-                            <div className="profile-menu" role="menu">
-                                <button
-                                    type="button"
-                                    role="menuitem"
-                                    onClick={() => {
-                                        onCurrentViewChange("account");
-                                        onProfileMenuChange(false);
-                                    }}
-                                >
-                                    <AppIcon name="account" size={16} />
-                                    View account
-                                </button>
-                                <button type="button" role="menuitem" onClick={onSignOut}>
-                                    <AppIcon name="logout" size={16} />
-                                    Sign out
-                                </button>
-                            </div>
-                        )}
-                    </div>
                 </header>
                 {children}
             </main>

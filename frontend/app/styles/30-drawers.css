@@ -57,7 +57,7 @@
     border: 0;
     border-radius: 9px;
     background: transparent;
-    color: var(--blue);
+    color: var(--green);
 }
 
 .drawer-close:hover,
@@ -240,8 +240,7 @@
 
     .pipeline-stats-container {
         grid-template-columns: 1fr;
-        margin-left: 38px;
-        margin-right: 42px;
+        margin-right: 30px;
     }
 
     .pipeline-stats-container .stat-grid {
@@ -277,6 +276,7 @@
 }
 
 @media (max-width: 1400px) {
+
     .hero,
     .stat-grid,
     .pipeline-stats-container,
@@ -296,9 +296,11 @@
     }
 
     .sidebar {
-        display: block;
+        display: flex;
+        flex-direction: column;
         position: fixed;
         inset: 0 auto 0 0;
+        height: 100dvh;
         width: min(82vw, 300px);
         padding-top: 22px;
         box-shadow: 18px 0 42px rgba(15, 31, 56, .18);
@@ -312,6 +314,7 @@
         transform: translateX(0);
         visibility: visible;
         pointer-events: auto;
+        background: #eaf3ff;
     }
 
     .sidebar-backdrop {

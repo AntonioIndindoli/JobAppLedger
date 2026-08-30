@@ -29,7 +29,6 @@
 
 .pipeline-mobile-summary,
 .mobile-topbar-title,
-.topbar-page-controls,
 .dashboard-filter-toggle,
 .dashboard-filter-backdrop,
 .dashboard-filter-sheet-header,
@@ -39,35 +38,54 @@
 }
 
 @media (max-width: 1600px) {
+    .pipeline-stats-container {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "stats"
+            "sankey"
+            "goal";
+        gap: 12px;
+    }
+
+    .pipeline-graph {
+        grid-area: sankey;
+    }
+
+    .stats-summary-panel {
+        display: contents;
+    }
+
     .stats-panel {
-        margin-top: 0;
-        order: 1;
+        margin-top: 12px;
+        display: block;
+        grid-area: stats;
+        overflow: visible;
     }
 
     .stats-panel h2 {
-        padding: 16px 14px 7px;
+        display: none;
     }
 
     .stats-panel .stat-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-        padding: 8px 12px 14px;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 12px;
+        padding: 0;
     }
 
-    .stats-panel .stat-grid::before {
-        top: 8px;
-        bottom: 14px;
-    }
-
+    .stats-panel .stat-grid::before,
     .stats-panel .stat-grid::after {
-        top: 90px;
-        right: 12px;
-        left: 12px;
+        display: none;
     }
 
     .stats-panel .stat-card {
-        gap: 8px;
-        padding: 11px;
+        min-height: 96px;
+        grid-template-columns: 40px minmax(0, 1fr);
+        gap: 10px;
+        padding: 14px;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 10px 26px rgba(31, 60, 100, .035);
     }
 
     .stats-panel .stat-card p {
@@ -77,16 +95,16 @@
     }
 
     .stats-panel .stat-card strong {
-        font-size: 20px;
+        font-size: 24px;
     }
 
     .stats-panel .stat-card:nth-child(-n + 2) strong {
-        font-size: 23px;
+        font-size: 28px;
     }
 
     .stats-panel .metric-icon {
-        width: 34px;
-        height: 34px;
+        width: 40px;
+        height: 40px;
     }
 
     .stats-panel .metric-icon svg {
@@ -95,7 +113,12 @@
     }
 
     .weekly-goal-summary {
-        padding: 15px 14px 17px;
+        grid-area: goal;
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 10px 26px rgba(31, 60, 100, .035);
     }
 
     .weekly-goal-copy {
@@ -143,7 +166,7 @@
         padding: 0 6px;
         border-radius: 999px;
         background: #eaf3ff;
-        color: #0b56c7;
+        color: var(--green);
         font-size: 11px;
     }
 
@@ -209,8 +232,8 @@
     }
 
     .tracker-panel>.filter-row.dashboard-filters-open>button:last-child {
-        border-color: var(--blue);
-        background: var(--blue);
+        border-color: var(--green);
+        background: var(--green);
         color: #fff;
         font-weight: 800;
     }
@@ -235,7 +258,7 @@
     .mobile-stage-tabs {
         display: flex;
         gap: 8px;
-        padding: 0 42px 4px 12px;
+        padding: 0 30px 4px 12px;
         overflow-x: auto;
         scrollbar-width: none;
         overscroll-behavior-inline: contain;
@@ -250,7 +273,6 @@
         align-items: center;
         gap: 7px;
         flex: 0 0 auto;
-        min-height: 42px;
         padding: 9px 12px;
         border: 1px solid #dbe5f2;
         border-radius: 999px;
@@ -275,7 +297,7 @@
     .mobile-stage-tabs button[aria-pressed="true"] {
         border-color: #9fc6ff;
         background: #eaf3ff;
-        color: #0b56c7;
+        color: var(--green);
     }
 
     .tracker-panel .kanban {
@@ -360,7 +382,7 @@
         border-radius: 8px;
         padding: 0 8px;
         background: #f4f8ff;
-        color: #0b56c7;
+        color: var(--green);
         font: inherit;
         font-size: 12px;
         font-weight: 800;
@@ -375,8 +397,16 @@
 }
 
 @media (max-width: 1100px) {
+    .pipeline-stats-container {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "stats"
+            "sankey"
+            "goal";
+    }
+
     .stats-panel .stat-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .tracker-panel .kanban,
@@ -386,12 +416,6 @@
 
     .tracker-actions {
         display: none;
-    }
-}
-
-@media (min-width: 700px) and (max-width: 1600px) {
-    .stats-panel .stat-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
@@ -407,39 +431,6 @@
         backdrop-filter: blur(14px);
     }
 
-    .profile {
-        gap: 8px;
-    }
-
-    .mobile-topbar-title {
-        display: block;
-        flex: 1 1 auto;
-        min-width: 0;
-        margin-left: 11px;
-        overflow: hidden;
-        color: #14213d;
-        font-size: 16px;
-        line-height: 1.2;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .profile-trigger {
-        min-width: 44px;
-        min-height: 44px;
-        padding: 3px;
-    }
-
-    .profile-trigger>strong,
-    .profile-trigger>svg {
-        display: none;
-    }
-
-    .avatar {
-        width: 38px;
-        height: 38px;
-    }
-
     .bell {
         width: 40px;
         height: 40px;
@@ -449,6 +440,10 @@
         grid-template-columns: minmax(0, 1fr);
         gap: 12px;
         margin: 0 12px 12px;
+    }
+
+    .stats-panel .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .tracker-panel {
@@ -481,8 +476,8 @@
         display: none;
     }
 
-    .tracker-panel > .filter-row,
-    .tracker-panel > .filter-row.dashboard-filters-open {
+    .tracker-panel>.filter-row,
+    .tracker-panel>.filter-row.dashboard-filters-open {
         position: static;
         z-index: auto;
         display: grid;
@@ -498,9 +493,9 @@
         box-shadow: none;
     }
 
-    .tracker-panel > .filter-row.dashboard-filters-open input,
-    .tracker-panel > .filter-row.dashboard-filters-open select,
-    .tracker-panel > .filter-row.dashboard-filters-open .tracker-search-field {
+    .tracker-panel>.filter-row.dashboard-filters-open input,
+    .tracker-panel>.filter-row.dashboard-filters-open select,
+    .tracker-panel>.filter-row.dashboard-filters-open .tracker-search-field {
         min-height: 38px;
     }
 
@@ -559,11 +554,11 @@
 }
 
 @media (max-width: 900px) {
-    .tracker-panel > .filter-row.dashboard-filters-open .tracker-search-field {
+    .tracker-panel>.filter-row.dashboard-filters-open .tracker-search-field {
         min-height: 46px;
     }
 
-    .tracker-panel > .filter-row.dashboard-filters-open .dashboard-filter-done {
+    .tracker-panel>.filter-row.dashboard-filters-open .dashboard-filter-done {
         display: inline-flex !important;
     }
 }

@@ -3,8 +3,13 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
-  title: "JobAppLedger",
+  title: "JobHazel",
   description: "Track job applications, interviews, tasks, and imports.",
+  icons: {
+    icon: "/JobHazelIcon.png",
+    shortcut: "/JobHazelIcon.png",
+    apple: "/JobHazelIcon.png",
+  },
 };
 
 export default function RootLayout({

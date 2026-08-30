@@ -281,32 +281,21 @@ export function InterviewsView({
 
     return (
         <section className={isMobileDetailOpen ? "applications-page interviews-page mobile-page-detail-open" : "applications-page interviews-page"}>
-            <header className="page-header">
-                <div>
-                    <p className="page-header-text">Interviews</p>
-                    <span
-                        className="interviews-header-meta"
-                        aria-label="Interview totals by status"
-                    >
-                        {interviewStatusSummary.map(({ outcome, count, label }) => (
-                            <strong
-                                key={outcome}
-                                className={`interviews-status-count ${outcome.toLowerCase()}`}
-                            >
-                                {count} {label}
-                            </strong>
-                        ))}
-                    </span>
-                </div>
-                <div className="applications-actions">
-                    <AddInterviewButton
-                        className="primary mobile-page-primary-action"
-                        iconSize={20}
-                        onClick={onCreateInterview}
-                        disabled={!canCreateInterview}
-                    />
-                </div>
-            </header>
+            <div className="page-summary">
+                <span
+                    className="interviews-header-meta"
+                    aria-label="Interview totals by status"
+                >
+                    {interviewStatusSummary.map(({ outcome, count, label }) => (
+                        <strong
+                            key={outcome}
+                            className={`interviews-status-count ${outcome.toLowerCase()}`}
+                        >
+                            {count} {label}
+                        </strong>
+                    ))}
+                </span>
+            </div>
 
             <div className={isMobileDetailOpen ? "applications-split-panel interviews-split-panel mobile-detail-open" : "applications-split-panel interviews-split-panel"}>
                 <aside className="application-list-panel interviews-list-panel">

@@ -39,17 +39,6 @@ export function AnalyticsView({
 
     return (
         <section className="applications-page analytics-page">
-            <header className="page-header">
-                <div>
-                    <p className="page-header-text">Analytics</p>
-                    <span>
-                        Source mix and application activity across{" "}
-                        {applications.length} tracked{" "}
-                        {applications.length === 1 ? "application" : "applications"}.
-                    </span>
-                </div>
-            </header>
-
             <section
                 className="analytics-kpi-grid"
                 aria-label="Analytics key performance indicators"

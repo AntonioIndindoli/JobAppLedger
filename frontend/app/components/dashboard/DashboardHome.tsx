@@ -33,11 +33,9 @@ type DashboardHomeProps = {
     openTimelineId: string | null;
     tasks: Task[];
     onApplicationGoalChange: (goal: ApplicationGoalSettings) => void;
-    onCreateApplication: () => void;
     onCreateInterview: (applicationId?: string) => void;
     onCreateTask: () => void;
     onFiltersChange: (filters: ApplicationFilters) => void;
-    onImportOpen: () => void;
     onRemoveApplication: (id: string) => void;
     onRemoveHistoryEvent: (
         applicationId: string,
@@ -62,11 +60,9 @@ export function DashboardHome({
     openTimelineId,
     tasks,
     onApplicationGoalChange,
-    onCreateApplication,
     onCreateInterview,
     onCreateTask,
     onFiltersChange,
-    onImportOpen,
     onRemoveApplication,
     onRemoveHistoryEvent,
     onStartEdit,
@@ -96,13 +92,6 @@ export function DashboardHome({
 
     return (
         <>
-            <section className="hero dashboard-hero">
-                <header className="dashboard-hero-header">
-                    <div>
-                        <p className="page-header-text">Dashboard</p>
-                    </div>
-                </header>
-            </section>
             <DashboardStats
                 activePipeline={activePipeline}
                 applicationGoal={applicationGoal}
@@ -120,8 +109,6 @@ export function DashboardHome({
                 interviews={interviews}
                 openTimelineId={openTimelineId}
                 trackerApplications={trackerApplications}
-                onImportOpen={onImportOpen}
-                onCreateApplication={onCreateApplication}
                 onFiltersChange={onFiltersChange}
                 onRemoveApplication={onRemoveApplication}
                 onRemoveHistoryEvent={onRemoveHistoryEvent}

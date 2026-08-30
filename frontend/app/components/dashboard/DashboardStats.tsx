@@ -285,23 +285,24 @@ export function DashboardStats({
                 applications={applications}
                 historyByApp={historyByApp}
             />
-            <section className="stats-panel" aria-labelledby="stats-heading">
-                <h2 id="stats-heading">Job Search Stats</h2>
-                <div className="stat-grid">
-                    {stats.map((stat) => (
-                        <article className="stat-card" key={stat.label}>
-                            <MetricIcon name={stat.icon} tone={stat.tone} />
-                            <div>
-                                <p>{stat.label}</p>
-                                <strong>{stat.value}</strong>
-                                {stat.detail && (
-                                    <small className="stat-detail">{stat.detail}</small>
-                                )}
-                            </div>
-
-                        </article>
-                    ))}
-                </div>
+            <div className="stats-summary-panel">
+                <section className="stats-panel" aria-labelledby="stats-heading">
+                    <h2 id="stats-heading">Job Search Stats</h2>
+                    <div className="stat-grid">
+                        {stats.map((stat) => (
+                            <article className="stat-card" key={stat.label}>
+                                <MetricIcon name={stat.icon} tone={stat.tone} />
+                                <div>
+                                    <p>{stat.label}</p>
+                                    <strong>{stat.value}</strong>
+                                    {stat.detail && (
+                                        <small className="stat-detail">{stat.detail}</small>
+                                    )}
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                </section>
                 <footer className="weekly-goal-summary">
                     <div className="weekly-goal-header">
                         <h3>{goalCopy.title}</h3>
@@ -339,7 +340,7 @@ export function DashboardStats({
                         <span style={{ width: `${goalProgress}%` }} />
                     </div>
                 </footer>
-            </section>
+            </div>
         </section>
     );
 }

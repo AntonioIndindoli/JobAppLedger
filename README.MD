@@ -1,8 +1,8 @@
-# JobAppLedger
+# JobHazel
 
 A full-stack job application CRM with a Chrome extension for saving job postings from any website.
 
-JobAppLedger helps job seekers organize their search pipeline, save jobs from browser pages, track interviews, manage follow-up tasks, and analyze which job sources produce the best results.
+JobHazel helps job seekers organize their search pipeline, save jobs from browser pages, track interviews, manage follow-up tasks, and analyze which job sources produce the best results.
 
 The product is designed as a modern SaaS-style dashboard for candidates who apply across LinkedIn, Indeed, Greenhouse, Lever, Workday, company career pages, referrals, and recruiter outreach.
 
@@ -121,7 +121,7 @@ The product is designed as a modern SaaS-style dashboard for candidates who appl
 
 ## Product Architecture
 
-JobAppLedger is split into two main parts:
+JobHazel is split into two main parts:
 
 1. **The web application**, which handles authentication, job tracking, data persistence, analytics, and import review.
 2. **The Chrome extension**, which captures job posting context from the active browser tab and sends it to the web app.
@@ -425,9 +425,9 @@ The extension should avoid broad host permissions where possible. `activeTab` ke
 ```text
 1. User opens a job posting page.
 2. User highlights the job description.
-3. User clicks the JobAppLedger extension icon.
+3. User clicks the JobHazel extension icon.
 4. Extension captures selected text, URL, title, and domain.
-5. Extension opens the JobAppLedger import page.
+5. Extension opens the JobHazel import page.
 6. User reviews the parsed job details.
 7. User saves the job to their pipeline.
 ```
@@ -436,7 +436,7 @@ The extension should avoid broad host permissions where possible. `activeTab` ke
 
 ## Job Parsing Logic
 
-JobAppLedger starts with deterministic parsing before adding AI.
+JobHazel starts with deterministic parsing before adding AI.
 
 ### Source Detection
 
@@ -489,7 +489,7 @@ CI/CD
 
 ### Duplicate Detection
 
-JobAppLedger warns users when a new application appears to match an existing one.
+JobHazel warns users when a new application appears to match an existing one.
 
 Duplicate signals:
 
@@ -540,8 +540,8 @@ Interviews or offers generated per application source
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/JobAppLedger.git
-cd JobAppLedger
+git clone https://github.com/your-username/JobHazel.git
+cd JobHazel
 ```
 
 ### 2. Install dependencies
@@ -555,7 +555,7 @@ npm install
 Create a `.env` file:
 
 ```env
-DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55489/jobappledger"
+DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55489/JobHazel"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
 # Auth provider values depend on whether Clerk or Auth.js is used.
@@ -617,13 +617,13 @@ Then load the extension in Chrome:
 4. Select the extension build folder
 5. Open a job posting page
 6. Highlight the job description
-7. Click the JobAppLedger extension icon
+7. Click the JobHazel extension icon
 
 ---
 
 ## Security and Privacy
 
-JobAppLedger is designed around user-controlled data capture.
+JobHazel is designed around user-controlled data capture.
 
 Security principles:
 
@@ -677,7 +677,7 @@ Security principles:
 
 ## Known Limitations
 
-* JobAppLedger does not directly sync LinkedIn or Indeed application history.
+* JobHazel does not directly sync LinkedIn or Indeed application history.
 * The Chrome extension does not scrape private job-board account pages.
 * Job parsing is heuristic-based and may require user correction.
 * Some job boards render content dynamically, so selected text may be more reliable than automatic page extraction.

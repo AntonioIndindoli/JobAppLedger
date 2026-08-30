@@ -290,7 +290,7 @@ export function AccountView({
                         <span><AppIcon name="checklist" size={19} /></span>
                         <div>
                             <h2>Task automation</h2>
-                            <p>Choose which reminders JobAppLedger creates for you.</p>
+                            <p>Choose which reminders JobHazel creates for you.</p>
                         </div>
                     </div>
                     <div className="account-switch-list">
@@ -415,7 +415,7 @@ export function AccountView({
                         <header className="drawer-header">
                             <div>
                                 <h2 id="account-profile-panel-title">Edit profile</h2>
-                                <p>Update the name and email used throughout JobAppLedger.</p>
+                                <p>Update the name and email used throughout JobHazel.</p>
                             </div>
                             <button
                                 type="button"

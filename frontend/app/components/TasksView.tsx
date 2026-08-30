@@ -287,27 +287,14 @@ export function TasksView({
 
     return (
         <section className={isMobileDetailOpen ? "applications-page tasks-page mobile-page-detail-open" : "applications-page tasks-page"}>
-            <header className="page-header">
-                <div>
-                    <p className="page-header-text">Tasks & Follow-Ups</p>
-                    <span className="tasks-header-meta" aria-label="Task summary">
-                        <strong>{taskSummary.open} open</strong>
-                        <strong>{taskSummary.overdue} overdue</strong>
-                        <strong>{taskSummary.today} due today</strong>
-                        <strong>{taskSummary.completed} completed</strong>
-                    </span>
-                </div>
-                <div className="applications-actions">
-                    <button
-                        type="button"
-                        className="primary mobile-page-primary-action"
-                        onClick={() => onCreateTask()}
-                    >
-                        <AppIcon name="plus" size={18} />
-                        Create Task
-                    </button>
-                </div>
-            </header>
+            <div className="page-summary">
+                <span className="tasks-header-meta" aria-label="Task summary">
+                    <strong>{taskSummary.open} open</strong>
+                    <strong>{taskSummary.overdue} overdue</strong>
+                    <strong>{taskSummary.today} due today</strong>
+                    <strong>{taskSummary.completed} completed</strong>
+                </span>
+            </div>
 
             <div className={isMobileDetailOpen ? "applications-split-panel tasks-split-panel mobile-detail-open" : "applications-split-panel tasks-split-panel"}>
                 <aside className="application-list-panel tasks-list-panel">

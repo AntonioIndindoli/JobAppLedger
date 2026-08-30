@@ -28,7 +28,6 @@ type ApplicationsViewProps = {
     onCreateInterview: (applicationId?: string) => void;
     onCreateTask: (applicationId?: string) => void;
     onCompleteTask: (id: string) => void | Promise<void>;
-    onImportOpen: () => void;
     onRemoveApplication: (id: string) => void;
     onRemoveInterview: (id: string) => void | Promise<void>;
     onStartEdit: (application: Application) => void;
@@ -141,7 +140,6 @@ export function ApplicationsView({
     onCreateInterview,
     onCreateTask,
     onCompleteTask,
-    onImportOpen,
     onRemoveApplication,
     onRemoveInterview,
     onStartEdit,
@@ -352,38 +350,21 @@ export function ApplicationsView({
 
     return (
         <section className={isMobileDetailOpen ? "applications-page mobile-page-detail-open" : "applications-page"}>
-            <header className="page-header">
-                <div>
-                    <p className="page-header-text">Applications</p>
-                    <span
-                        className="applications-status-meta"
-                        aria-label="Application totals by status"
-                    >
-                        {applicationStatusSummary.map(({ status, count, label }) => (
-                            <strong
-                                key={status}
-                                className={`applications-status-count ${status.toLowerCase()}`}
-                            >
-                                {count} {label}
-                            </strong>
-                        ))}
-                    </span>
-                </div>
-                <div className="applications-actions">
-                    <button type="button" className="primary desktop-secondary-action" onClick={onImportOpen}>
-                        <AppIcon name="import" size={18} />
-                        Import Job
-                    </button>
-                    <button
-                        type="button"
-                        className="secondary mobile-page-primary-action"
-                        onClick={onCreateApplication}
-                    >
-                        <AppIcon name="plus" size={18} />
-                        Add Application
-                    </button>
-                </div>
-            </header>
+            <div className="page-summary">
+                <span
+                    className="applications-status-meta"
+                    aria-label="Application totals by status"
+                >
+                    {applicationStatusSummary.map(({ status, count, label }) => (
+                        <strong
+                            key={status}
+                            className={`applications-status-count ${status.toLowerCase()}`}
+                        >
+                            {count} {label}
+                        </strong>
+                    ))}
+                </span>
+            </div>
 
             <div className={isMobileDetailOpen ? "applications-split-panel mobile-detail-open" : "applications-split-panel"}>
                 <aside className="application-list-panel">

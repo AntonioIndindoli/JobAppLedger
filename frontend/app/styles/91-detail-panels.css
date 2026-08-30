@@ -84,7 +84,7 @@
 .status-select.applied,
 .status-select.interviewing {
     border-color: #b9d5ff;
-    color: #0b56c7;
+    color: #0b6bff;
 }
 
 .application-detail-header-actions {
@@ -307,7 +307,7 @@
 
 .status-select.applied {
     background-color: #eaf3ff;
-    color: #0b56c7;
+    color: #0b6bff;
 }
 
 .status-select.interviewing {
@@ -476,7 +476,7 @@
 
 .detail-status-control.scheduled,
 .detail-status-control.upcoming {
-    color: #0b56c7;
+    color: var(--green);
 }
 
 .detail-status-control.completed {
@@ -504,7 +504,7 @@
 .status-select.scheduled,
 .status-select.upcoming {
     background-color: #eaf3ff;
-    color: #0b56c7;
+    color: var(--green);
 }
 
 .status-select.completed {
