@@ -122,7 +122,12 @@ export async function getTaskAutomationPreferences(userId) {
   const prisma = await getPrismaAsync();
   return prisma.user.findUnique({
     where: { id: userId },
-    select: { autoCreateFollowUpTasks: true, autoCreateThankYouTasks: true },
+    select: {
+      autoCreateFollowUpTasks: true,
+      autoCreateThankYouTasks: true,
+      followUpTaskDelayDays: true,
+      thankYouTaskDelayDays: true,
+    },
   });
 }
 
@@ -131,15 +136,23 @@ export async function updateTaskAutomationPreferences(userId, payload) {
   return prisma.user.update({
     where: { id: userId },
     data: payload,
-    select: { autoCreateFollowUpTasks: true, autoCreateThankYouTasks: true },
+    select: {
+      autoCreateFollowUpTasks: true,
+      autoCreateThankYouTasks: true,
+      followUpTaskDelayDays: true,
+      thankYouTaskDelayDays: true,
+    },
   });
 }
 
 export async function maybeCreateAppliedFollowUpTask(tx, userId, application) {
-  const user = await tx.user.findUnique({ where: { id: userId }, select: { autoCreateFollowUpTasks: true } });
+  const user = await tx.user.findUnique({
+    where: { id: userId },
+    select: { autoCreateFollowUpTasks: true, followUpTaskDelayDays: true },
+  });
   if (!user?.autoCreateFollowUpTasks) return null;
 
-  const dueDate = addDays(application.dateApplied ?? new Date(), 7);
+  const dueDate = addDays(application.dateApplied ?? new Date(), user.followUpTaskDelayDays);
   const task = await tx.task.create({
     data: {
       userId,
@@ -156,10 +169,13 @@ export async function maybeCreateAppliedFollowUpTask(tx, userId, application) {
 }
 
 export async function maybeCreateInterviewThankYouTask(tx, userId, interview) {
-  const user = await tx.user.findUnique({ where: { id: userId }, select: { autoCreateThankYouTasks: true } });
+  const user = await tx.user.findUnique({
+    where: { id: userId },
+    select: { autoCreateThankYouTasks: true, thankYouTaskDelayDays: true },
+  });
   if (!user?.autoCreateThankYouTasks) return null;
 
-  const dueDate = addDays(interview.scheduledAt, 1);
+  const dueDate = addDays(interview.scheduledAt, user.thankYouTaskDelayDays);
   const titleSuffix = interview.interviewerName ? ` to ${interview.interviewerName}` : "";
   const task = await tx.task.create({
     data: {

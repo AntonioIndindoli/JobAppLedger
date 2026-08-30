@@ -77,6 +77,16 @@ export function validateTaskPatchPayload(req, res, next) {
 export function validateTaskAutomationPreferences(req, res, next) {
   const payload = {};
 
+  function validateDelayDays(field) {
+    if (!Object.prototype.hasOwnProperty.call(req.body, field)) return null;
+    const value = req.body[field];
+    if (!Number.isInteger(value) || value < 0 || value > 365) {
+      return `${field} must be a whole number between 0 and 365.`;
+    }
+    payload[field] = value;
+    return null;
+  }
+
   if (Object.prototype.hasOwnProperty.call(req.body, "autoCreateFollowUpTasks")) {
     if (typeof req.body.autoCreateFollowUpTasks !== "boolean") {
       return res.status(400).json({ message: "autoCreateFollowUpTasks must be a boolean." });
@@ -90,6 +100,12 @@ export function validateTaskAutomationPreferences(req, res, next) {
     }
     payload.autoCreateThankYouTasks = req.body.autoCreateThankYouTasks;
   }
+
+  const followUpDelayError = validateDelayDays("followUpTaskDelayDays");
+  if (followUpDelayError) return res.status(400).json({ message: followUpDelayError });
+
+  const thankYouDelayError = validateDelayDays("thankYouTaskDelayDays");
+  if (thankYouDelayError) return res.status(400).json({ message: thankYouDelayError });
 
   if (Object.keys(payload).length === 0) {
     return res.status(400).json({ message: "Provide at least one preference to update." });

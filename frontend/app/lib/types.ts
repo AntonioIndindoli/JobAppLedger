@@ -29,6 +29,7 @@ export type DashboardView =
     | "analytics"
     | "interviews"
     | "tasks"
+    | "settings"
     | "account";
 
 export type Application = {
@@ -145,6 +146,8 @@ export type TaskFormValues = {
 export type TaskAutomationPreferences = {
     autoCreateFollowUpTasks: boolean;
     autoCreateThankYouTasks: boolean;
+    followUpTaskDelayDays: number;
+    thankYouTaskDelayDays: number;
 };
 
 export type ImportCaptureValues = {

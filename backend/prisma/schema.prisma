@@ -83,33 +83,35 @@ enum ActivityType {
 }
 
 model User {
-  id             String          @id @default(cuid())
-  name           String?
-  email          String          @unique
-  passwordHash   String
-  applications   Application[]
-  companies      Company[]
-  contacts       Contact[]
-  interviews     Interview[]
-  tasks          Task[]
-  autoCreateFollowUpTasks Boolean @default(false)
-  autoCreateThankYouTasks Boolean @default(false)
-  resumeVersions ResumeVersion[]
-  importDrafts   ImportDraft[]
-  activityLogs   ActivityLog[]
-  refreshTokens  RefreshToken[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id                      String          @id @default(cuid())
+  name                    String?
+  email                   String          @unique
+  passwordHash            String
+  applications            Application[]
+  companies               Company[]
+  contacts                Contact[]
+  interviews              Interview[]
+  tasks                   Task[]
+  autoCreateFollowUpTasks Boolean         @default(false)
+  autoCreateThankYouTasks Boolean         @default(false)
+  followUpTaskDelayDays   Int             @default(7)
+  thankYouTaskDelayDays   Int             @default(1)
+  resumeVersions          ResumeVersion[]
+  importDrafts            ImportDraft[]
+  activityLogs            ActivityLog[]
+  refreshTokens           RefreshToken[]
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash String   @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
   expiresAt DateTime
   revokedAt DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([userId])
   @@index([expiresAt])

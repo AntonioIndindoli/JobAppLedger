@@ -14,19 +14,14 @@ import {
 import type {
     Application,
     Task,
-    TaskAutomationPreferences,
 } from "../lib/types";
 import { AppIcon } from "./AppIcon";
 
 type TasksViewProps = {
     applications: Application[];
-    preferences: TaskAutomationPreferences;
     tasks: Task[];
     onCompleteTask: (id: string) => void | Promise<void>;
     onCreateTask: (applicationId?: string) => void;
-    onPreferenceChange: (
-        preferences: Partial<TaskAutomationPreferences>,
-    ) => void | Promise<void>;
     onRemoveTask: (id: string) => void | Promise<void>;
     onStartEdit: (task: Task) => void;
     onUpdateDescription: (id: string, description: string) => Promise<void>;
@@ -100,11 +95,9 @@ function getTaskStatusClass(task: Task) {
 
 export function TasksView({
     applications,
-    preferences,
     tasks,
     onCompleteTask,
     onCreateTask,
-    onPreferenceChange,
     onRemoveTask,
     onStartEdit,
     onUpdateDescription,
@@ -256,31 +249,6 @@ export function TasksView({
                             : "sort-icon"
                     }
                 />
-            </button>
-        );
-    }
-
-    function renderPreferenceSwitch(
-        label: string,
-        meta: string,
-        checked: boolean,
-        keyName: keyof TaskAutomationPreferences,
-    ) {
-        return (
-            <button
-                type="button"
-                role="switch"
-                aria-checked={checked}
-                className={checked ? "task-switch active" : "task-switch"}
-                onClick={() => onPreferenceChange({ [keyName]: !checked })}
-            >
-                <span className="task-switch-track" aria-hidden="true">
-                    <span />
-                </span>
-                <span className="task-switch-copy">
-                    <strong>{label}</strong>
-                    <small>{meta}</small>
-                </span>
             </button>
         );
     }

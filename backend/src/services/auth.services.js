@@ -213,6 +213,8 @@ export async function buildAccountExport(userId) {
           email: true,
           autoCreateFollowUpTasks: true,
           autoCreateThankYouTasks: true,
+          followUpTaskDelayDays: true,
+          thankYouTaskDelayDays: true,
           createdAt: true,
           updatedAt: true,
         },

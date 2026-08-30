@@ -2,7 +2,6 @@
 
 import { type FormEvent, useEffect, useRef, useState } from "react";
 
-import type { TaskAutomationPreferences } from "../lib/types";
 import { AppIcon } from "./AppIcon";
 
 export type AccountActionResult = {
@@ -16,16 +15,12 @@ type AccountViewProps = {
     email: string;
     memberSince: string;
     name: string;
-    preferences: TaskAutomationPreferences;
     onDeleteAccount: (password: string) => Promise<AccountActionResult>;
     onExport: (format: "json" | "csv") => Promise<AccountActionResult>;
     onPasswordChange: (values: {
         currentPassword: string;
         newPassword: string;
     }) => Promise<AccountActionResult>;
-    onPreferenceChange: (
-        preferences: Partial<TaskAutomationPreferences>,
-    ) => Promise<AccountActionResult>;
     onProfileSave: (values: {
         name: string;
         email: string;
@@ -53,11 +48,9 @@ export function AccountView({
     email,
     memberSince,
     name,
-    preferences,
     onDeleteAccount,
     onExport,
     onPasswordChange,
-    onPreferenceChange,
     onProfileSave,
     onReturnToDashboard,
     onSignOut,
@@ -73,7 +66,6 @@ export function AccountView({
     const [busyAction, setBusyAction] = useState<string | null>(null);
     const [profileStatus, setProfileStatus] = useState<SectionStatus>(null);
     const [passwordStatus, setPasswordStatus] = useState<SectionStatus>(null);
-    const [preferenceStatus, setPreferenceStatus] = useState<SectionStatus>(null);
     const [dataStatus, setDataStatus] = useState<SectionStatus>(null);
     const [deleteStatus, setDeleteStatus] = useState<SectionStatus>(null);
     const panelFirstFieldRef = useRef<HTMLInputElement>(null);
@@ -163,14 +155,6 @@ export function AccountView({
         }
     }
 
-    async function togglePreference(key: keyof TaskAutomationPreferences) {
-        setBusyAction(key);
-        setPreferenceStatus(null);
-        const result = await onPreferenceChange({ [key]: !preferences[key] });
-        setPreferenceStatus(result);
-        setBusyAction(null);
-    }
-
     async function exportData(format: "json" | "csv") {
         setBusyAction(`export-${format}`);
         setDataStatus(null);
@@ -194,32 +178,6 @@ export function AccountView({
             <p className={status.ok ? "account-feedback success" : "account-feedback error"} role="status">
                 {status.message}
             </p>
-        );
-    }
-
-    function renderPreferenceSwitch(
-        label: string,
-        description: string,
-        key: keyof TaskAutomationPreferences,
-    ) {
-        const checked = preferences[key];
-        return (
-            <button
-                type="button"
-                role="switch"
-                aria-checked={checked}
-                className={checked ? "account-switch active" : "account-switch"}
-                disabled={busyAction === key}
-                onClick={() => togglePreference(key)}
-            >
-                <span>
-                    <strong>{label}</strong>
-                    <small>{description}</small>
-                </span>
-                <span className="account-switch-track" aria-hidden="true">
-                    <span />
-                </span>
-            </button>
         );
     }
 
@@ -283,29 +241,6 @@ export function AccountView({
                             Change password
                         </button>
                     </div>
-                </article>
-
-                <article className="account-settings-card">
-                    <div className="account-section-heading">
-                        <span><AppIcon name="checklist" size={19} /></span>
-                        <div>
-                            <h2>Task automation</h2>
-                            <p>Choose which reminders JobHazel creates for you.</p>
-                        </div>
-                    </div>
-                    <div className="account-switch-list">
-                        {renderPreferenceSwitch(
-                            "Application follow-ups",
-                            "Create a follow-up task seven days after applying.",
-                            "autoCreateFollowUpTasks",
-                        )}
-                        {renderPreferenceSwitch(
-                            "Interview thank-you notes",
-                            "Create a thank-you task one day after an interview.",
-                            "autoCreateThankYouTasks",
-                        )}
-                    </div>
-                    {renderStatus(preferenceStatus)}
                 </article>
 
                 <article className="account-settings-card">

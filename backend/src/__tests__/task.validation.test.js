@@ -82,9 +82,35 @@ test("task patch and automation preference validation accept partial payloads", 
     const preferences = await fetch(`${baseUrl}/tasks/preferences`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ autoCreateFollowUpTasks: true, autoCreateThankYouTasks: false }),
+      body: JSON.stringify({
+        autoCreateFollowUpTasks: true,
+        autoCreateThankYouTasks: false,
+        followUpTaskDelayDays: 10,
+        thankYouTaskDelayDays: 0,
+      }),
     });
     assert.equal(preferences.status, 200);
-    assert.deepEqual(await preferences.json(), { autoCreateFollowUpTasks: true, autoCreateThankYouTasks: false });
+    assert.deepEqual(await preferences.json(), {
+      autoCreateFollowUpTasks: true,
+      autoCreateThankYouTasks: false,
+      followUpTaskDelayDays: 10,
+      thankYouTaskDelayDays: 0,
+    });
+  });
+});
+
+test("automation preference validation rejects invalid delay days", async () => {
+  await withServer(buildApp(), async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/tasks/preferences`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ followUpTaskDelayDays: 1.5 }),
+    });
+
+    assert.equal(response.status, 400);
+    assert.equal(
+      (await response.json()).message,
+      "followUpTaskDelayDays must be a whole number between 0 and 365.",
+    );
   });
 });

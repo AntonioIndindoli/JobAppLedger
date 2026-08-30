@@ -113,8 +113,7 @@
 }
 
 .sidebar-profile .profile-trigger.active {
-  background: #eaf3ff;
-  color: #0066ff;
+  color: #156e33;
 }
 
 .sidebar-profile-copy {
@@ -226,6 +225,6 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: #dceeff;
+  background: #dcffdf;
   color: var(--green);
 }

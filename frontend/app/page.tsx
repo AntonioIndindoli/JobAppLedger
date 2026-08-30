@@ -16,6 +16,7 @@ import { DashboardShell } from "./components/DashboardShell";
 import { ImportDrawer } from "./components/ImportDrawer";
 import { InterviewDrawer } from "./components/InterviewDrawer";
 import { InterviewsView } from "./components/InterviewsView";
+import { SettingsView } from "./components/SettingsView";
 import { TaskDrawer } from "./components/TaskDrawer";
 import { TasksView } from "./components/TasksView";
 import { DashboardHome } from "./components/dashboard/DashboardHome";
@@ -147,6 +148,8 @@ export default function MainPage() {
         useState<TaskAutomationPreferences>({
             autoCreateFollowUpTasks: false,
             autoCreateThankYouTasks: false,
+            followUpTaskDelayDays: 7,
+            thankYouTaskDelayDays: 1,
         });
     const [isImportDrawerOpen, setIsImportDrawerOpen] = useState(false);
     const [importStep, setImportStep] = useState<"capture" | "review">("capture");
@@ -337,6 +340,8 @@ export default function MainPage() {
         setTaskPreferences({
             autoCreateFollowUpTasks: false,
             autoCreateThankYouTasks: false,
+            followUpTaskDelayDays: 7,
+            thankYouTaskDelayDays: 1,
         });
         setHistoryByApp({});
         setOpenTimelineId(null);
@@ -509,6 +514,8 @@ export default function MainPage() {
             autoCreateFollowUpTasks:
                 data.preferences?.autoCreateFollowUpTasks ?? false,
             autoCreateThankYouTasks: data.preferences?.autoCreateThankYouTasks ?? false,
+            followUpTaskDelayDays: data.preferences?.followUpTaskDelayDays ?? 7,
+            thankYouTaskDelayDays: data.preferences?.thankYouTaskDelayDays ?? 1,
         });
     }
 
@@ -1119,6 +1126,10 @@ export default function MainPage() {
                     data.preferences?.autoCreateFollowUpTasks ?? false,
                 autoCreateThankYouTasks:
                     data.preferences?.autoCreateThankYouTasks ?? false,
+                followUpTaskDelayDays:
+                    data.preferences?.followUpTaskDelayDays ?? 7,
+                thankYouTaskDelayDays:
+                    data.preferences?.thankYouTaskDelayDays ?? 1,
             });
             return { ok: true, message: "Automation preference updated." };
         } catch {
@@ -1346,6 +1357,8 @@ export default function MainPage() {
                             </button>
                         </div>
                     </>
+                ) : currentView === "settings" ? (
+                    <h1 className="topbar-page-title">Settings</h1>
                 ) : (
                     <h1 className="topbar-page-title">Account</h1>
                 )
@@ -1358,14 +1371,17 @@ export default function MainPage() {
                     email={userEmail || email}
                     memberSince={memberSince}
                     name={accountName}
-                    preferences={taskPreferences}
                     onDeleteAccount={deleteUserAccount}
                     onExport={exportAccountData}
                     onPasswordChange={changeAccountPassword}
-                    onPreferenceChange={updateTaskAutomationPreferences}
                     onProfileSave={saveAccountProfile}
                     onReturnToDashboard={() => setCurrentView("dashboard")}
                     onSignOut={signOut}
+                />
+            ) : currentView === "settings" ? (
+                <SettingsView
+                    preferences={taskPreferences}
+                    onPreferenceChange={updateTaskAutomationPreferences}
                 />
             ) : currentView === "applications" ? (
                 <ApplicationsView
@@ -1410,13 +1426,9 @@ export default function MainPage() {
             ) : currentView === "tasks" ? (
                 <TasksView
                     applications={applications}
-                    preferences={taskPreferences}
                     tasks={tasks}
                     onCompleteTask={completeTask}
                     onCreateTask={openCreateTask}
-                    onPreferenceChange={(nextPreferences) => {
-                        void updateTaskAutomationPreferences(nextPreferences);
-                    }}
                     onRemoveTask={removeTask}
                     onStartEdit={startEditTask}
                     onUpdateDescription={updateTaskDescription}
