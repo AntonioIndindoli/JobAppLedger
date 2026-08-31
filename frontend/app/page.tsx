@@ -13,6 +13,7 @@ import { ApplicationsView } from "./components/ApplicationsView";
 import { ApplicationDrawer } from "./components/ApplicationDrawer";
 import { AuthPanel } from "./components/AuthPanel";
 import { DashboardShell } from "./components/DashboardShell";
+import { ContactsView } from "./components/ContactsView";
 import { ImportDrawer } from "./components/ImportDrawer";
 import { InterviewDrawer } from "./components/InterviewDrawer";
 import { InterviewsView } from "./components/InterviewsView";
@@ -49,6 +50,8 @@ import type {
     ApplicationGoalSettings,
     ApplicationFormValues,
     AuthStatus,
+    Contact,
+    ContactFormValues,
     DashboardView,
     ImportDraft,
     ImportReviewValues,
@@ -127,6 +130,8 @@ export default function MainPage() {
     const [applications, setApplications] = useState<Application[]>([]);
     const [interviews, setInterviews] = useState<Interview[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [contacts, setContacts] = useState<Contact[]>([]);
+    const [contactCreateRequest, setContactCreateRequest] = useState(0);
     const [form, setForm] = useState<ApplicationFormValues>(EMPTY_APPLICATION_FORM);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isApplicationFormOpen, setIsApplicationFormOpen] = useState(false);
@@ -293,6 +298,7 @@ export default function MainPage() {
             loadApplications(token);
             loadInterviews(token);
             loadTasks(token);
+            loadContacts(token);
             loadTaskAutomationPreferences(token);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -317,6 +323,7 @@ export default function MainPage() {
         loadApplications(data.accessToken);
         loadInterviews(data.accessToken);
         loadTasks(data.accessToken);
+        loadContacts(data.accessToken);
         loadTaskAutomationPreferences(data.accessToken);
     }
 
@@ -337,6 +344,7 @@ export default function MainPage() {
         setApplications([]);
         setInterviews([]);
         setTasks([]);
+        setContacts([]);
         setTaskPreferences({
             autoCreateFollowUpTasks: false,
             autoCreateThankYouTasks: false,
@@ -500,6 +508,50 @@ export default function MainPage() {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) return setMessage(data.message ?? "Failed loading tasks");
         setTasks(data.tasks ?? []);
+    }
+
+    async function loadContacts(activeToken = token) {
+        if (!activeToken) return;
+        const res = await fetch(`${API_BASE_URL}/contacts`, {
+            headers: { Authorization: `Bearer ${activeToken}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) return setMessage(data.message ?? "Failed loading contacts");
+        setContacts(data.contacts ?? []);
+    }
+
+    async function saveContact(values: ContactFormValues, id?: string) {
+        const payload = {
+            ...values,
+            role: values.role || null,
+            email: values.email || null,
+            linkedinUrl: values.linkedinUrl || null,
+            notes: values.notes || null,
+            companyName: values.companyName || null,
+            applicationId: values.applicationId || null,
+        };
+        try {
+            const res = await authedFetch(id ? `/contacts/${id}` : "/contacts", {
+                method: id ? "PATCH" : "POST",
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) return { ok: false, message: data.message ?? "Contact save failed." };
+            setContacts((current) => id
+                ? current.map((contact) => contact.id === id ? data.contact : contact)
+                : [data.contact, ...current]);
+            setMessage(id ? "Contact updated." : "Contact added.");
+            return { ok: true };
+        } catch {
+            return { ok: false, message: "Could not connect to the server." };
+        }
+    }
+
+    async function removeContact(id: string) {
+        const res = await authedFetch(`/contacts/${id}`, { method: "DELETE" });
+        if (!res.ok) return setMessage("Contact delete failed.");
+        setContacts((current) => current.filter((contact) => contact.id !== id));
+        setMessage("Contact deleted.");
     }
 
     async function loadTaskAutomationPreferences(activeToken = token) {
@@ -1357,6 +1409,16 @@ export default function MainPage() {
                             </button>
                         </div>
                     </>
+                ) : currentView === "contacts" ? (
+                    <>
+                        <h1 className="topbar-page-title">Contacts</h1>
+                        <div className="topbar-page-actions">
+                            <button type="button" className="primary" aria-label="Add contact" onClick={() => setContactCreateRequest((request) => request + 1)}>
+                                <AppIcon name="plus" size={18} />
+                                <span>Add Contact</span>
+                            </button>
+                        </div>
+                    </>
                 ) : currentView === "settings" ? (
                     <h1 className="topbar-page-title">Settings</h1>
                 ) : (
@@ -1433,6 +1495,15 @@ export default function MainPage() {
                     onStartEdit={startEditTask}
                     onUpdateDescription={updateTaskDescription}
                     onViewApplication={viewApplication}
+                />
+            ) : currentView === "contacts" ? (
+                <ContactsView
+                    key={contactCreateRequest}
+                    applications={applications}
+                    contacts={contacts}
+                    createRequest={contactCreateRequest}
+                    onSave={saveContact}
+                    onRemove={removeContact}
                 />
             ) : (
                 <DashboardHome

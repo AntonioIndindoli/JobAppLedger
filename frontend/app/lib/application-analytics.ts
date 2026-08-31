@@ -15,7 +15,18 @@ import type {
     WeeklyRangeWeeks,
 } from "./types";
 
-const ANALYTICS_PERIOD_DAYS = 30;
+export const ANALYTICS_TIMEFRAME_OPTIONS = [
+    { label: "Last 7 days", days: 7 },
+    { label: "Last 30 days", days: 30 },
+    { label: "Last 90 days", days: 90 },
+    { label: "Last 6 months", days: 180 },
+    { label: "Last 1 year", days: 365 },
+] as const;
+
+export type AnalyticsTimeframeDays =
+    (typeof ANALYTICS_TIMEFRAME_OPTIONS)[number]["days"];
+
+export const DEFAULT_ANALYTICS_TIMEFRAME: AnalyticsTimeframeDays = 30;
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const ACTIVE_APPLICATION_STATUSES = new Set(["APPLIED", "INTERVIEWING", "OFFER"]);
 const SUBMITTED_APPLICATION_STATUSES = new Set([
@@ -634,39 +645,27 @@ export function buildAnalyticsKpiCards(
     applications: Application[],
     historyByApp: Record<string, ActivityLog[]>,
     interviews: Interview[],
+    timeframeDays: AnalyticsTimeframeDays = DEFAULT_ANALYTICS_TIMEFRAME,
 ) {
     const now = new Date();
-    const currentThirtyDays = getDateRange(now, ANALYTICS_PERIOD_DAYS);
-    const previousThirtyDays = getDateRange(
-        currentThirtyDays.start,
-        ANALYTICS_PERIOD_DAYS,
-    );
-    const thisWeekStart = getStartOfWeek(now);
-    const nextWeekStart = new Date(thisWeekStart);
-    nextWeekStart.setDate(thisWeekStart.getDate() + 7);
-    const previousWeekStart = new Date(thisWeekStart);
-    previousWeekStart.setDate(thisWeekStart.getDate() - 7);
+    const currentPeriod = getDateRange(now, timeframeDays);
+    const previousPeriod = getDateRange(currentPeriod.start, timeframeDays);
+    const timeframeLabel =
+        ANALYTICS_TIMEFRAME_OPTIONS.find(
+            (option) => option.days === timeframeDays,
+        )?.label.replace("Last ", "").toLowerCase() ?? `${timeframeDays} days`;
+    const priorPeriodLabel = `vs prior ${timeframeLabel}`;
 
     const currentPeriodApplications = getApplicationsInRange(
         applications,
-        currentThirtyDays.start,
-        currentThirtyDays.end,
+        currentPeriod.start,
+        currentPeriod.end,
     );
     const previousPeriodApplications = getApplicationsInRange(
         applications,
-        previousThirtyDays.start,
-        previousThirtyDays.end,
+        previousPeriod.start,
+        previousPeriod.end,
     );
-    const currentWeekApplications = getApplicationsInRange(
-        applications,
-        thisWeekStart,
-        nextWeekStart,
-    ).length;
-    const previousWeekApplications = getApplicationsInRange(
-        applications,
-        previousWeekStart,
-        thisWeekStart,
-    ).length;
     const interviewsByApplicationId = new Set(
         interviews.map((interview) => interview.applicationId),
     );
@@ -683,32 +682,32 @@ export function buildAnalyticsKpiCards(
     const currentOffers = countOffersInRange(
         applications,
         historyByApp,
-        currentThirtyDays.start,
-        currentThirtyDays.end,
+        currentPeriod.start,
+        currentPeriod.end,
     );
     const previousOffers = countOffersInRange(
         applications,
         historyByApp,
-        previousThirtyDays.start,
-        previousThirtyDays.end,
+        previousPeriod.start,
+        previousPeriod.end,
     );
     const activeApplications = countActiveApplications(applications);
-    const activeApplicationsThirtyDaysAgo = countActiveApplicationsAt(
+    const activeApplicationsAtPeriodStart = countActiveApplicationsAt(
         applications,
         historyByApp,
-        currentThirtyDays.start,
+        currentPeriod.start,
     );
     const currentAverageDays = currentPeriodMetrics.averageDaysToResponse;
     const previousAverageDays = previousPeriodMetrics.averageDaysToResponse;
     const averageDaysComparison =
         currentAverageDays === null && previousAverageDays === null
-            ? "No change vs prior 30 days"
+            ? `No change ${priorPeriodLabel}`
             : previousAverageDays === null
                 ? "No prior responses"
                 : formatComparison(
                     currentAverageDays ?? 0,
                     previousAverageDays,
-                    "vs prior 30 days",
+                    priorPeriodLabel,
                     formatDays,
                 );
 
@@ -718,19 +717,19 @@ export function buildAnalyticsKpiCards(
             value: activeApplications,
             comparison: formatComparison(
                 activeApplications,
-                activeApplicationsThirtyDaysAgo,
-                "vs 30 days ago",
+                activeApplicationsAtPeriodStart,
+                `vs ${timeframeLabel} ago`,
             ),
             icon: "trend",
             tone: "green",
         },
         {
-            label: "Applications this week",
-            value: currentWeekApplications,
+            label: "Applications",
+            value: currentPeriodApplications.length,
             comparison: formatComparison(
-                currentWeekApplications,
-                previousWeekApplications,
-                "vs prior week",
+                currentPeriodApplications.length,
+                previousPeriodApplications.length,
+                priorPeriodLabel,
             ),
             icon: "applications",
         },
@@ -740,7 +739,7 @@ export function buildAnalyticsKpiCards(
             comparison: formatComparison(
                 currentPeriodMetrics.responseRate,
                 previousPeriodMetrics.responseRate,
-                "vs prior 30 days",
+                priorPeriodLabel,
                 (value) => `${value}%`,
             ),
             icon: "clock",
@@ -752,7 +751,7 @@ export function buildAnalyticsKpiCards(
             comparison: formatComparison(
                 currentPeriodMetrics.interviewRate,
                 previousPeriodMetrics.interviewRate,
-                "vs prior 30 days",
+                priorPeriodLabel,
                 (value) => `${value}%`,
             ),
             icon: "contacts",
@@ -764,7 +763,7 @@ export function buildAnalyticsKpiCards(
             comparison: formatComparison(
                 currentOffers,
                 previousOffers,
-                "vs prior 30 days",
+                priorPeriodLabel,
             ),
             icon: "check",
             tone: "green",

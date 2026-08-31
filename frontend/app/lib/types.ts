@@ -29,6 +29,7 @@ export type DashboardView =
     | "analytics"
     | "interviews"
     | "tasks"
+    | "contacts"
     | "settings"
     | "account";
 
@@ -148,6 +149,33 @@ export type TaskAutomationPreferences = {
     autoCreateThankYouTasks: boolean;
     followUpTaskDelayDays: number;
     thankYouTaskDelayDays: number;
+};
+
+export type Contact = {
+    id: string;
+    name: string;
+    role: string | null;
+    email: string | null;
+    linkedinUrl: string | null;
+    relationship: string;
+    notes: string | null;
+    companyId: string | null;
+    companyName: string | null;
+    applicationId: string | null;
+    applicationTitle: string | null;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type ContactFormValues = {
+    name: string;
+    role: string;
+    email: string;
+    linkedinUrl: string;
+    relationship: string;
+    notes: string;
+    companyName: string;
+    applicationId: string;
 };
 
 export type ImportCaptureValues = {

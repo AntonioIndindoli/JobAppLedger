@@ -244,15 +244,24 @@
         margin: 14px -12px 10px;
     }
 
+    .mobile-stage-tabs-shell::before,
     .mobile-stage-tabs-shell::after {
         position: absolute;
-        right: 0;
         bottom: 4px;
         width: 42px;
         height: 42px;
-        background: linear-gradient(90deg, transparent, #fff 82%);
         content: "";
         pointer-events: none;
+    }
+
+    .mobile-stage-tabs-shell::before {
+        left: 0;
+        background: linear-gradient(270deg, transparent, #fff 82%);
+    }
+
+    .mobile-stage-tabs-shell::after {
+        right: 0;
+        background: linear-gradient(90deg, transparent, #fff 82%);
     }
 
     .mobile-stage-tabs {

@@ -8,6 +8,7 @@ import type {
     InterviewOutcome,
     InterviewType,
     TaskFormValues,
+    ContactFormValues,
     TaskType,
     WeeklyRangeWeeks,
 } from "./types";
@@ -135,6 +136,22 @@ export const WEEKLY_RANGE_OPTIONS = [
     { label: "Last 12 weeks", weeks: 12 },
 ] as const;
 
+export const CONTACT_RELATIONSHIPS = [
+    "RECRUITER",
+    "REFERRAL",
+    "HIRING_MANAGER",
+    "EMPLOYEE",
+    "OTHER",
+] as const;
+
+export const CONTACT_RELATIONSHIP_LABELS: Record<string, string> = {
+    RECRUITER: "Recruiter",
+    REFERRAL: "Referral",
+    HIRING_MANAGER: "Hiring manager",
+    EMPLOYEE: "Employee",
+    OTHER: "Other",
+};
+
 export const DEFAULT_WEEKLY_RANGE: WeeklyRangeWeeks = 6;
 export const APPLICATION_GOAL_STORAGE_KEY = "jobappledger_application_goal";
 export const APPLICATION_GOAL_PERIOD_OPTIONS = [
@@ -190,6 +207,17 @@ export const EMPTY_TASK_FORM: TaskFormValues = {
     applicationId: "",
     dueDate: "",
     type: "FOLLOW_UP",
+};
+
+export const EMPTY_CONTACT_FORM: ContactFormValues = {
+    name: "",
+    role: "",
+    email: "",
+    linkedinUrl: "",
+    relationship: "RECRUITER",
+    notes: "",
+    companyName: "",
+    applicationId: "",
 };
 
 export const EMPTY_IMPORT_CAPTURE: ImportCaptureValues = {

@@ -82,6 +82,7 @@ export function DashboardShell({
         if (label === "Analytics") return "analytics";
         if (label === "Interviews") return "interviews";
         if (label === "Tasks") return "tasks";
+        if (label === "Contacts") return "contacts";
         if (label === "Settings") return "settings";
         if (label === "Account") return "account";
         return null;

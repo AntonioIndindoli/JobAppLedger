@@ -419,11 +419,6 @@
   box-shadow: 0 10px 26px rgba(31, 60, 100, .035);
 }
 
-.application-list-panel {
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-}
-
 .application-detail-panel {
   min-width: 0;
   min-height: 520px;
