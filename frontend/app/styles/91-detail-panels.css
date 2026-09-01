@@ -81,10 +81,14 @@
     color: #26334d;
 }
 
-.status-select.applied,
+.status-select.applied {
+    border-color: var(--application-status-applied-background);
+    color: var(--application-status-applied);
+}
+
 .status-select.interviewing {
-    border-color: #b9d5ff;
-    color: #0b6bff;
+    border-color: var(--application-status-interviewing-background);
+    color: var(--application-status-interviewing);
 }
 
 .application-detail-header-actions {
@@ -301,33 +305,33 @@
 }
 
 .status-select.saved {
-    background-color: #f1f5f9;
-    color: #475569;
+    background-color: var(--application-status-saved-background);
+    color: var(--application-status-saved);
 }
 
 .status-select.applied {
-    background-color: #eaf3ff;
-    color: #0b6bff;
+    background-color: var(--application-status-applied-background);
+    color: var(--application-status-applied);
 }
 
 .status-select.interviewing {
-    background-color: #eef2ff;
-    color: #6d3bd1;
+    background-color: var(--application-status-interviewing-background);
+    color: var(--application-status-interviewing);
 }
 
 .status-select.offer {
-    background-color: #dcfce7;
-    color: #18794e;
+    background-color: var(--application-status-offer-background);
+    color: var(--application-status-offer);
 }
 
 .status-select.rejected {
-    background-color: #fee2e2;
-    color: #d64545;
+    background-color: var(--application-status-rejected-background);
+    color: var(--application-status-rejected);
 }
 
 .status-select.withdrawn {
-    background-color: #e2e8f0;
-    color: #475569;
+    background-color: var(--application-status-withdrawn-background);
+    color: var(--application-status-withdrawn);
 }
 
 .application-detail-header-actions .secondary {

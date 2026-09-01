@@ -45,6 +45,15 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
     WITHDRAWN: "Withdrawn",
 };
 
+export const APPLICATION_STATUS_COLORS: Record<ApplicationStatus, string> = {
+    SAVED: "#475569",
+    APPLIED: "#0066ff",
+    INTERVIEWING: "#4f33ff",
+    OFFER: "#15803d",
+    REJECTED: "#dc2626",
+    WITHDRAWN: "#475569",
+};
+
 export const INTERVIEW_TYPES = [
     "RECRUITER_SCREEN",
     "TECHNICAL",

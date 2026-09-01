@@ -397,7 +397,7 @@
 }
 
 .stats-panel .stat-card:nth-child(1) strong {
-  color: var(--green);
+  color:  #0a64eb;
   font-size: 38px;
 }
 
@@ -718,27 +718,27 @@
 }
 
 .lane {
-  --lane-color: #117970;
+  --lane-color: var(--application-status-saved);
 }
 
 .lane.applied {
-  --lane-color: #006bff;
+  --lane-color: var(--application-status-applied);
 }
 
 .lane.interviewing {
-  --lane-color: #4f33ff;
+  --lane-color: var(--application-status-interviewing);
 }
 
 .lane.offer {
-  --lane-color: #00a33d;
+  --lane-color: var(--application-status-offer);
 }
 
 .lane.rejected {
-  --lane-color: #e22b2b;
+  --lane-color: var(--application-status-rejected);
 }
 
 .lane.withdrawn {
-  --lane-color: #64748b;
+  --lane-color: var(--application-status-withdrawn);
 }
 
 .lane-header {
@@ -783,32 +783,32 @@
 
 .lane.saved .lane-header,
 .dropzone.saved {
-  background: #24756f3b;
+  background: var(--application-status-saved-background);
 }
 
 .lane.applied .lane-header,
 .dropzone.applied {
-  background: #006aff42;
+  background: var(--application-status-applied-background);
 }
 
 .lane.interviewing .lane-header,
 .dropzone.interviewing {
-  background: #4e33ff2d;
+  background: var(--application-status-interviewing-background);
 }
 
 .lane.offer .lane-header,
 .dropzone.offer {
-  background: #00a33c2f;
+  background: var(--application-status-offer-background);
 }
 
 .lane.rejected .lane-header,
 .dropzone.rejected {
-  background: #e22b2b2c;
+  background: var(--application-status-rejected-background);
 }
 
 .lane.withdrawn .lane-header,
 .dropzone.withdrawn {
-  background: #64748b31;
+  background: var(--application-status-withdrawn-background);
 }
 
 .job-card {

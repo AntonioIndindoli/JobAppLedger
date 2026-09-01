@@ -287,7 +287,7 @@
         padding: 14px;
         border: 1px solid #e0e7f0;
         background: white;
-        box-shadow: inset 3px 0 var(--status-accent, #0b6bff);
+        box-shadow: inset 3px 0 var(--status-accent, var(--application-status-saved));
         color: #26334d;
         text-align: left;
     }
@@ -448,7 +448,6 @@
         grid-template-columns: minmax(0, 1fr) auto;
         gap: 8px;
         min-height: 0;
-
         border: 0;
         background: transparent;
         box-shadow: none;

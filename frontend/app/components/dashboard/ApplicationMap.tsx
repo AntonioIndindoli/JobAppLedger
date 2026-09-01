@@ -5,7 +5,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { STATUS_LABELS } from "../../lib/constants";
+import {
+    APPLICATION_STATUS_COLORS,
+    STATUS_LABELS,
+} from "../../lib/constants";
 import {
     getApplicationTimestamp,
     isApplicationStatus,
@@ -283,20 +286,8 @@ function getStatusClass(status: string) {
 }
 
 function getMarkerColor(status: string) {
-    switch (getStatusClass(status)) {
-        case "applied":
-            return "#2563eb";
-        case "interviewing":
-            return "#d97706";
-        case "offer":
-            return "#16a34a";
-        case "rejected":
-            return "#dc2626";
-        case "withdrawn":
-            return "#7c3aed";
-        default:
-            return "#64748b";
-    }
+    const normalizedStatus = isApplicationStatus(status) ? status : "SAVED";
+    return APPLICATION_STATUS_COLORS[normalizedStatus];
 }
 
 function formatAppliedDate(value: string | null) {
@@ -678,15 +669,30 @@ export function ApplicationMap({
 
                         <div className="application-map-legend">
                             <span>
-                                <b style={{ backgroundColor: "#2563eb" }} />
+                                <b
+                                    style={{
+                                        backgroundColor:
+                                            APPLICATION_STATUS_COLORS.APPLIED,
+                                    }}
+                                />
                                 Applied
                             </span>
                             <span>
-                                <b style={{ backgroundColor: "#d97706" }} />
+                                <b
+                                    style={{
+                                        backgroundColor:
+                                            APPLICATION_STATUS_COLORS.INTERVIEWING,
+                                    }}
+                                />
                                 Interviewing
                             </span>
                             <span>
-                                <b style={{ backgroundColor: "#16a34a" }} />
+                                <b
+                                    style={{
+                                        backgroundColor:
+                                            APPLICATION_STATUS_COLORS.OFFER,
+                                    }}
+                                />
                                 Offer
                             </span>
                             <span className="application-map-count">

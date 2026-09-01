@@ -1,30 +1,48 @@
 /* Design tokens and document defaults. */
 
 :root {
-  --background: #f8fbff;
-  --foreground: #111827;
-  --green: #139132;
-  --border: #dce5f2;
-  --muted: #63708a;
+    --background: #f8fbff;
+    --foreground: #111827;
+    --green: #139132;
+    --border: #dce5f2;
+    --muted: #63708a;
+
+    --application-status-saved: #0e7490;
+    --application-status-saved-background: #ecfeff;
+
+    --application-status-applied: #2563eb;
+    --application-status-applied-background: #eff6ff;
+
+    --application-status-interviewing: #7c3aed;
+    --application-status-interviewing-background: #f5f3ff;
+
+    --application-status-offer: #15803d;
+    --application-status-offer-background: #f0fdf4;
+
+    --application-status-rejected: #dc2626;
+    --application-status-rejected-background: #fef2f2;
+
+    --application-status-withdrawn: #64748b;
+    --application-status-withdrawn-background: #f8fafc;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
 }
 
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 button {
-  cursor: pointer;
+    cursor: pointer;
 }

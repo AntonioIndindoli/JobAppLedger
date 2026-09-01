@@ -52,25 +52,28 @@
   font-weight: 500;
 }
 
-.applications-status-count.saved,
-.applications-status-count.withdrawn {
-  color: #64748b;
+.applications-status-count.saved {
+  color: var(--application-status-saved);
 }
 
 .applications-status-count.applied {
-  color: #3f6f9f;
+  color: var(--application-status-applied);
 }
 
 .applications-status-count.interviewing {
-  color: #6d67a8;
+  color: var(--application-status-interviewing);
 }
 
 .applications-status-count.offer {
-  color: #4f7b5c;
+  color: var(--application-status-offer);
 }
 
 .applications-status-count.rejected {
-  color: #a45f5f;
+  color: var(--application-status-rejected);
+}
+
+.applications-status-count.withdrawn {
+  color: var(--application-status-withdrawn);
 }
 
 .applications-actions {
@@ -266,40 +269,40 @@
   min-height: 28px;
   padding: 5px 10px;
   border-radius: 999px;
-  background: #eef6ff;
-  color: var(--green);
+  background: var(--application-status-saved-background);
+  color: var(--application-status-saved);
   font-size: 12px;
   font-weight: 800;
 }
 
 .status-pill.saved {
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--application-status-saved-background);
+  color: var(--application-status-saved);
 }
 
 .status-pill.applied {
-  background: #eaf3ff;
-  color: #0066ff;
+  background: var(--application-status-applied-background);
+  color: var(--application-status-applied);
 }
 
 .status-pill.interviewing {
-  background: #eef2ff;
-  color: #4f33ff;
+  background: var(--application-status-interviewing-background);
+  color: var(--application-status-interviewing);
 }
 
 .status-pill.offer {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--application-status-offer-background);
+  color: var(--application-status-offer);
 }
 
 .status-pill.rejected {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--application-status-rejected-background);
+  color: var(--application-status-rejected);
 }
 
 .status-pill.withdrawn {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--application-status-withdrawn-background);
+  color: var(--application-status-withdrawn);
 }
 
 .status-pill.scheduled {
@@ -423,7 +426,7 @@
   min-width: 0;
   min-height: 520px;
   padding: 24px;
-  box-shadow: inset 4px 0 var(--status-accent, #0b6bff);
+  box-shadow: inset 4px 0 var(--status-accent, var(--application-status-saved));
   border-bottom-right-radius: 12px;
   border-top-right-radius: 12px;
 }
@@ -556,32 +559,50 @@
 
 .application-list-item.active {
   background: #f4f9ff;
-  box-shadow: inset 4px 0 0 var(--status-accent, #0b6bff);
+  box-shadow: inset 4px 0 0 var(--status-accent, var(--application-status-saved));
 }
 
-.status-accent.saved,
-.status-accent.withdrawn,
+.status-accent.saved {
+  --status-accent: var(--application-status-saved);
+}
+
+.status-accent.withdrawn {
+  --status-accent: var(--application-status-withdrawn);
+}
+
 .status-accent.canceled,
 .status-accent.no-due-date {
   --status-accent: #64748b;
 }
 
-.status-accent.applied,
+.status-accent.applied {
+  --status-accent: var(--application-status-applied);
+}
+
 .status-accent.upcoming {
   --status-accent: #0b6bff;
 }
 
-.status-accent.interviewing,
+.status-accent.interviewing {
+  --status-accent: var(--application-status-interviewing);
+}
+
 .status-accent.scheduled {
   --status-accent: #6d3bd1;
 }
 
-.status-accent.offer,
+.status-accent.offer {
+  --status-accent: var(--application-status-offer);
+}
+
 .status-accent.passed {
   --status-accent: #15803d;
 }
 
-.status-accent.rejected,
+.status-accent.rejected {
+  --status-accent: var(--application-status-rejected);
+}
+
 .status-accent.failed,
 .status-accent.overdue {
   --status-accent: #dc2626;

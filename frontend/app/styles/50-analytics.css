@@ -200,23 +200,29 @@
 }
 
 .application-map-point.applied {
-  color: #0066ff;
+  color: var(--application-status-applied);
 }
 
 .application-map-point.interviewing {
-  color: #4f33ff;
+  color: var(--application-status-interviewing);
 }
 
 .application-map-point.offer {
-  color: #15803d;
+  color: var(--application-status-offer);
 }
 
 .application-map-point.rejected {
-  color: #dc2626;
+  color: var(--application-status-rejected);
 }
 
-.application-map-point.withdrawn,
-.application-map-point.saved,
+.application-map-point.saved {
+  color: var(--application-status-saved);
+}
+
+.application-map-point.withdrawn {
+  color: var(--application-status-withdrawn);
+}
+
 .application-map-point.is-fallback {
   color: #64748b;
 }
@@ -245,15 +251,15 @@
 }
 
 .application-map-legend b.applied {
-  background: #0066ff;
+  background: var(--application-status-applied);
 }
 
 .application-map-legend b.interviewing {
-  background: #4f33ff;
+  background: var(--application-status-interviewing);
 }
 
 .application-map-legend b.offer {
-  background: #15803d;
+  background: var(--application-status-offer);
 }
 
 .application-map-detail {

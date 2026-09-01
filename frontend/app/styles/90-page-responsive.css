@@ -2,10 +2,6 @@
 
 @media (max-width: 700px) {
 
-  .applications-page {
-    margin-block: 22px 28px;
-  }
-
   .page-header {
     align-items: flex-start;
     flex-direction: column;

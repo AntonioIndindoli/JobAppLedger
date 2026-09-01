@@ -14,6 +14,7 @@ import {
     countApplicationsByStatus,
     type ApplicationPipelineNode,
 } from "../../lib/application-analytics";
+import { APPLICATION_STATUS_COLORS } from "../../lib/constants";
 import type { ActivityLog, Application } from "../../lib/types";
 
 type PipelineNodeId = ApplicationPipelineNode;
@@ -82,21 +83,45 @@ const LINK_ORDER: Record<PipelineNodeId, Partial<Record<PipelineNodeId, number>>
 };
 
 const NODE_CATALOG: Record<PipelineNodeId, PipelineNodeDatum> = {
-    APPLIED: { id: "APPLIED", label: "Applied", color: "#1268f3" },
-    INTERVIEWING: { id: "INTERVIEWING", label: "Interview", color: "#6d5dfc" },
-    NO_RESPONSE: { id: "NO_RESPONSE", label: "No Response", color: "#1268f3" },
-    OFFER: { id: "OFFER", label: "Offer", color: "#16a34a" },
-    REJECTED: { id: "REJECTED", label: "Rejected", color: "#dc2626" },
-    WITHDRAWN: { id: "WITHDRAWN", label: "Withdrawn", color: "#475569" },
+    APPLIED: {
+        id: "APPLIED",
+        label: "Applied",
+        color: APPLICATION_STATUS_COLORS.APPLIED,
+    },
+    INTERVIEWING: {
+        id: "INTERVIEWING",
+        label: "Interview",
+        color: APPLICATION_STATUS_COLORS.INTERVIEWING,
+    },
+    NO_RESPONSE: {
+        id: "NO_RESPONSE",
+        label: "No Response",
+        color: APPLICATION_STATUS_COLORS.APPLIED,
+    },
+    OFFER: {
+        id: "OFFER",
+        label: "Offer",
+        color: APPLICATION_STATUS_COLORS.OFFER,
+    },
+    REJECTED: {
+        id: "REJECTED",
+        label: "Rejected",
+        color: APPLICATION_STATUS_COLORS.REJECTED,
+    },
+    WITHDRAWN: {
+        id: "WITHDRAWN",
+        label: "Withdrawn",
+        color: APPLICATION_STATUS_COLORS.WITHDRAWN,
+    },
 };
 
 const LINK_COLORS: Record<PipelineNodeId, string> = {
-    APPLIED: "#1268f3",
-    INTERVIEWING: "#a78bfa",
-    NO_RESPONSE: "#1268f3",
-    OFFER: "#4ade80",
-    REJECTED: "#f87171",
-    WITHDRAWN: "#94a3b8",
+    APPLIED: APPLICATION_STATUS_COLORS.APPLIED,
+    INTERVIEWING: APPLICATION_STATUS_COLORS.INTERVIEWING,
+    NO_RESPONSE: APPLICATION_STATUS_COLORS.APPLIED,
+    OFFER: APPLICATION_STATUS_COLORS.OFFER,
+    REJECTED: APPLICATION_STATUS_COLORS.REJECTED,
+    WITHDRAWN: APPLICATION_STATUS_COLORS.WITHDRAWN,
 };
 
 const ALLOWED_TRANSITIONS: Record<PipelineNodeId, PipelineNodeId[]> = {
