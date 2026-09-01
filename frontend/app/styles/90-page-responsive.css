@@ -3,7 +3,7 @@
 @media (max-width: 700px) {
 
   .applications-page {
-    margin: 22px 14px 28px;
+    margin-block: 22px 28px;
   }
 
   .page-header {

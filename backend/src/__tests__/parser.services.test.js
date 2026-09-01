@@ -57,6 +57,23 @@ test("extractTitle handles page title patterns", () => {
   assert.equal(extractTitle({ sourceUrl: "https://job-boards.greenhouse.io/twitch/jobs/8504990002" }), null);
 });
 
+test("extractTitle recognizes roles outside technology", () => {
+  assert.equal(extractTitle({ pageTitle: "Registered Nurse - Mercy Health" }), "Registered Nurse");
+  assert.equal(extractTitle({ pageTitle: "Pinecrest Academy | Third Grade Teacher" }), "Third Grade Teacher");
+  assert.equal(extractTitle({ pageTitle: "Journeyman Electrician - Bright Spark Services" }), "Journeyman Electrician");
+  assert.equal(extractTitle({ pageTitle: "Harbor Hotel | Executive Chef" }), "Executive Chef");
+});
+
+test("extractTitle ignores expanded section headings", () => {
+  assert.equal(
+    extractTitle({
+      pageTitle: "Essential Functions",
+      rawText: "Essential Functions\nRegistered Nurse\nMercy Health",
+    }),
+    "Registered Nurse",
+  );
+});
+
 test("extractLocation prefers explicit location markers", () => {
   assert.equal(extractLocation("Location: Remote, United States\nSalary: $100k-$120k"), "Remote, United States");
   assert.equal(extractLocation("This role is open to candidates.\nHybrid - Austin, TX"), "Hybrid - Austin, TX");
@@ -70,6 +87,25 @@ test("extractSkills recognizes expanded technology dictionary", () => {
     "CI/CD",
     "GitHub Actions",
   ]);
+});
+
+test("extractSkills recognizes cross-industry skills", () => {
+  assert.deepEqual(
+    extractSkills("Manage accounts payable and bank reconciliation with Microsoft Excel and QuickBooks while supporting customer service."),
+    ["Microsoft Excel", "QuickBooks", "Accounts Payable", "Bank Reconciliation", "Customer Service"],
+  );
+  assert.deepEqual(
+    extractSkills("Current BLS and CPR certification with Epic EMR experience and direct patient care."),
+    ["BLS", "CPR", "EMR", "Epic", "Patient Care"],
+  );
+  assert.deepEqual(
+    extractSkills("OSHA 30 training, blueprint reading, HVAC maintenance, and forklift operation are required."),
+    ["OSHA 30", "Blueprint Reading", "HVAC", "Forklift Operation"],
+  );
+  assert.deepEqual(
+    extractSkills("Experience with lesson planning, classroom management, special education, and conflict resolution."),
+    ["Conflict Resolution", "Lesson Planning", "Classroom Management", "Special Education"],
+  );
 });
 
 test("parseJobDescription returns an import-draft-ready payload", () => {

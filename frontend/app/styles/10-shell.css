@@ -15,7 +15,7 @@
   min-width: 190px;
   max-width: 400px;
   min-height: 100vh;
-  padding: 28px 14px;
+  padding: 28px 0px 28px 14px;
   z-index: 50;
 }
 
@@ -140,8 +140,17 @@
 }
 
 .dashboard-main {
+  --page-gutter: 30px;
   flex: 1;
+  min-width: 0;
   margin-left: min(14%, 400px);
+}
+
+.dashboard-page-content,
+.topbar {
+  padding:
+    0 calc(var(--page-gutter) + env(safe-area-inset-right))
+    0 calc(var(--page-gutter) + env(safe-area-inset-left));
 }
 
 .topbar {
@@ -149,7 +158,18 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0 30px 0 0px;
+}
+
+@media (max-width: 1400px) {
+  .dashboard-main {
+    --page-gutter: 14px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dashboard-main {
+    --page-gutter: 12px;
+  }
 }
 
 .topbar-page-controls {

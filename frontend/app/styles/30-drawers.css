@@ -240,7 +240,6 @@
 
     .pipeline-stats-container {
         grid-template-columns: 1fr;
-        margin-right: 30px;
     }
 
     .pipeline-stats-container .stat-grid {
@@ -274,21 +273,6 @@
         color: transparent;
     }
 }
-
-@media (max-width: 1400px) {
-
-    .hero,
-    .stat-grid,
-    .pipeline-stats-container,
-    .panel,
-    .mini-grid,
-    .tracker-panel,
-    .analytics-grid {
-        margin-left: 14px;
-        margin-right: 14px;
-    }
-}
-
 
 @media (max-width: 1100px) {
     .dashboard-shell {
@@ -365,10 +349,6 @@
 
     .sidebar .brand {
         padding-bottom: 28px;
-    }
-
-    .topbar {
-        padding: 0 16px;
     }
 
     .search {

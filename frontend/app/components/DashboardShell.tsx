@@ -220,7 +220,7 @@ export function DashboardShell({
                         </div>
                     )}
                 </header>
-                {children}
+                <div className="dashboard-page-content">{children}</div>
             </main>
         </div>
     );

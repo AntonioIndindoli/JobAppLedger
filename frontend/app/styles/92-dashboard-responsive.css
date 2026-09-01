@@ -434,8 +434,6 @@
         top: 0;
         z-index: 35;
         height: 62px;
-        padding-right: calc(12px + env(safe-area-inset-right));
-        padding-left: calc(12px + env(safe-area-inset-left));
         background: rgba(255, 255, 255, .96);
         backdrop-filter: blur(14px);
     }
@@ -448,7 +446,7 @@
     .pipeline-stats-container {
         grid-template-columns: minmax(0, 1fr);
         gap: 12px;
-        margin: 0 12px 12px;
+        margin-bottom: 12px;
     }
 
     .stats-panel .stat-grid {
@@ -456,7 +454,7 @@
     }
 
     .tracker-panel {
-        margin: 12px 12px calc(28px + env(safe-area-inset-bottom));
+        margin-block: 12px calc(28px + env(safe-area-inset-bottom));
         padding: 12px;
     }
 }
