@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "npm run prisma:generate && nodemon src/server.js",
     "start": "npm run prisma:generate && node src/server.js",
+    "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "test": "node --test src/__tests__/*.test.js",
     "db:seed": "node prisma/seed.js",
@@ -14,6 +15,9 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@neon/config": "^1.1.0",
     "@neon/env": "^1.1.6",

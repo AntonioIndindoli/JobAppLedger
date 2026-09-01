@@ -90,7 +90,7 @@ export function SourceBreakdown({ applications }: SourceBreakdownProps) {
             </div>
             {totalSourceCount
                 ? undefined
-                : <p>"Import jobs or add sources to see your source breakdown."</p>}
+                : <p>Import jobs or add sources to see your source breakdown.</p>}
         </div>
     );
 }

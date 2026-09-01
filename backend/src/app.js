@@ -13,8 +13,11 @@ import { errorHandler, notFoundHandler } from "./middleware/error.middleware.js"
 
 export function createApp() {
   const app = express();
+  const corsOrigins = env.CORS_ORIGIN.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
-  app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+  app.use(cors({ origin: corsOrigins, credentials: true }));
   app.use(express.json());
 
   app.use("/health", healthRoutes);
@@ -31,3 +34,9 @@ export function createApp() {
 
   return app;
 }
+
+// Vercel detects and deploys this default export as a single Express Function.
+// Keeping createApp exported separately preserves the test and local-dev factory.
+const app = createApp();
+
+export default app;

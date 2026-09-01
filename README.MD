@@ -10,8 +10,7 @@ The product is designed as a modern SaaS-style dashboard for candidates who appl
 
 ## Demo
 
-**Live App:** Coming soon
-**Demo Video:** Coming soon
+**Live App:** https://jobhazel.com/
 **Chrome Extension Demo:** Coming soon
 
 ---
@@ -117,10 +116,10 @@ The product is designed as a modern SaaS-style dashboard for candidates who appl
 * **Charts:** Recharts
 * **Drag and Drop:** dnd-kit
 * **Deployment:** Vercel
-* **Database Hosting:** Neon, Supabase, or Railway
+* **Database Hosting:** Neon
 * **Private File Storage:** Cloudflare R2
 
-### Chrome Extension
+### Chrome Extension (planned)
 
 * **Manifest:** Chrome Manifest V3
 * **Language:** TypeScript
@@ -1061,15 +1060,6 @@ Create a `.env` file:
 ```env
 DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55489/JobHazel"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
-
-# Auth provider values depend on whether Clerk or Auth.js is used.
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=""
-CLERK_SECRET_KEY=""
-```
-
-Or, if using Auth.js:
-
-```env
 AUTH_SECRET=""
 AUTH_GITHUB_ID=""
 AUTH_GITHUB_SECRET=""
@@ -1100,8 +1090,6 @@ The app should now be available at:
 ```text
 http://localhost:4000
 ```
-
----
 
 ## Chrome Extension Local Setup
 
