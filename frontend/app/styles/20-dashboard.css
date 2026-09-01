@@ -719,26 +719,32 @@
 
 .lane {
   --lane-color: var(--application-status-saved);
+  --lane-background: var(--application-status-saved-background);
 }
 
 .lane.applied {
   --lane-color: var(--application-status-applied);
+  --lane-background: var(--application-status-applied-background);
 }
 
 .lane.interviewing {
   --lane-color: var(--application-status-interviewing);
+  --lane-background: var(--application-status-interviewing-background);
 }
 
 .lane.offer {
   --lane-color: var(--application-status-offer);
+  --lane-background: var(--application-status-offer-background);
 }
 
 .lane.rejected {
   --lane-color: var(--application-status-rejected);
+  --lane-background: var(--application-status-rejected-background);
 }
 
 .lane.withdrawn {
   --lane-color: var(--application-status-withdrawn);
+  --lane-background: var(--application-status-withdrawn-background);
 }
 
 .lane-header {
@@ -819,7 +825,7 @@
   margin-bottom: 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: white;
+  background: var(--lane-background, white);
   box-shadow: 0 6px 14px rgba(20, 46, 80, .05);
   font-size: 12px;
 }
