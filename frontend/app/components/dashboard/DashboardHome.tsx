@@ -81,6 +81,13 @@ export function DashboardHome({
         () => groupDashboardApplications(trackerApplications),
         [trackerApplications],
     );
+    const mobileGroupedApplications = useMemo(
+        () =>
+            groupDashboardApplications(
+                filterApplications(applications, { ...filters, status: "" }),
+            ),
+        [applications, filters],
+    );
     const upcomingInterviews = useMemo(
         () =>
             sortInterviewsBySchedule(
@@ -105,6 +112,7 @@ export function DashboardHome({
                 applications={applications}
                 filters={filters}
                 groupedApplications={groupedApplications}
+                mobileGroupedApplications={mobileGroupedApplications}
                 historyByApp={historyByApp}
                 interviews={interviews}
                 openTimelineId={openTimelineId}

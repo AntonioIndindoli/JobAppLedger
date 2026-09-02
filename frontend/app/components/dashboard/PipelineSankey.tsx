@@ -49,7 +49,7 @@ const PIPELINE_NODE_ORDER: PipelineNodeId[] = [
 const NODE_COLUMN: Record<PipelineNodeId, number> = {
     APPLIED: 0,
     INTERVIEWING: 1,
-    NO_RESPONSE: 2,
+    NO_RESPONSE: 1,
     OFFER: 2,
     REJECTED: 2,
     WITHDRAWN: 2,
@@ -139,8 +139,9 @@ const SANKEY_MARGIN = {
     bottom: 44,
     left: 28,
 } as const;
-const SANKEY_NODE_PADDING = 28;
-const SANKEY_NODE_WIDTH = 5;
+const SANKEY_NODE_PADDING_MIN = 32;
+const SANKEY_NODE_PADDING_MAX = 72;
+const SANKEY_NODE_WIDTH = 8;
 
 function canAddLink(source: PipelineNodeId, target: PipelineNodeId) {
     return ALLOWED_TRANSITIONS[source].includes(target);
@@ -344,12 +345,16 @@ function buildPipelineSankey(
 
     const layoutTop = SANKEY_MARGIN.top;
     const layoutBottom = layoutHeight - SANKEY_MARGIN.bottom;
+    const nodePadding = Math.max(
+        SANKEY_NODE_PADDING_MIN,
+        Math.min(SANKEY_NODE_PADDING_MAX, layoutHeight * 0.16),
+    );
 
     const sankeyGenerator =
         sankey<PipelineNodeDatum, PipelineLinkDatum>()
             .nodeId((node) => node.id)
             .nodeWidth(SANKEY_NODE_WIDTH)
-            .nodePadding(SANKEY_NODE_PADDING)
+            .nodePadding(nodePadding)
             .nodeAlign((node, columns) =>
                 Math.min(NODE_COLUMN[node.id], columns - 1)
             )
@@ -501,7 +506,20 @@ export function PipelineSankey({
                                                     textAnchor={labelOnRight ? "start" : "end"}
                                                     dominantBaseline="middle"
                                                 >
-                                                    <tspan className="sankey-label">{node.label}: {node.value ?? 0}</tspan>
+                                                    <tspan
+                                                        x={labelOnRight ? x1 + 8 : x0 - 8}
+                                                        dy="-0.15em"
+                                                        className="sankey-value"
+                                                    >
+                                                        {node.value ?? 0}
+                                                    </tspan>
+                                                    <tspan
+                                                        x={labelOnRight ? x1 + 8 : x0 - 8}
+                                                        dy="1.2em"
+                                                        className="sankey-label"
+                                                    >
+                                                        {node.label}
+                                                    </tspan>
                                                 </text>
                                             </g>
                                         );

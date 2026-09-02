@@ -106,6 +106,17 @@ export function AppIcon({
                 </>
             );
             break;
+        case "company":
+            icon = (
+                <>
+                    <path d="M4.5 20V8.5h9V20" />
+                    <path d="M13.5 12h6V20" />
+                    <path d="M3 20h18" />
+                    <path d="M7.5 5h3v3.5h-3Z" />
+                    <path d="M7.5 12h.01M10.5 12h.01M7.5 15.5h.01M10.5 15.5h.01M16.5 15.5h.01" />
+                </>
+            );
+            break;
         case "contacts":
             icon = (
                 <>

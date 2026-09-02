@@ -60,6 +60,10 @@
         display: block;
         grid-area: stats;
         overflow: visible;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
     }
 
     .stats-panel h2 {
@@ -247,11 +251,14 @@
     .mobile-stage-tabs-shell::before,
     .mobile-stage-tabs-shell::after {
         position: absolute;
+        z-index: 1;
         bottom: 4px;
-        width: 42px;
-        height: 42px;
+        width: 34px;
+        height: 44px;
         content: "";
+        opacity: 0;
         pointer-events: none;
+        transition: opacity 160ms ease;
     }
 
     .mobile-stage-tabs-shell::before {
@@ -264,6 +271,11 @@
         background: linear-gradient(90deg, transparent, #fff 82%);
     }
 
+    .mobile-stage-tabs-shell.has-overflow-start::before,
+    .mobile-stage-tabs-shell.has-overflow-end::after {
+        opacity: 1;
+    }
+
     .mobile-stage-tabs {
         display: flex;
         gap: 8px;
@@ -271,6 +283,10 @@
         overflow-x: auto;
         scrollbar-width: none;
         overscroll-behavior-inline: contain;
+        scroll-padding-inline: 30px;
+        scroll-snap-type: x proximity;
+        touch-action: pan-x;
+        -webkit-overflow-scrolling: touch;
     }
 
     .mobile-stage-tabs::-webkit-scrollbar {
@@ -282,6 +298,7 @@
         align-items: center;
         gap: 7px;
         flex: 0 0 auto;
+        min-height: 44px;
         padding: 9px 12px;
         border: 1px solid #dbe5f2;
         border-radius: 999px;
@@ -290,6 +307,7 @@
         font: inherit;
         font-size: 12px;
         font-weight: 800;
+        scroll-snap-align: center;
     }
 
     .mobile-stage-tabs button>span {
@@ -303,10 +321,15 @@
         font-size: 11px;
     }
 
-    .mobile-stage-tabs button[aria-pressed="true"] {
+    .mobile-stage-tabs button[aria-selected="true"] {
         border-color: #9fc6ff;
         background: #eaf3ff;
         color: var(--green);
+    }
+
+    .mobile-stage-tabs button:focus-visible {
+        outline: 3px solid rgba(0, 102, 255, .32);
+        outline-offset: 1px;
     }
 
     .tracker-panel .kanban {
@@ -457,6 +480,10 @@
         margin-block: 12px calc(28px + env(safe-area-inset-bottom));
         padding: 12px;
     }
+
+    .sankey-label {
+        font-size: 12px;
+    }
 }
 
 @media (max-width: 380px) {
@@ -561,6 +588,10 @@
 }
 
 @media (max-width: 900px) {
+    .tracker-panel>.filter-row.dashboard-filters-open>.tracker-status-filter {
+        display: none;
+    }
+
     .tracker-panel>.filter-row.dashboard-filters-open .tracker-search-field {
         min-height: 46px;
     }

@@ -217,6 +217,7 @@ export type AppIconName =
     | "checklist"
     | "chevron-down"
     | "clock"
+    | "company"
     | "contacts"
     | "dashboard"
     | "document"

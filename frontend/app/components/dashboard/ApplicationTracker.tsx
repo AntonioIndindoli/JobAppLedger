@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+    type KeyboardEvent as ReactKeyboardEvent,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 
 import { DASHBOARD_STATUSES, SOURCES, STATUSES, STATUS_LABELS } from "../../lib/constants";
 import {
@@ -21,6 +28,7 @@ type ApplicationTrackerProps = {
     applications: Application[];
     filters: ApplicationFilters;
     groupedApplications: Record<DashboardStatus, Application[]>;
+    mobileGroupedApplications: Record<DashboardStatus, Application[]>;
     historyByApp: Record<string, ActivityLog[]>;
     interviews: Interview[];
     openTimelineId: string | null;
@@ -80,6 +88,7 @@ export function ApplicationTracker({
     applications,
     filters,
     groupedApplications,
+    mobileGroupedApplications,
     historyByApp,
     interviews,
     openTimelineId,
@@ -94,6 +103,7 @@ export function ApplicationTracker({
 }: ApplicationTrackerProps) {
     const [openCardMenuId, setOpenCardMenuId] = useState<string | null>(null);
     const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+    const [isMobileLayout, setIsMobileLayout] = useState(false);
     const [mobileActiveStatus, setMobileActiveStatus] =
         useState<DashboardStatus>(
             () =>
@@ -101,9 +111,92 @@ export function ApplicationTracker({
                     (status) => groupedApplications[status].length > 0,
                 ) ?? "APPLIED",
         );
+    const [mobileStageOverflow, setMobileStageOverflow] = useState({
+        start: false,
+        end: false,
+    });
+    const [hasSelectedMobileStage, setHasSelectedMobileStage] = useState(false);
     const mobileFiltersToggleRef = useRef<HTMLButtonElement>(null);
     const mobileFiltersCloseRef = useRef<HTMLButtonElement>(null);
-    const activeFilterCount = Object.values(filters).filter(Boolean).length;
+    const mobileStageTabsRef = useRef<HTMLDivElement>(null);
+    const mobileStageTabRefs = useRef<
+        Partial<Record<DashboardStatus, HTMLButtonElement | null>>
+    >({});
+    const activeFilterCount = [filters.query, filters.source, filters.company].filter(
+        Boolean,
+    ).length;
+    const filteredMobileStatus = DASHBOARD_STATUSES.find(
+        (status) => status === filters.status,
+    );
+    const firstPopulatedMobileStatus = DASHBOARD_STATUSES.find(
+        (status) => mobileGroupedApplications[status].length > 0,
+    );
+    const resolvedMobileActiveStatus =
+        filteredMobileStatus ??
+        (!hasSelectedMobileStage &&
+        mobileGroupedApplications[mobileActiveStatus].length === 0
+            ? (firstPopulatedMobileStatus ?? mobileActiveStatus)
+            : mobileActiveStatus);
+
+    const updateMobileStageOverflow = useCallback(() => {
+        const tabList = mobileStageTabsRef.current;
+        if (!tabList) return;
+
+        const maxScrollLeft = Math.max(
+            0,
+            tabList.scrollWidth - tabList.clientWidth,
+        );
+        const nextOverflow = {
+            start: tabList.scrollLeft > 2,
+            end: tabList.scrollLeft < maxScrollLeft - 2,
+        };
+
+        setMobileStageOverflow((current) =>
+            current.start === nextOverflow.start &&
+            current.end === nextOverflow.end
+                ? current
+                : nextOverflow,
+        );
+    }, []);
+
+    const selectMobileStage = useCallback(
+        (status: DashboardStatus) => {
+            setHasSelectedMobileStage(true);
+            setMobileActiveStatus(status);
+
+            if (filters.status !== status) {
+                onFiltersChange({ ...filters, status });
+            }
+        },
+        [filters, onFiltersChange],
+    );
+
+    function handleMobileStageKeyDown(
+        event: ReactKeyboardEvent<HTMLButtonElement>,
+        status: DashboardStatus,
+    ) {
+        const currentIndex = DASHBOARD_STATUSES.indexOf(status);
+        let nextIndex: number | null = null;
+
+        if (event.key === "ArrowRight") {
+            nextIndex = (currentIndex + 1) % DASHBOARD_STATUSES.length;
+        } else if (event.key === "ArrowLeft") {
+            nextIndex =
+                (currentIndex - 1 + DASHBOARD_STATUSES.length) %
+                DASHBOARD_STATUSES.length;
+        } else if (event.key === "Home") {
+            nextIndex = 0;
+        } else if (event.key === "End") {
+            nextIndex = DASHBOARD_STATUSES.length - 1;
+        }
+
+        if (nextIndex === null) return;
+
+        event.preventDefault();
+        const nextStatus = DASHBOARD_STATUSES[nextIndex];
+        selectMobileStage(nextStatus);
+        mobileStageTabRefs.current[nextStatus]?.focus();
+    }
 
     useEffect(() => {
         if (!isMobileFiltersOpen) return;
@@ -127,19 +220,63 @@ export function ApplicationTracker({
     }, [isMobileFiltersOpen]);
 
     useEffect(() => {
-        const desktopQuery = window.matchMedia("(min-width: 901px)");
+        const mobileQuery = window.matchMedia("(max-width: 900px)");
 
-        function closeMobileFiltersOnDesktop(event: MediaQueryListEvent) {
-            if (event.matches) setIsMobileFiltersOpen(false);
+        function syncMobileLayout() {
+            setIsMobileLayout(mobileQuery.matches);
+            if (!mobileQuery.matches) setIsMobileFiltersOpen(false);
         }
 
-        desktopQuery.addEventListener("change", closeMobileFiltersOnDesktop);
-        return () =>
-            desktopQuery.removeEventListener(
-                "change",
-                closeMobileFiltersOnDesktop,
-            );
+        syncMobileLayout();
+        mobileQuery.addEventListener("change", syncMobileLayout);
+        return () => mobileQuery.removeEventListener("change", syncMobileLayout);
     }, []);
+
+    useEffect(() => {
+        const tabList = mobileStageTabsRef.current;
+        if (!tabList) return;
+
+        tabList.addEventListener("scroll", updateMobileStageOverflow, {
+            passive: true,
+        });
+        window.addEventListener("resize", updateMobileStageOverflow);
+        updateMobileStageOverflow();
+
+        return () => {
+            tabList.removeEventListener("scroll", updateMobileStageOverflow);
+            window.removeEventListener("resize", updateMobileStageOverflow);
+        };
+    }, [updateMobileStageOverflow]);
+
+    useEffect(() => {
+        const frame = window.requestAnimationFrame(updateMobileStageOverflow);
+        return () => window.cancelAnimationFrame(frame);
+    }, [mobileGroupedApplications, updateMobileStageOverflow]);
+
+    useEffect(() => {
+        if (!isMobileLayout) return;
+
+        const activeTab = mobileStageTabRefs.current[resolvedMobileActiveStatus];
+        if (!activeTab) return;
+
+        const frame = window.requestAnimationFrame(() => {
+            activeTab.scrollIntoView({
+                behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+                    .matches
+                    ? "auto"
+                    : "smooth",
+                block: "nearest",
+                inline: "center",
+            });
+            updateMobileStageOverflow();
+        });
+
+        return () => window.cancelAnimationFrame(frame);
+    }, [
+        isMobileLayout,
+        resolvedMobileActiveStatus,
+        updateMobileStageOverflow,
+    ]);
 
     const interviewByApplicationId = useMemo(() => {
         const groupedInterviews = new Map<string, Interview[]>();
@@ -163,9 +300,6 @@ export function ApplicationTracker({
             <div className="panel-title tracker-heading-row">
                 <div>
                     <h2>
-                        <span className="heading-icon">
-                            <AppIcon name="applications" size={17} />
-                        </span>
                         Application Tracker
                         <InfoTooltip
                             label="Application tracker information"
@@ -226,6 +360,8 @@ export function ApplicationTracker({
                     />
                 </label>
                 <select
+                    className="tracker-status-filter"
+                    aria-label="Filter by status"
                     value={filters.status}
                     onChange={(event) =>
                         onFiltersChange({ ...filters, status: event.target.value })
@@ -258,37 +394,52 @@ export function ApplicationTracker({
                     }
                 />
                 <button
+                    type="button"
                     className="dashboard-filter-done"
-                    onClick={() => {
-                        if (
-                            DASHBOARD_STATUSES.includes(
-                                filters.status as DashboardStatus,
-                            )
-                        ) {
-                            setMobileActiveStatus(
-                                filters.status as DashboardStatus,
-                            );
-                        }
-                        setIsMobileFiltersOpen(false);
-                    }}
+                    onClick={() => setIsMobileFiltersOpen(false)}
                 >
                     Show results
                 </button>
             </div>
-            <div className="mobile-stage-tabs-shell">
+            <div
+                className={`mobile-stage-tabs-shell${
+                    mobileStageOverflow.start ? " has-overflow-start" : ""
+                }${mobileStageOverflow.end ? " has-overflow-end" : ""}`}
+            >
                 <div
+                    ref={mobileStageTabsRef}
                     className="mobile-stage-tabs"
+                    role="tablist"
                     aria-label="Application stages"
                 >
                     {DASHBOARD_STATUSES.map((status) => (
                         <button
                             key={status}
+                            ref={(button) => {
+                                mobileStageTabRefs.current[status] = button;
+                            }}
                             type="button"
-                            aria-pressed={mobileActiveStatus === status}
-                            onClick={() => setMobileActiveStatus(status)}
+                            id={`mobile-stage-tab-${status.toLowerCase()}`}
+                            role="tab"
+                            aria-controls={`application-stage-${status.toLowerCase()}`}
+                            aria-label={`${STATUS_LABELS[status]}, ${
+                                mobileGroupedApplications[status].length
+                            } ${
+                                mobileGroupedApplications[status].length === 1
+                                    ? "application"
+                                    : "applications"
+                            }`}
+                            aria-selected={resolvedMobileActiveStatus === status}
+                            tabIndex={resolvedMobileActiveStatus === status ? 0 : -1}
+                            onClick={() => selectMobileStage(status)}
+                            onKeyDown={(event) =>
+                                handleMobileStageKeyDown(event, status)
+                            }
                         >
                             {STATUS_LABELS[status]}
-                            <span>{groupedApplications[status].length}</span>
+                            <span aria-hidden="true">
+                                {mobileGroupedApplications[status].length}
+                            </span>
                         </button>
                     ))}
                 </div>
@@ -297,8 +448,20 @@ export function ApplicationTracker({
                 {DASHBOARD_STATUSES.map((status) => (
                     <section
                         key={status}
+                        id={`application-stage-${status.toLowerCase()}`}
+                        role={isMobileLayout ? "tabpanel" : undefined}
+                        aria-labelledby={
+                            isMobileLayout
+                                ? `mobile-stage-tab-${status.toLowerCase()}`
+                                : undefined
+                        }
+                        hidden={
+                            isMobileLayout && resolvedMobileActiveStatus !== status
+                        }
                         className={`lane ${status.toLowerCase()}${
-                            mobileActiveStatus === status ? " mobile-active" : ""
+                            resolvedMobileActiveStatus === status
+                                ? " mobile-active"
+                                : ""
                         }`}
                         onDragOver={(event) => event.preventDefault()}
                         onDrop={(event) => {

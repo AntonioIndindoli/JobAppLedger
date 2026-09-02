@@ -3,7 +3,7 @@
 .dashboard-shell {
     min-height: 100vh;
     display: flex;
-    background: linear-gradient(180deg, #e1e9ff21, #ced1da4f);
+    background: linear-gradient(180deg, #00000013, #0000001e);
 }
 
 .sidebar {
@@ -12,8 +12,8 @@
     display: flex;
     flex-direction: column;
     width: 14%;
-    min-width: 190px;
-    max-width: 400px;
+    min-width: 230px;
+    max-width: 340px;
     min-height: 100vh;
     padding: 28px 0px 28px 0px;
     z-index: 50;
@@ -144,7 +144,7 @@
     --page-gutter: 30px;
     flex: 1;
     min-width: 0;
-    margin-left: min(14%, 400px);
+    margin-left: min(14%, 340px);
 }
 
 .dashboard-page-content,

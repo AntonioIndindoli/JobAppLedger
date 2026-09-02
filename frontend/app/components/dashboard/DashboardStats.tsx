@@ -247,6 +247,7 @@ export function DashboardStats({
                 label: "Total Applications",
                 value: applications.length,
                 icon: "applications",
+                tone: "green",
             },
             {
                 label: "Active Applications",
@@ -275,7 +276,6 @@ export function DashboardStats({
                 label: "Tasks & Follow-ups Due",
                 value: dueTaskCount,
                 icon: "checklist",
-                tone: "slate",
             },
         ];
 

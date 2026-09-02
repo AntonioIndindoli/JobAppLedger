@@ -576,9 +576,15 @@ export function ApplicationsView({
 
                                 </div>
                                 <p className="application-detail-company-location">
-                                    <span>{selectedApplication.companyName || "Unknown company"}</span>
-                                    <span aria-hidden="true">·</span>
-                                    <span>{selectedApplication.location || "Location not set"}</span>
+                                    <span className="application-detail-context-item application-detail-company">
+                                        <AppIcon name="company" size={31} />
+                                        {selectedApplication.companyName || "Unknown company"}
+                                    </span>
+                                    <span className="application-detail-context-separator" aria-hidden="true" />
+                                    <span className="application-detail-context-item">
+                                        <AppIcon name="location" size={31} />
+                                        {selectedApplication.location || "Location not set"}
+                                    </span>
                                 </p>
                                 <div className="application-detail-status-row">
                                     <label className="application-detail-status-control">
@@ -601,15 +607,15 @@ export function ApplicationsView({
                                         </select>
                                     </label>
                                     <span className="application-detail-status-date">
-                                        <AppIcon name="calendar" size={15} />
+                                        <AppIcon name="calendar" size={27} />
                                         Applied {formatDisplayDate(selectedApplication.dateApplied)}
                                     </span>
                                 </div>
                                 <div className="application-detail-summary" aria-label="Application overview">
-                                    <span><AppIcon name="source" size={17} /> {selectedApplication.source || "No source"}</span>
-                                    <span><AppIcon name="salary" size={17} /> {selectedApplication.salaryMin !== null || selectedApplication.salaryMax !== null ? `Salary: ${formatSalaryRange(selectedApplication)}` : formatSalaryRange(selectedApplication)}</span>
+                                    <span><AppIcon name="source" size={27} /> {selectedApplication.source || "No source"}</span>
+                                    <span><AppIcon name="salary" size={27} /> {selectedApplication.salaryMin !== null || selectedApplication.salaryMax !== null ? `Salary: ${formatSalaryRange(selectedApplication)}` : formatSalaryRange(selectedApplication)}</span>
                                     {selectedApplication.sourceUrl && (
-                                        <span><AppIcon name="external-link" size={17} className="application-detail-external-link-icon" />
+                                        <span><AppIcon name="external-link" size={27} className="application-detail-external-link-icon" />
                                             <a className="application-detail-posting-link" href={selectedApplication.sourceUrl} target="_blank" rel="noreferrer">
                                                 Original posting
                                             </a>
@@ -639,9 +645,15 @@ export function ApplicationsView({
                                                 <div>
                                                     <strong>{nextTask.title}</strong>
                                                     <p>
-                                                        {nextTask.dueDate
-                                                            ? `Due ${formatTaskDueDate(nextTask.dueDate)} · ${formatTaskRemaining(nextTask.dueDate)}`
-                                                            : "No due date"}
+                                                        {nextTask.dueDate ? (
+                                                            <>
+                                                                <span>Due {formatTaskDueDate(nextTask.dueDate)}</span>
+                                                                <span aria-hidden="true">·</span>
+                                                                <span className={`application-task-due-copy ${getTaskDueState(nextTask)}`}>
+                                                                    {formatTaskRemaining(nextTask.dueDate)}
+                                                                </span>
+                                                            </>
+                                                        ) : "No due date"}
                                                     </p>
                                                 </div>
                                             </div>
@@ -725,7 +737,10 @@ export function ApplicationsView({
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className="application-interviews-empty">No interviews yet</div>
+                                            <div className="application-interviews-empty">
+                                                <AppIcon name="contacts" size={37} />
+                                                <div>No interviews yet</div>
+                                            </div>
                                         )}
                                     </section>
 
@@ -751,7 +766,10 @@ export function ApplicationsView({
                                                 </div>
                                             </div>
                                         ) : (
-                                            <p className={selectedNotes ? "" : "is-empty"}>{selectedNotes || "No notes added"}</p>
+                                            <p className={selectedNotes ? "" : "is-empty"}>
+                                                {!selectedNotes && <AppIcon name="document" size={37} />}
+                                                {selectedNotes || "No notes added"}
+                                            </p>
                                         )}
                                     </section>
                                 </div>
