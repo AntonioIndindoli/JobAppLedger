@@ -479,9 +479,15 @@ export function InterviewsView({
                                     <div className="application-detail-heading">
                                         <h2>{selectedInterview.applicationTitle ?? "Unknown role"}</h2>
                                         <p className="application-detail-company-location">
-                                            <span>{selectedInterview.companyName ?? "Unknown company"}</span>
-                                            <span aria-hidden="true">·</span>
-                                            <span>{selectedInterview.location || "Location not set"}</span>
+                                            <span className="application-detail-context-item application-detail-company">
+                                                <AppIcon name="company" size={20} />
+                                                {selectedInterview.companyName ?? "Unknown company"}
+                                            </span>
+                                            <span className="application-detail-context-separator" aria-hidden="true" />
+                                            <span className="application-detail-context-item">
+                                                <AppIcon name="location" size={20} />
+                                                {selectedInterview.location || "Location not set"}
+                                            </span>
                                         </p>
                                         <div className="application-detail-status-row">
                                             <label className="application-detail-status-control">
@@ -489,7 +495,10 @@ export function InterviewsView({
                                                     {INTERVIEW_OUTCOMES.map((outcome) => <option key={outcome} value={outcome}>{getInterviewOutcomeLabel(outcome)}</option>)}
                                                 </select>
                                             </label>
-                                            <span>{getInterviewTypeLabel(selectedInterview.type)} interview</span>
+                                            <span className="detail-type-label">
+                                                <AppIcon name="contacts" size={18} />
+                                                {getInterviewTypeLabel(selectedInterview.type)} interview
+                                            </span>
                                         </div>
                                     </div>
                                     <div
@@ -627,7 +636,10 @@ export function InterviewsView({
                                         {isEditingNotes ? <div className="application-notes-editor">
                                             <textarea aria-label="Interview notes" autoFocus value={notesDraft} onChange={(event) => setNotesDraft(event.target.value)} placeholder="Write a note…" />
                                             <div className="application-notes-editor-actions"><button type="button" className="secondary" disabled={isSavingNotes} onClick={() => setIsEditingNotes(false)}>Cancel</button><button type="button" className="primary" disabled={isSavingNotes} onClick={async () => { setIsSavingNotes(true); try { await onUpdateNotes(selectedInterview.id, notesDraft); setIsEditingNotes(false); } catch { } finally { setIsSavingNotes(false); } }}>{isSavingNotes ? "Saving…" : "Save notes"}</button></div>
-                                        </div> : <p className={selectedNotes ? "" : "is-empty"}>{selectedNotes || "No notes added"}</p>}
+                                        </div> : <p className={selectedNotes ? "" : "is-empty"}>
+                                            {!selectedNotes && <AppIcon name="document" size={22} />}
+                                            {selectedNotes || "No notes added"}
+                                        </p>}
                                     </section>
                                 </div>
                             </div>

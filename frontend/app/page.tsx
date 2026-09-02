@@ -70,6 +70,7 @@ const INITIAL_FILTERS: ApplicationFilters = {
     status: "",
     source: "",
     company: "",
+    timeframe: "",
 };
 
 function isApplicationGoalPeriod(value: unknown): value is ApplicationGoalPeriod {
@@ -1507,7 +1508,6 @@ export default function MainPage() {
                 />
             ) : (
                 <DashboardHome
-                    activePipeline={activePipeline}
                     applicationGoal={applicationGoal}
                     applications={applications}
                     filters={filters}

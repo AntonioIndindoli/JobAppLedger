@@ -482,9 +482,15 @@ export function TasksView({
                                     <div className="application-detail-heading">
                                         <h2>{selectedTask.title}</h2>
                                         <p className="application-detail-company-location">
-                                            <span>{selectedTask.companyName ?? "Unknown company"}</span>
-                                            <span aria-hidden="true">·</span>
-                                            <span>{selectedTaskApplication?.location || "Location not set"}</span>
+                                            <span className="application-detail-context-item application-detail-company">
+                                                <AppIcon name="company" size={20} />
+                                                {selectedTask.companyName ?? "Unknown company"}
+                                            </span>
+                                            <span className="application-detail-context-separator" aria-hidden="true" />
+                                            <span className="application-detail-context-item">
+                                                <AppIcon name="location" size={20} />
+                                                {selectedTaskApplication?.location || "Location not set"}
+                                            </span>
                                         </p>
                                         <div className="application-detail-status-row">
                                             <label className="application-detail-status-control">
@@ -515,7 +521,7 @@ export function TasksView({
                                     </div>
                                 </div>
                                 <div className="application-detail-summary" aria-label="Task summary">
-                                    <span>{getTaskTypeLabel(selectedTask.type)} task</span>
+                                    <span><AppIcon name="checklist" size={19} /> {getTaskTypeLabel(selectedTask.type)} task</span>
                                     {selectedTask.applicationId && (
                                         <button
                                             type="button"
@@ -609,7 +615,10 @@ export function TasksView({
                                     {isEditingDescription ? <div className="application-notes-editor">
                                         <textarea aria-label="Task description" autoFocus value={descriptionDraft} onChange={(event) => setDescriptionDraft(event.target.value)} placeholder="Write a description…" />
                                         <div className="application-notes-editor-actions"><button type="button" className="secondary" disabled={isSavingDescription} onClick={() => setIsEditingDescription(false)}>Cancel</button><button type="button" className="primary" disabled={isSavingDescription} onClick={async () => { setIsSavingDescription(true); try { await onUpdateDescription(selectedTask.id, descriptionDraft); setIsEditingDescription(false); } catch { } finally { setIsSavingDescription(false); } }}>{isSavingDescription ? "Saving…" : "Save description"}</button></div>
-                                    </div> : <p className={selectedDescription ? "" : "is-empty"}>{selectedDescription || "No description added"}</p>}
+                                    </div> : <p className={selectedDescription ? "" : "is-empty"}>
+                                        {!selectedDescription && <AppIcon name="document" size={22} />}
+                                        {selectedDescription || "No description added"}
+                                    </p>}
                                 </section>
                             </div>
                         </>

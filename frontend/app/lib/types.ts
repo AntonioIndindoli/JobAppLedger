@@ -1,5 +1,6 @@
 import type {
     DASHBOARD_STATUSES,
+    DASHBOARD_TIMEFRAME_OPTIONS,
     INTERVIEW_OUTCOMES,
     INTERVIEW_TYPES,
     APPLICATION_GOAL_PERIOD_OPTIONS,
@@ -10,6 +11,8 @@ import type {
 
 export type ApplicationStatus = (typeof STATUSES)[number];
 export type DashboardStatus = (typeof DASHBOARD_STATUSES)[number];
+export type DashboardTimeframe =
+    (typeof DASHBOARD_TIMEFRAME_OPTIONS)[number]["value"];
 export type InterviewType = (typeof INTERVIEW_TYPES)[number];
 export type InterviewOutcome = (typeof INTERVIEW_OUTCOMES)[number];
 export type TaskType = (typeof TASK_TYPES)[number];
@@ -203,6 +206,7 @@ export type ApplicationFilters = {
     status: string;
     source: string;
     company: string;
+    timeframe: DashboardTimeframe;
 };
 
 export type AppIconName =

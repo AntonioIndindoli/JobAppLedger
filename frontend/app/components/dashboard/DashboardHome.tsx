@@ -24,7 +24,6 @@ import { DashboardCards } from "./DashboardCards";
 import { DashboardStats } from "./DashboardStats";
 
 type DashboardHomeProps = {
-    activePipeline: number;
     applicationGoal: ApplicationGoalSettings;
     applications: Application[];
     filters: ApplicationFilters;
@@ -51,7 +50,6 @@ type DashboardHomeProps = {
 };
 
 export function DashboardHome({
-    activePipeline,
     applicationGoal,
     applications,
     filters,
@@ -100,7 +98,6 @@ export function DashboardHome({
     return (
         <>
             <DashboardStats
-                activePipeline={activePipeline}
                 applicationGoal={applicationGoal}
                 applications={applications}
                 historyByApp={historyByApp}

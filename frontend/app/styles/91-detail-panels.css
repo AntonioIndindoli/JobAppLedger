@@ -1067,3 +1067,215 @@
         font-size: 16px;
     }
 }
+
+/* Keep interview, task, and contact detail surfaces aligned with applications. */
+.interviews-page .detail-type-label,
+.tasks-page .detail-type-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #27344d;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.interviews-page .interview-detail-body,
+.tasks-page .task-detail-body {
+    gap: 0;
+    margin-top: 0;
+}
+
+.interviews-page .detail-facts-section,
+.tasks-page .detail-facts-section {
+    padding: 22px 0;
+    border-top: 1px solid #9fb2ca;
+}
+
+.interviews-page .detail-facts-section>h3,
+.tasks-page .detail-facts-section>h3 {
+    margin: 0 0 12px;
+    color: #070b12;
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: -.02em;
+}
+
+.interviews-page .interview-detail-facts,
+.tasks-page .task-detail-facts {
+    padding: 0 18px;
+    border-color: #9fb2ca;
+    border-radius: 11px;
+    background: #fff;
+}
+
+.interviews-page .interview-detail-fact,
+.tasks-page .interview-detail-fact {
+    padding: 14px 0;
+    border-bottom-color: #dce4ee;
+}
+
+.interviews-page .interview-detail-content-grid>.application-detail-card-section,
+.tasks-page .task-detail-body>.application-detail-card-section {
+    padding: 22px 0 0;
+    border-top: 1px solid #9fb2ca;
+}
+
+.interviews-page .interview-detail-content-grid>.application-detail-card-section .interview-detail-section-title,
+.tasks-page .task-detail-body>.application-detail-card-section .interview-detail-section-title {
+    min-height: 34px;
+    margin-bottom: 12px;
+}
+
+.interviews-page .interview-detail-content-grid>.application-detail-card-section h3,
+.tasks-page .task-detail-body>.application-detail-card-section h3,
+.contacts-page .contact-notes h3 {
+    margin: 0;
+    color: #070b12;
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: -.02em;
+}
+
+.interviews-page .interview-detail-content-grid>.application-detail-card-section p,
+.tasks-page .task-detail-body>.application-detail-card-section p {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 58px;
+    margin: 0;
+    padding: 12px 18px;
+    border: 1px solid #9fb2ca;
+    border-radius: 11px;
+    background: #f2f5fa;
+    color: #27344d;
+    font-size: 14px;
+}
+
+.interviews-page .interview-detail-content-grid>.application-detail-card-section p svg,
+.tasks-page .task-detail-body>.application-detail-card-section p svg {
+    flex: 0 0 auto;
+    color: #070b12;
+}
+
+.contacts-page .contact-detail {
+    --status-accent: #0c7f58;
+}
+
+.contacts-page .contact-detail-header {
+    align-items: start;
+    gap: 18px;
+    padding-bottom: 22px;
+    border-bottom-color: #9fb2ca;
+}
+
+.contacts-page .contact-detail-header .application-detail-header-actions {
+    position: relative;
+    z-index: 2;
+}
+
+.contacts-page .contact-detail-header h2 {
+    margin: 5px 0 4px;
+    color: #070b12;
+    font-size: clamp(24px, 2.25vw, 30px);
+    font-weight: 900;
+    line-height: 1.08;
+    letter-spacing: -.035em;
+}
+
+.contacts-page .contact-detail-header p {
+    color: #27344d;
+    font-size: 15px;
+}
+
+.contacts-page .contact-detail-header .contact-avatar.large {
+    border-radius: 11px;
+    box-shadow: inset 0 0 0 1px rgba(11, 107, 255, .12);
+}
+
+.contacts-page .contact-badge {
+    border: 1px solid #d8dfff;
+}
+
+.contacts-page .contact-facts {
+    gap: 12px;
+    margin: 22px 0;
+}
+
+.contacts-page .contact-facts div {
+    min-height: 76px;
+    padding: 15px 16px;
+    border-color: #9fb2ca;
+    border-radius: 11px;
+    background: #f2f5fa;
+}
+
+.contacts-page .contact-facts dt {
+    color: #66738b;
+    letter-spacing: .045em;
+}
+
+.contacts-page .contact-facts dd {
+    color: #070b12;
+    font-size: 14px;
+}
+
+.contacts-page .contact-notes {
+    display: grid;
+    gap: 12px;
+    min-height: 0;
+    padding: 22px 0 0;
+    border-width: 1px 0 0;
+    border-color: #9fb2ca;
+    border-radius: 0;
+}
+
+.contacts-page .contact-notes-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.contacts-page .contact-notes p {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 58px;
+    margin: 0;
+    padding: 12px 18px;
+    border: 1px solid #9fb2ca;
+    border-radius: 11px;
+    background: #f2f5fa;
+    color: #27344d;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.contacts-page .contact-notes p.is-empty {
+    color: #66738b;
+}
+
+.contacts-page .contact-notes p svg {
+    flex: 0 0 auto;
+    color: #070b12;
+}
+
+@media (max-width: 900px) {
+    .interviews-page .detail-facts-section,
+    .tasks-page .detail-facts-section,
+    .interviews-page .interview-detail-content-grid>.application-detail-card-section,
+    .tasks-page .task-detail-body>.application-detail-card-section,
+    .contacts-page .contact-notes {
+        padding-top: 20px;
+    }
+
+    .contacts-page .contact-detail-header h2 {
+        font-size: clamp(24px, 6vw, 28px);
+    }
+
+    .contacts-page .contact-facts {
+        grid-template-columns: 1fr;
+    }
+}

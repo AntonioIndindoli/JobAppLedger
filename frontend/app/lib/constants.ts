@@ -145,6 +145,15 @@ export const WEEKLY_RANGE_OPTIONS = [
     { label: "Last 12 weeks", weeks: 12 },
 ] as const;
 
+export const DASHBOARD_TIMEFRAME_OPTIONS = [
+    { label: "All time", value: "" },
+    { label: "1 week", value: "1-week" },
+    { label: "1 month", value: "1-month" },
+    { label: "3 months", value: "3-months" },
+    { label: "6 months", value: "6-months" },
+    { label: "1 year", value: "1-year" },
+] as const;
+
 export const CONTACT_RELATIONSHIPS = [
     "RECRUITER",
     "REFERRAL",

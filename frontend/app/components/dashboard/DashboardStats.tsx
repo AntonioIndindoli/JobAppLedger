@@ -2,8 +2,16 @@
 
 import { useState } from "react";
 
-import { getApplicationTimestamp } from "../../lib/application-analytics";
-import { APPLICATION_GOAL_PERIOD_OPTIONS } from "../../lib/constants";
+import {
+    countActiveApplications,
+    filterApplicationsByTimeframe,
+    getApplicationTimestamp,
+    getTimeframeStartTimestamp,
+} from "../../lib/application-analytics";
+import {
+    APPLICATION_GOAL_PERIOD_OPTIONS,
+    DASHBOARD_TIMEFRAME_OPTIONS,
+} from "../../lib/constants";
 import { hasRetainedMilestone } from "../../lib/dashboard-metrics";
 import { AppIcon, MetricIcon } from "../AppIcon";
 import { PipelineSankey } from "./PipelineSankey";
@@ -15,6 +23,7 @@ import type {
     ApplicationGoalPeriod,
     ApplicationGoalSettings,
     AppIconName,
+    DashboardTimeframe,
     IconTone,
     Interview,
     Task,
@@ -22,7 +31,6 @@ import type {
 
 const RESPONSE_STATUSES = new Set(["INTERVIEWING", "OFFER", "REJECTED", "WITHDRAWN"]);
 const INTERVIEW_STATUSES = new Set(["INTERVIEWING", "OFFER"]);
-const OFFER_STATUSES = new Set(["OFFER"]);
 const GOAL_PERIOD_COPY: Record<
     ApplicationGoalPeriod,
     { ariaLabel: string; countLabel: string; title: string }
@@ -45,7 +53,6 @@ const GOAL_PERIOD_COPY: Record<
 };
 
 type DashboardStatsProps = {
-    activePipeline: number;
     applicationGoal: ApplicationGoalSettings;
     applications: Application[];
     historyByApp: Record<string, ActivityLog[]>;
@@ -85,17 +92,6 @@ function getGoalPeriodRange(period: ApplicationGoalPeriod) {
     if (period === "daily") end.setDate(start.getDate() + 1);
     if (period === "weekly") end.setDate(start.getDate() + 7);
     if (period === "monthly") end.setMonth(start.getMonth() + 1);
-
-    return { end: end.getTime(), start: start.getTime() };
-}
-
-function getCurrentWeekRange() {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    start.setDate(start.getDate() - start.getDay());
-
-    const end = new Date(start);
-    end.setDate(start.getDate() + 7);
 
     return { end: end.getTime(), start: start.getTime() };
 }
@@ -175,7 +171,6 @@ function ApplicationGoalControls({
 }
 
 export function DashboardStats({
-    activePipeline,
     applicationGoal,
     applications,
     historyByApp,
@@ -184,12 +179,46 @@ export function DashboardStats({
     tasks,
 }: DashboardStatsProps) {
     const [isGoalEditorOpen, setIsGoalEditorOpen] = useState(false);
-    const upcomingInterviewCount = interviews.filter(isUpcomingInterview).length;
-    const dueTaskCount = tasks.filter(isTaskNeedingAttention).length;
-    const responseCount = applications.filter(
+    const [statsTimeframe, setStatsTimeframe] =
+        useState<DashboardTimeframe>("");
+    const now = new Date();
+    const statsApplications = filterApplicationsByTimeframe(
+        applications,
+        statsTimeframe,
+        now,
+    );
+    const statsApplicationIds = new Set(
+        statsApplications.map((application) => application.id),
+    );
+    const timeframeStart = getTimeframeStartTimestamp(statsTimeframe, now);
+    const statsInterviews = statsTimeframe
+        ? interviews.filter((interview) =>
+              statsApplicationIds.has(interview.applicationId),
+          )
+        : interviews;
+    const statsTasks = statsTimeframe
+        ? tasks.filter((task) => {
+              if (task.applicationId) {
+                  return statsApplicationIds.has(task.applicationId);
+              }
+
+              const createdAt = new Date(task.createdAt).getTime();
+              return (
+                  timeframeStart !== null &&
+                  createdAt >= timeframeStart &&
+                  createdAt <= now.getTime()
+              );
+          })
+        : tasks;
+    const activeApplicationCount = countActiveApplications(statsApplications);
+    const upcomingInterviewCount = statsInterviews.filter(
+        isUpcomingInterview,
+    ).length;
+    const dueTaskCount = statsTasks.filter(isTaskNeedingAttention).length;
+    const responseCount = statsApplications.filter(
         (application) => RESPONSE_STATUSES.has(application.status),
     ).length;
-    const submittedApplications = applications.filter(
+    const submittedApplications = statsApplications.filter(
         (application) => application.status !== "SAVED",
     );
     const interviewCount = submittedApplications.filter(
@@ -200,28 +229,11 @@ export function DashboardStats({
                 INTERVIEW_STATUSES,
             ),
     ).length;
-    const offerCount = submittedApplications.filter(
-        (application) =>
-            hasRetainedMilestone(
-                application,
-                historyByApp[application.id] ?? [],
-                OFFER_STATUSES,
-            ),
-    ).length;
-    const responseRate = getPercent(responseCount, applications.length);
+    const responseRate = getPercent(responseCount, statsApplications.length);
     const interviewRate = getPercent(
         interviewCount,
         submittedApplications.length,
     );
-    const offerRate = getPercent(offerCount, submittedApplications.length);
-    const currentWeekRange = getCurrentWeekRange();
-    const applicationsThisWeek = submittedApplications.filter((application) => {
-        const applicationTime = getApplicationTimestamp(application);
-        return (
-            applicationTime >= currentWeekRange.start &&
-            applicationTime < currentWeekRange.end
-        );
-    }).length;
     const goalPeriodRange = getGoalPeriodRange(applicationGoal.period);
     const goalTarget = getGoalTarget(applicationGoal.target);
     const goalApplications = applications.filter((application) => {
@@ -245,13 +257,13 @@ export function DashboardStats({
     }> = [
             {
                 label: "Total Applications",
-                value: applications.length,
+                value: statsApplications.length,
                 icon: "applications",
                 tone: "green",
             },
             {
                 label: "Active Applications",
-                value: activePipeline,
+                value: activeApplicationCount,
                 icon: "trend",
                 tone: "green",
             },
@@ -287,7 +299,28 @@ export function DashboardStats({
             />
             <div className="stats-summary-panel">
                 <section className="stats-panel" aria-labelledby="stats-heading">
-                    <h2 id="stats-heading">Job Search Stats</h2>
+                    <div className="stats-panel-header">
+                        <h2 id="stats-heading">Job Search Stats</h2>
+                        <select
+                            className="stats-timeframe-filter"
+                            aria-label="Filter job search stats by timeframe"
+                            value={statsTimeframe}
+                            onChange={(event) =>
+                                setStatsTimeframe(
+                                    event.target.value as DashboardTimeframe,
+                                )
+                            }
+                        >
+                            {DASHBOARD_TIMEFRAME_OPTIONS.map((option) => (
+                                <option
+                                    key={option.value || "all-time"}
+                                    value={option.value}
+                                >
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     <div className="stat-grid">
                         {stats.map((stat) => (
                             <article className="stat-card" key={stat.label}>

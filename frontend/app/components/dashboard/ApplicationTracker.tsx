@@ -9,7 +9,13 @@ import {
     useState,
 } from "react";
 
-import { DASHBOARD_STATUSES, SOURCES, STATUSES, STATUS_LABELS } from "../../lib/constants";
+import {
+    DASHBOARD_STATUSES,
+    DASHBOARD_TIMEFRAME_OPTIONS,
+    SOURCES,
+    STATUSES,
+    STATUS_LABELS,
+} from "../../lib/constants";
 import {
     getInterviewTimestamp,
     getInterviewTypeLabel,
@@ -122,9 +128,13 @@ export function ApplicationTracker({
     const mobileStageTabRefs = useRef<
         Partial<Record<DashboardStatus, HTMLButtonElement | null>>
     >({});
-    const activeFilterCount = [filters.query, filters.source, filters.company].filter(
-        Boolean,
-    ).length;
+    const activeFilterCount = [
+        filters.query,
+        filters.source,
+        filters.company,
+        filters.timeframe,
+    ].filter(Boolean).length;
+    const hasActiveFilters = Object.values(filters).some(Boolean);
     const filteredMobileStatus = DASHBOARD_STATUSES.find(
         (status) => status === filters.status,
     );
@@ -385,6 +395,23 @@ export function ApplicationTracker({
                         <option key={source}>{source}</option>
                     ))}
                 </select>
+                <select
+                    aria-label="Filter by timeframe"
+                    value={filters.timeframe}
+                    onChange={(event) =>
+                        onFiltersChange({
+                            ...filters,
+                            timeframe: event.target
+                                .value as ApplicationFilters["timeframe"],
+                        })
+                    }
+                >
+                    {DASHBOARD_TIMEFRAME_OPTIONS.map((option) => (
+                        <option key={option.value || "all-time"} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
                 <input
                     aria-label="Filter by company or job title"
                     placeholder="Company or job title"
@@ -393,6 +420,22 @@ export function ApplicationTracker({
                         onFiltersChange({ ...filters, company: event.target.value })
                     }
                 />
+                <button
+                    type="button"
+                    className="tracker-clear-filters"
+                    disabled={!hasActiveFilters}
+                    onClick={() =>
+                        onFiltersChange({
+                            query: "",
+                            status: "",
+                            source: "",
+                            company: "",
+                            timeframe: "",
+                        })
+                    }
+                >
+                    Clear filters
+                </button>
                 <button
                     type="button"
                     className="dashboard-filter-done"

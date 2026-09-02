@@ -84,7 +84,7 @@ export function ContactsView({ applications, contacts, createRequest, onSave, on
                     <span className="contact-avatar">{initials(contact.name)}</span><span className="contact-row-copy"><strong>{contact.name}</strong><span>{contact.role || CONTACT_RELATIONSHIP_LABELS[contact.relationship]}</span><small>{contact.companyName || "No company linked"}</small></span><AppIcon name="arrow-right" size={17} />
                 </button>) : <div className="contacts-no-results"><AppIcon name="search" size={26} /><strong>No contacts found</strong><span>Try a different search or filter.</span></div>}
             </div>
-            <aside className="application-detail-panel contact-detail">
+            <aside className="application-detail-panel contact-detail status-accent">
                 {selected ? <>
                     <button type="button" className="mobile-detail-back" onClick={closeMobileDetail}><AppIcon name="arrow-left" size={20} /> Contacts</button>
                     <header className="contact-detail-header"><span className="contact-avatar large">{initials(selected.name)}</span><div><span className="contact-badge">{CONTACT_RELATIONSHIP_LABELS[selected.relationship]}</span><h2>{selected.name}</h2><p>{selected.role || "Role not set"}{selected.companyName ? ` at ${selected.companyName}` : ""}</p></div><div className="application-detail-header-actions"><button className="alternative icon-button" aria-label="Edit contact" onClick={() => openEdit(selected)}><AppIcon name="edit" size={20} /></button><div className="application-detail-menu" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDetailMenuOpen(false); }}><button type="button" className="application-detail-menu-trigger" aria-label="More contact actions" aria-haspopup="menu" aria-expanded={isDetailMenuOpen} onClick={() => setIsDetailMenuOpen((open) => !open)}><AppIcon name="dots-vertical" size={25} /></button>{isDetailMenuOpen && <div className="application-detail-menu-popover" role="menu"><button type="button" role="menuitem" className="danger-text" onClick={async () => { setIsDetailMenuOpen(false); if (window.confirm(`Delete ${selected.name}?`)) { await onRemove(selected.id); setSelectedId(null); } }}><AppIcon name="trash" size={15} /> Delete contact</button></div>}</div></div></header>
@@ -93,7 +93,16 @@ export function ContactsView({ applications, contacts, createRequest, onSave, on
                         <div><dt>LinkedIn</dt><dd>{selected.linkedinUrl ? <a href={selected.linkedinUrl} target="_blank" rel="noreferrer">View profile <AppIcon name="external-link" size={14} /></a> : <span>Not added</span>}</dd></div>
                         <div><dt>Application</dt><dd>{selected.applicationTitle || "Not linked"}</dd></div>
                     </dl>
-                    <section className="contact-notes"><h3>Notes</h3><p className={selected.notes ? "" : "muted"}>{selected.notes || "No notes added yet."}</p></section>
+                    <section className="contact-notes">
+                        <div className="contact-notes-heading">
+                            <h3>Notes</h3>
+                            <button type="button" className="alternative application-section-action" onClick={() => openEdit(selected)}>Edit notes</button>
+                        </div>
+                        <p className={selected.notes ? "" : "muted is-empty"}>
+                            {!selected.notes && <AppIcon name="document" size={22} />}
+                            {selected.notes || "No notes added yet."}
+                        </p>
+                    </section>
                 </> : <div className="contacts-no-results"><AppIcon name="contacts" size={30} /><strong>Select a contact</strong></div>}
             </aside>
         </div>}

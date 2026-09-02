@@ -10,6 +10,7 @@ import type {
     ApplicationStatus,
     AppIconName,
     DashboardStatus,
+    DashboardTimeframe,
     IconTone,
     Interview,
     WeeklyRangeWeeks,
@@ -92,6 +93,52 @@ function getStartOfWeek(date: Date) {
     weekStart.setHours(0, 0, 0, 0);
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     return weekStart;
+}
+
+function subtractCalendarMonths(date: Date, monthCount: number) {
+    const originalDay = date.getDate();
+    date.setDate(1);
+    date.setMonth(date.getMonth() - monthCount);
+
+    const lastDayOfTargetMonth = new Date(
+        date.getFullYear(),
+        date.getMonth() + 1,
+        0,
+    ).getDate();
+    date.setDate(Math.min(originalDay, lastDayOfTargetMonth));
+}
+
+export function getTimeframeStartTimestamp(
+    timeframe: DashboardTimeframe,
+    now = new Date(),
+) {
+    if (!timeframe) return null;
+
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+
+    if (timeframe === "1-week") start.setDate(start.getDate() - 7);
+    if (timeframe === "1-month") subtractCalendarMonths(start, 1);
+    if (timeframe === "3-months") subtractCalendarMonths(start, 3);
+    if (timeframe === "6-months") subtractCalendarMonths(start, 6);
+    if (timeframe === "1-year") subtractCalendarMonths(start, 12);
+
+    return start.getTime();
+}
+
+export function filterApplicationsByTimeframe(
+    applications: Application[],
+    timeframe: DashboardTimeframe,
+    now = new Date(),
+) {
+    const startTimestamp = getTimeframeStartTimestamp(timeframe, now);
+    if (startTimestamp === null) return applications;
+
+    const endTimestamp = now.getTime();
+    return applications.filter((application) => {
+        const timestamp = getApplicationTimestamp(application);
+        return timestamp >= startTimestamp && timestamp <= endTimestamp;
+    });
 }
 
 function getMetadataObject(metadata: ActivityLog["metadata"]) {
@@ -593,6 +640,8 @@ export function filterApplications(
 ) {
     const queryFilter = filters.query.trim().toLowerCase();
     const companyFilter = filters.company.trim().toLowerCase();
+    const timeframeStart = getTimeframeStartTimestamp(filters.timeframe);
+    const timeframeEnd = Date.now();
 
     return applications.filter((app) => {
         const searchableText = [
@@ -621,6 +670,14 @@ export function filterApplications(
                 .includes(companyFilter)
         )
             return false;
+        if (timeframeStart !== null) {
+            const applicationTimestamp = getApplicationTimestamp(app);
+            if (
+                applicationTimestamp < timeframeStart ||
+                applicationTimestamp > timeframeEnd
+            )
+                return false;
+        }
 
         return true;
     });
