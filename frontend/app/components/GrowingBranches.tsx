@@ -11,6 +11,7 @@ function GrowingBranchTree({ position }: { position: "left" | "center" | "right"
             preserveAspectRatio="xMidYMid meet"
         >
             <g transform={position === "right" ? "translate(1400 0) scale(-1 1)" : undefined}>
+                <g className={`hero-growth-canopy hero-growth-canopy--${position}`}>
                 <g className="hero-growth-vines" strokeLinecap="round" strokeLinejoin="round">
                     <path
                         className="hero-growth-path hero-growth-trunk"
@@ -157,6 +158,7 @@ function GrowingBranchTree({ position }: { position: "left" | "center" | "right"
                     <g transform="translate(540 44) rotate(-168)"><path className="hero-growth-leaf hero-leaf-top-left" d={leafShape} /></g>
                     <g transform="translate(610 38) rotate(-98)"><path className="hero-growth-leaf hero-leaf-top-left-twig" d={leafShape} /></g>
                     <g transform="translate(700 30) rotate(-76)"><path className="hero-growth-leaf hero-leaf-crown" d={leafShape} /></g>
+                </g>
                 </g>
             </g>
         </svg>

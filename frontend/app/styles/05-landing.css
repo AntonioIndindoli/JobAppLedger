@@ -322,7 +322,7 @@ html[data-theme="dark"] .landing-page {
 }
 
 .landing-hero-growth-svg--left {
-    transform: translateX(calc(-50% - 700px)) translateY(+80px) scaleY(1) rotate(-10deg);
+    transform: translateX(calc(-50% - 800px)) translateY(+80px) scaleX(1.25) rotate(-5deg);
 }
 
 .landing-hero-growth-svg--center {
@@ -330,7 +330,29 @@ html[data-theme="dark"] .landing-page {
 }
 
 .landing-hero-growth-svg--right {
-    transform: translateX(calc(-50% + 700px)) translateY(+90px) scaleY(1) rotate(+30deg);
+    transform: translateX(calc(-50% + 800px)) translateY(+90px) scaleX(1.25) rotate(+10deg);
+}
+
+.hero-growth-canopy {
+    transform-box: view-box;
+    transform-origin: 700px 744px;
+    will-change: transform;
+    animation: landing-plant-sway 8s ease-in-out 3.4s infinite;
+}
+
+.hero-growth-canopy--left {
+    animation-duration: 12.8s;
+    animation-delay: 0s;
+}
+
+.hero-growth-canopy--center {
+    animation-duration: 14.6s;
+    animation-delay: 0s;
+}
+
+.hero-growth-canopy--right {
+    animation-duration: 13.2s;
+    animation-delay: 0s;
 }
 
 .hero-growth-vines {
@@ -1375,6 +1397,25 @@ body.auth-modal-open {
     }
 }
 
+@keyframes landing-plant-sway {
+    0%,
+    100% {
+        transform: translateX(-1px) rotate(-.18deg);
+    }
+
+    30% {
+        transform: translateX(2px) rotate(.32deg);
+    }
+
+    58% {
+        transform: translateX(0) rotate(-.05deg);
+    }
+
+    78% {
+        transform: translateX(1px) rotate(.2deg);
+    }
+}
+
 @keyframes landing-background-leaf-appear {
     from {
         opacity: 0;
@@ -1652,6 +1693,11 @@ body.auth-modal-open {
 
     .hero-growth-leaf {
         opacity: .17;
+    }
+
+    .hero-growth-canopy {
+        animation: none;
+        transform: none;
     }
 
     .landing-chart span {
