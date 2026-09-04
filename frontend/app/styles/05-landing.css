@@ -3,6 +3,7 @@
 .landing-page {
     --landing-ink: #10221a;
     --landing-green: #17863d;
+    --landing-top-gradient: #17863e1a;
     --landing-green-dark: #0f6d30;
     --landing-mint: #effaf1;
     --landing-background: #fbfdf9;
@@ -23,7 +24,7 @@
     min-height: 100vh;
     overflow: hidden;
     color: var(--landing-ink);
-    background: linear-gradient(135deg, var(--landing-background), var(--landing-surface));
+    background: linear-gradient(180deg, var(--landing-top-gradient), var(--landing-background) );
 }
 
 html[data-theme="dark"] .landing-page {
@@ -31,7 +32,7 @@ html[data-theme="dark"] .landing-page {
     --landing-green: #5ee384;
     --landing-green-dark: #43c86a;
     --landing-mint: #153426;
-    --landing-background: #07140e;
+    --landing-background: #000000;
     --landing-surface: #0e2117;
     --landing-surface-translucent: rgba(14, 33, 23, .93);
     --landing-surface-soft: #10261a;
@@ -220,31 +221,6 @@ html[data-theme="dark"] .landing-page {
     animation-delay: .39s;
 }
 
-.landing-eyebrow {
-    width: fit-content;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    margin-bottom: 22px;
-    padding: 8px 12px;
-    border: 1px solid var(--landing-border);
-    border-radius: 999px;
-    color: var(--landing-copy);
-    background: var(--landing-mint);
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-}
-
-.landing-eyebrow-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #31b950;
-    box-shadow: 0 0 0 4px #31b9501e;
-}
-
 .landing-hero h1 {
     margin: 0;
     color: var(--landing-ink);
@@ -346,21 +322,21 @@ html[data-theme="dark"] .landing-page {
 }
 
 .landing-hero-growth-svg--left {
-    transform: translateX(calc(-50% - 800px)) translateY(+300px) scaleY(.8) rotate(+40deg);
+    transform: translateX(calc(-50% - 700px)) translateY(+130px) scaleY(1) rotate(-10deg);
 }
 
 .landing-hero-growth-svg--center {
-    transform: translateX(-50%);
+    transform: translateX(-50%) translateY(+100px) scaleY(1.2);
 }
 
 .landing-hero-growth-svg--right {
-    transform: translateX(calc(-50% + 700px)) translateY(+400px) scaleY(.8) rotate(-30deg);
+    transform: translateX(calc(-50% + 700px)) translateY(+120px) scaleY(1) rotate(+30deg);
 }
 
 .hero-growth-vines {
     stroke: #37864a;
     stroke-width: 3;
-    opacity: .17;
+    opacity: .05;
 }
 
 .hero-growth-trunk {
@@ -391,83 +367,123 @@ html[data-theme="dark"] .landing-page {
 }
 
 .hero-growth-lower-left {
-    animation-duration: 1.32s;
+    animation-duration: 1.05s;
     animation-delay: .78s;
 }
 
 .hero-growth-lower-left-twig {
-    animation-duration: .8s;
-    animation-delay: 1.3s;
+    animation-duration: .55s;
+    animation-delay: 1.22s;
 }
 
 .hero-growth-lower-right {
-    animation-duration: .82s;
+    animation-duration: .68s;
     animation-delay: .82s;
 }
 
 .hero-growth-lower-right-twig {
-    animation-duration: .78s;
-    animation-delay: 1.34s;
+    animation-duration: .5s;
+    animation-delay: 1.15s;
+}
+
+.hero-growth-lower-middle-right {
+    animation-duration: .88s;
+    animation-delay: 1s;
+}
+
+.hero-growth-lower-middle-right-twig {
+    animation-duration: .52s;
+    animation-delay: 1.42s;
 }
 
 .hero-growth-middle-right {
-    animation-duration: 1.32s;
+    animation-duration: 1.08s;
     animation-delay: 1.25s;
 }
 
 .hero-growth-middle-right-twig {
-    animation-duration: .75s;
-    animation-delay: 1.78s;
+    animation-duration: .55s;
+    animation-delay: 1.72s;
 }
 
 .hero-growth-middle-left {
-    animation-duration: .88s;
+    animation-duration: .58s;
     animation-delay: 1.28s;
 }
 
 .hero-growth-middle-left-twig {
-    animation-duration: .74s;
-    animation-delay: 1.8s;
+    animation-duration: .5s;
+    animation-delay: 1.55s;
+}
+
+.hero-growth-middle-lower-left {
+    animation-duration: .82s;
+    animation-delay: 1.48s;
+}
+
+.hero-growth-middle-lower-left-twig {
+    animation-duration: .5s;
+    animation-delay: 1.87s;
 }
 
 .hero-growth-upper-left {
-    animation-duration: .84s;
+    animation-duration: .96s;
     animation-delay: 1.72s;
 }
 
 .hero-growth-upper-left-twig {
-    animation-duration: .72s;
-    animation-delay: 2.17s;
+    animation-duration: .52s;
+    animation-delay: 2.15s;
 }
 
 .hero-growth-upper-right {
-    animation-duration: 1.25s;
+    animation-duration: .68s;
     animation-delay: 1.75s;
 }
 
 .hero-growth-upper-right-twig {
-    animation-duration: .7s;
-    animation-delay: 2.2s;
+    animation-duration: .5s;
+    animation-delay: 2.06s;
+}
+
+.hero-growth-upper-middle-right {
+    animation-duration: .58s;
+    animation-delay: 1.98s;
+}
+
+.hero-growth-upper-middle-right-twig {
+    animation-duration: .48s;
+    animation-delay: 2.24s;
 }
 
 .hero-growth-top-right {
-    animation-duration: .88s;
+    animation-duration: .58s;
     animation-delay: 2.15s;
 }
 
 .hero-growth-top-right-twig {
-    animation-duration: .7s;
-    animation-delay: 2.58s;
+    animation-duration: .42s;
+    animation-delay: 2.4s;
+}
+
+.hero-growth-top-left {
+    animation-duration: .55s;
+    animation-delay: 2.48s;
+}
+
+.hero-growth-top-left-twig {
+    animation-duration: .4s;
+    animation-delay: 2.7s;
 }
 
 .hero-growth-leaf {
-    fill: #3d8d4c;
+    fill: #3d8d4c6c;
     opacity: 0;
     animation: landing-background-leaf-appear .45s ease-out forwards;
 }
 
 .hero-leaf-lower-left {
-    animation-delay: 2.12s;
+    animation-delay: 1.86s;
 }
 
 .hero-leaf-trunk-lower {
@@ -479,19 +495,27 @@ html[data-theme="dark"] .landing-page {
 }
 
 .hero-leaf-lower-left-twig {
-    animation-delay: 2.14s;
+    animation-delay: 1.8s;
 }
 
 .hero-leaf-lower-right {
-    animation-delay: 1.68s;
+    animation-delay: 1.54s;
 }
 
 .hero-leaf-lower-right-twig {
-    animation-delay: 2.16s;
+    animation-delay: 1.68s;
+}
+
+.hero-leaf-lower-middle-right {
+    animation-delay: 1.92s;
+}
+
+.hero-leaf-lower-middle-right-twig {
+    animation-delay: 1.98s;
 }
 
 .hero-leaf-middle-right {
-    animation-delay: 2.62s;
+    animation-delay: 2.37s;
 }
 
 .hero-leaf-trunk-middle {
@@ -503,19 +527,27 @@ html[data-theme="dark"] .landing-page {
 }
 
 .hero-leaf-middle-right-twig {
-    animation-delay: 2.57s;
+    animation-delay: 2.31s;
 }
 
 .hero-leaf-middle-left {
-    animation-delay: 2.2s;
+    animation-delay: 1.9s;
 }
 
 .hero-leaf-middle-left-twig {
-    animation-delay: 2.6s;
+    animation-delay: 2.09s;
+}
+
+.hero-leaf-middle-lower-left {
+    animation-delay: 2.34s;
+}
+
+.hero-leaf-middle-lower-left-twig {
+    animation-delay: 2.41s;
 }
 
 .hero-leaf-upper-left {
-    animation-delay: 2.6s;
+    animation-delay: 2.72s;
 }
 
 .hero-leaf-trunk-upper {
@@ -527,15 +559,23 @@ html[data-theme="dark"] .landing-page {
 }
 
 .hero-leaf-upper-left-twig {
-    animation-delay: 2.93s;
+    animation-delay: 2.71s;
 }
 
 .hero-leaf-upper-right {
-    animation-delay: 3.05s;
+    animation-delay: 2.47s;
 }
 
 .hero-leaf-upper-right-twig {
-    animation-delay: 2.96s;
+    animation-delay: 2.6s;
+}
+
+.hero-leaf-upper-middle-right {
+    animation-delay: 2.6s;
+}
+
+.hero-leaf-upper-middle-right-twig {
+    animation-delay: 2.76s;
 }
 
 .hero-leaf-crown {
@@ -551,11 +591,19 @@ html[data-theme="dark"] .landing-page {
 }
 
 .hero-leaf-top-right {
-    animation-delay: 3.08s;
+    animation-delay: 2.77s;
 }
 
 .hero-leaf-top-right-twig {
-    animation-delay: 3.32s;
+    animation-delay: 2.84s;
+}
+
+.hero-leaf-top-left {
+    animation-delay: 3.07s;
+}
+
+.hero-leaf-top-left-twig {
+    animation-delay: 3.14s;
 }
 
 .landing-product-sidebar {

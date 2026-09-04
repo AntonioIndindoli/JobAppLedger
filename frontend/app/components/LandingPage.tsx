@@ -130,10 +130,6 @@ export function LandingPage({
             <section className="landing-hero" id="top">
                 <GrowingBranches />
                 <div className="landing-hero-copy landing-hero-entrance">
-                    <div className="landing-eyebrow">
-                        <span className="landing-eyebrow-dot" />
-                        Your job search, finally organized
-                    </div>
                     <h1>
                         Less tracking.
                         <br />
