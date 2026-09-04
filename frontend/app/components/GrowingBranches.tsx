@@ -4,9 +4,9 @@ function GrowingBranchTree({ position }: { position: "left" | "center" | "right"
     return (
         <svg
             className={`landing-hero-growth-svg landing-hero-growth-svg--${position}`}
-            viewBox="0 0 1400 720"
+            viewBox="0 0 1400 800"
             width="1400"
-            height="720"
+            height="800"
             fill="none"
             preserveAspectRatio="xMidYMid meet"
         >
@@ -21,7 +21,7 @@ function GrowingBranchTree({ position }: { position: "left" | "center" | "right"
                     <path
                         className="hero-growth-path hero-growth-branch hero-growth-lower-left"
                         pathLength="1"
-                        d="M695 590C602 566 520 526 445 470C368 413 305 390 245 350"
+                        d="M695 590C602 566 520 526 445 470C355 402 265 366 175 342"
                     />
                     <path
                         className="hero-growth-path hero-growth-twig hero-growth-lower-left-twig"
@@ -31,7 +31,7 @@ function GrowingBranchTree({ position }: { position: "left" | "center" | "right"
                     <path
                         className="hero-growth-path hero-growth-branch hero-growth-lower-right"
                         pathLength="1"
-                        d="M695 590C782 568 858 530 922 486C982 445 1037 429 1098 421"
+                        d="M695 590C782 568 858 530 922 486C953 464 983 452 1015 448"
                     />
                     <path
                         className="hero-growth-path hero-growth-twig hero-growth-lower-right-twig"
@@ -42,7 +42,7 @@ function GrowingBranchTree({ position }: { position: "left" | "center" | "right"
                     <path
                         className="hero-growth-path hero-growth-branch hero-growth-middle-right"
                         pathLength="1"
-                        d="M690 450C782 429 857 383 930 330C992 285 1061 266 1142 242"
+                        d="M690 450C782 429 857 383 930 330C1008 273 1099 240 1210 222"
                     />
                     <path
                         className="hero-growth-path hero-growth-twig hero-growth-middle-right-twig"
@@ -52,7 +52,7 @@ function GrowingBranchTree({ position }: { position: "left" | "center" | "right"
                     <path
                         className="hero-growth-path hero-growth-branch hero-growth-middle-left"
                         pathLength="1"
-                        d="M690 450C610 426 544 389 482 344C420 299 357 278 286 264"
+                        d="M690 450C610 426 544 389 482 344C435 310 389 290 340 278"
                     />
                     <path
                         className="hero-growth-path hero-growth-twig hero-growth-middle-left-twig"
@@ -63,7 +63,7 @@ function GrowingBranchTree({ position }: { position: "left" | "center" | "right"
                     <path
                         className="hero-growth-path hero-growth-branch hero-growth-upper-left"
                         pathLength="1"
-                        d="M700 315C616 286 550 229 490 165C430 101 352 82 258 78"
+                        d="M700 315C616 286 550 229 490 165C446 118 397 98 335 90"
                     />
                     <path
                         className="hero-growth-path hero-growth-twig hero-growth-upper-left-twig"
@@ -73,7 +73,7 @@ function GrowingBranchTree({ position }: { position: "left" | "center" | "right"
                     <path
                         className="hero-growth-path hero-growth-branch hero-growth-upper-right"
                         pathLength="1"
-                        d="M700 315C778 291 842 252 902 207C963 162 1028 142 1103 128"
+                        d="M700 315C778 291 842 252 902 207C980 149 1070 119 1180 104"
                     />
                     <path
                         className="hero-growth-path hero-growth-twig hero-growth-upper-right-twig"
@@ -84,7 +84,7 @@ function GrowingBranchTree({ position }: { position: "left" | "center" | "right"
                     <path
                         className="hero-growth-path hero-growth-branch hero-growth-top-right"
                         pathLength="1"
-                        d="M695 175C774 155 830 133 890 112C970 84 1050 52 1160 33"
+                        d="M695 175C774 155 830 133 890 112C958 88 1023 68 1090 54"
                     />
                     <path
                         className="hero-growth-path hero-growth-twig hero-growth-top-right-twig"
@@ -94,19 +94,19 @@ function GrowingBranchTree({ position }: { position: "left" | "center" | "right"
                 </g>
 
                 <g className="hero-growth-leaves">
-                    <g transform="translate(245 350) rotate(-128)"><path className="hero-growth-leaf hero-leaf-lower-left" d={leafShape} /></g>
+                    <g transform="translate(175 342) rotate(-140)"><path className="hero-growth-leaf hero-leaf-lower-left" d={leafShape} /></g>
                     <g transform="translate(370 370) rotate(-82)"><path className="hero-growth-leaf hero-leaf-lower-left-twig" d={leafShape} /></g>
-                    <g transform="translate(1098 421) rotate(-25)"><path className="hero-growth-leaf hero-leaf-lower-right" d={leafShape} /></g>
+                    <g transform="translate(1015 448) rotate(-18)"><path className="hero-growth-leaf hero-leaf-lower-right" d={leafShape} /></g>
                     <g transform="translate(988 388) rotate(-70)"><path className="hero-growth-leaf hero-leaf-lower-right-twig" d={leafShape} /></g>
-                    <g transform="translate(1142 242) rotate(-28)"><path className="hero-growth-leaf hero-leaf-middle-right" d={leafShape} /></g>
+                    <g transform="translate(1210 222) rotate(-22)"><path className="hero-growth-leaf hero-leaf-middle-right" d={leafShape} /></g>
                     <g transform="translate(990 210) rotate(-69)"><path className="hero-growth-leaf hero-leaf-middle-right-twig" d={leafShape} /></g>
-                    <g transform="translate(286 264) rotate(-155)"><path className="hero-growth-leaf hero-leaf-middle-left" d={leafShape} /></g>
+                    <g transform="translate(340 278) rotate(-151)"><path className="hero-growth-leaf hero-leaf-middle-left" d={leafShape} /></g>
                     <g transform="translate(423 244) rotate(-104)"><path className="hero-growth-leaf hero-leaf-middle-left-twig" d={leafShape} /></g>
-                    <g transform="translate(258 78) rotate(-158)"><path className="hero-growth-leaf hero-leaf-upper-left" d={leafShape} /></g>
+                    <g transform="translate(335 90) rotate(-153)"><path className="hero-growth-leaf hero-leaf-upper-left" d={leafShape} /></g>
                     <g transform="translate(420 72) rotate(-96)"><path className="hero-growth-leaf hero-leaf-upper-left-twig" d={leafShape} /></g>
-                    <g transform="translate(1103 128) rotate(-26)"><path className="hero-growth-leaf hero-leaf-upper-right" d={leafShape} /></g>
+                    <g transform="translate(1180 104) rotate(-22)"><path className="hero-growth-leaf hero-leaf-upper-right" d={leafShape} /></g>
                     <g transform="translate(964 111) rotate(-72)"><path className="hero-growth-leaf hero-leaf-upper-right-twig" d={leafShape} /></g>
-                    <g transform="translate(1160 33) rotate(-23)"><path className="hero-growth-leaf hero-leaf-top-right" d={leafShape} /></g>
+                    <g transform="translate(1090 54) rotate(-22)"><path className="hero-growth-leaf hero-leaf-top-right" d={leafShape} /></g>
                     <g transform="translate(940 38) rotate(-71)"><path className="hero-growth-leaf hero-leaf-top-right-twig" d={leafShape} /></g>
                     <g transform="translate(700 30) rotate(-76)"><path className="hero-growth-leaf hero-leaf-crown" d={leafShape} /></g>
                 </g>
