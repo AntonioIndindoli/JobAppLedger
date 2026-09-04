@@ -327,10 +327,21 @@ html[data-theme="dark"] .landing-page {
     width: 1400px;
     min-width: 1400px;
     max-width: none;
-    height: 720px;
+    height: 820px;
     min-height: 720px;
     overflow: hidden;
+}
+
+.landing-hero-growth-svg--left {
+    transform: translateX(calc(-50% - 630px));
+}
+
+.landing-hero-growth-svg--center {
     transform: translateX(-50%);
+}
+
+.landing-hero-growth-svg--right {
+    transform: translateX(calc(-50% + 630px));
 }
 
 .hero-growth-vines {

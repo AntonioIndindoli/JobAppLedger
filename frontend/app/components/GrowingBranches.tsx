@@ -1,16 +1,16 @@
-export function GrowingBranches() {
-    const leafShape = "M0 0C4-13 17-22 33-21C30-6 18 5 0 0Z";
+const leafShape = "M0 0C4-13 17-22 33-21C30-6 18 5 0 0Z";
 
+function GrowingBranchTree({ position }: { position: "left" | "center" | "right" }) {
     return (
-        <div className="landing-hero-growth" aria-hidden="true">
-            <svg
-                className="landing-hero-growth-svg"
-                viewBox="0 0 1400 720"
-                width="1400"
-                height="720"
-                fill="none"
-                preserveAspectRatio="xMidYMid meet"
-            >
+        <svg
+            className={`landing-hero-growth-svg landing-hero-growth-svg--${position}`}
+            viewBox="0 0 1400 720"
+            width="1400"
+            height="720"
+            fill="none"
+            preserveAspectRatio="xMidYMid meet"
+        >
+            <g transform={position === "center" ? undefined : "translate(1400 0) scale(-1 1)"}>
                 <g className="hero-growth-vines" strokeLinecap="round" strokeLinejoin="round">
                     <path
                         className="hero-growth-path hero-growth-trunk"
@@ -74,7 +74,17 @@ export function GrowingBranches() {
                     <g transform="translate(940 38) rotate(-71)"><path className="hero-growth-leaf hero-leaf-top-right-twig" d={leafShape} /></g>
                     <g transform="translate(700 30) rotate(-76)"><path className="hero-growth-leaf hero-leaf-crown" d={leafShape} /></g>
                 </g>
-            </svg>
+            </g>
+        </svg>
+    );
+}
+
+export function GrowingBranches() {
+    return (
+        <div className="landing-hero-growth" aria-hidden="true">
+            <GrowingBranchTree position="left" />
+            <GrowingBranchTree position="center" />
+            <GrowingBranchTree position="right" />
         </div>
     );
 }

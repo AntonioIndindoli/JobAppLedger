@@ -114,8 +114,7 @@ export function LandingPage({
                 </a>
 
                 <nav className="landing-nav-links" aria-label="Landing page">
-                    <a href="#features">Features</a>
-                    <a href="#how-it-works">How it works</a>
+
                 </nav>
 
                 <div className="landing-nav-actions">
