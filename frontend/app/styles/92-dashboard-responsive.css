@@ -11,7 +11,7 @@
 
 .dashboard-hero-header h1 {
     margin: 0 0 7px;
-    color: #14213d;
+    color: var(--text-heading);
     font-size: 31px;
     line-height: 1.08;
     font-weight: 850;
@@ -91,7 +91,7 @@
         grid-template-columns: 40px minmax(0, 1fr);
         gap: 10px;
         padding: 14px;
-        background: #fff;
+        background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 12px;
         box-shadow: 0 10px 26px rgba(31, 60, 100, .035);
@@ -126,7 +126,7 @@
         padding: 18px;
         border: 1px solid var(--border);
         border-radius: 12px;
-        background: #fff;
+        background: var(--surface);
         box-shadow: 0 10px 26px rgba(31, 60, 100, .035);
     }
 
@@ -160,8 +160,8 @@
         margin-top: 12px;
         border: 1px solid var(--border);
         border-radius: 8px;
-        background: #fff;
-        color: #26334d;
+        background: var(--surface);
+        color: var(--text-secondary);
         font: inherit;
         font-size: 13px;
         font-weight: 800;
@@ -174,7 +174,7 @@
         height: 21px;
         padding: 0 6px;
         border-radius: 999px;
-        background: #eaf3ff;
+        background: var(--surface-blue-strong);
         color: var(--green);
         font-size: 11px;
     }
@@ -206,9 +206,9 @@
         margin: 0;
         padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
         overflow-y: auto;
-        border: 1px solid #dce5f2;
+        border: 1px solid var(--border);
         border-radius: 18px 18px 0 0;
-        background: #fff;
+        background: var(--surface);
         box-shadow: 0 -18px 44px rgba(20, 33, 61, .22);
         overscroll-behavior: contain;
     }
@@ -218,7 +218,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        color: #14213d;
+        color: var(--text-heading);
         font-size: 16px;
     }
 
@@ -229,8 +229,8 @@
         height: 44px;
         border: 0;
         border-radius: 9px;
-        background: #f3f8ff;
-        color: #14213d;
+        background: var(--surface-blue);
+        color: var(--text-heading);
     }
 
     .tracker-panel>.filter-row.dashboard-filters-open input,
@@ -243,7 +243,7 @@
     .tracker-panel>.filter-row.dashboard-filters-open>button:last-child {
         border-color: var(--green);
         background: var(--green);
-        color: #fff;
+        color: white;
         font-weight: 800;
     }
 
@@ -268,12 +268,12 @@
 
     .mobile-stage-tabs-shell::before {
         left: 0;
-        background: linear-gradient(270deg, transparent, #fff 82%);
+        background: linear-gradient(270deg, transparent, var(--surface) 82%);
     }
 
     .mobile-stage-tabs-shell::after {
         right: 0;
-        background: linear-gradient(90deg, transparent, #fff 82%);
+        background: linear-gradient(90deg, transparent, var(--surface) 82%);
     }
 
     .mobile-stage-tabs-shell.has-overflow-start::before,
@@ -305,10 +305,10 @@
         flex: 0 0 auto;
         min-height: 44px;
         padding: 9px 12px;
-        border: 1px solid #dbe5f2;
+        border: 1px solid var(--border);
         border-radius: 999px;
-        background: #fff;
-        color: #53617b;
+        background: var(--surface);
+        color: var(--text-muted);
         font: inherit;
         font-size: 12px;
         font-weight: 800;
@@ -322,18 +322,18 @@
         height: 20px;
         padding: 0 5px;
         border-radius: 999px;
-        background: #eef3f8;
+        background: var(--surface-slate);
         font-size: 11px;
     }
 
     .mobile-stage-tabs button[aria-selected="true"] {
-        border-color: #9fc6ff;
-        background: #eaf3ff;
+        border-color: var(--accent-border);
+        background: var(--surface-blue-strong);
         color: var(--green);
     }
 
     .mobile-stage-tabs button:focus-visible {
-        outline: 3px solid rgba(0, 102, 255, .32);
+        outline: 3px solid rgba(0, 255, 42, 0.32);
         outline-offset: 1px;
     }
 
@@ -415,10 +415,10 @@
     .mobile-status-control select {
         min-height: 40px;
         max-width: 132px;
-        border: 1px solid #c9dcfb;
+        border: 1px solid var(--accent-border);
         border-radius: 8px;
         padding: 0 8px;
-        background: #f4f8ff;
+        background: var(--surface-blue);
         color: var(--green);
         font: inherit;
         font-size: 12px;
@@ -462,7 +462,7 @@
         top: 0;
         z-index: 35;
         height: 62px;
-        background: rgba(255, 255, 255, .96);
+        background: var(--surface-translucent);
         backdrop-filter: blur(14px);
     }
 
@@ -475,6 +475,39 @@
         grid-template-columns: minmax(0, 1fr);
         gap: 12px;
         margin-bottom: 12px;
+    }
+
+    .pipeline-header {
+        align-items: stretch;
+    }
+
+    .pipeline-view-switcher {
+        width: 100%;
+    }
+
+    .pipeline-view-switcher button {
+        min-width: 0;
+        min-height: 38px;
+    }
+
+    .pipeline-timeline-toolbar {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .pipeline-timeline-toolbar label {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .pipeline-timeline-toolbar select {
+        min-height: 38px;
+    }
+
+    .pipeline-visualization-frame {
+        min-height: 230px;
+        aspect-ratio: auto;
     }
 
     .stats-panel .stat-grid {

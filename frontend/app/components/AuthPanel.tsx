@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import type { FormEvent } from "react";
+import { useEffect, type FormEvent } from "react";
 
+import { AppIcon } from "./AppIcon";
 import type { AuthStatus, Mode } from "../lib/types";
 
 type AuthPanelProps = {
@@ -11,6 +12,7 @@ type AuthPanelProps = {
     password: string;
     authStatus: AuthStatus;
     message: string;
+    onClose: () => void;
     onModeChange: (mode: Mode) => void;
     onEmailChange: (email: string) => void;
     onPasswordChange: (password: string) => void;
@@ -23,61 +25,105 @@ export function AuthPanel({
     password,
     authStatus,
     message,
+    onClose,
     onModeChange,
     onEmailChange,
     onPasswordChange,
     onSubmit,
 }: AuthPanelProps) {
+    useEffect(() => {
+        function closeOnEscape(event: KeyboardEvent) {
+            if (event.key === "Escape") onClose();
+        }
+
+        document.addEventListener("keydown", closeOnEscape);
+        document.body.classList.add("auth-modal-open");
+        return () => {
+            document.removeEventListener("keydown", closeOnEscape);
+            document.body.classList.remove("auth-modal-open");
+        };
+    }, [onClose]);
+
+    const isChecking = authStatus === "checking";
+
     return (
-        <main className="p-8 max-w-xl mx-auto">
-            <div className="flex items-center gap-3 mb-4">
+        <div className="auth-modal-backdrop" role="presentation" onMouseDown={onClose}>
+            <section
+                className="auth-panel"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="auth-title"
+                onMouseDown={(event) => event.stopPropagation()}
+            >
+                <button type="button" className="auth-close" aria-label="Close" onClick={onClose}>
+                    <AppIcon name="x" size={20} />
+                </button>
+                <div className="auth-brand">
                 <Image
                     src="/JobHazelIcon.png"
                     alt=""
-                    width={38}
-                    height={38}
-                    className="shrink-0"
+                    width={42}
+                    height={42}
                     priority
                 />
-                <h1 className="text-2xl font-semibold">JobHazel</h1>
-            </div>
-            <form onSubmit={onSubmit} className="space-y-3">
-                <div className="flex gap-2">
+                    <span>JobHazel</span>
+                </div>
+                <div className="auth-heading">
+                    <h2 id="auth-title">{mode === "signup" ? "Start your job search" : "Welcome back"}</h2>
+                    <p>{mode === "signup" ? "Create your free workspace in a few seconds." : "Sign in to pick up where you left off."}</p>
+                </div>
+                <div className="auth-tabs" role="tablist" aria-label="Account action">
                     <button
                         type="button"
-                        className="border px-3 py-2"
+                        className={mode === "signup" ? "active" : ""}
+                        role="tab"
+                        aria-selected={mode === "signup"}
                         onClick={() => onModeChange("signup")}
                     >
-                        Sign up
+                        Create account
                     </button>
                     <button
                         type="button"
-                        className="border px-3 py-2"
+                        className={mode === "login" ? "active" : ""}
+                        role="tab"
+                        aria-selected={mode === "login"}
                         onClick={() => onModeChange("login")}
                     >
-                        Login
+                        Sign in
                     </button>
                 </div>
-                <input
-                    className="w-full border px-3 py-2"
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(event) => onEmailChange(event.target.value)}
-                    required
-                />
-                <input
-                    className="w-full border px-3 py-2"
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(event) => onPasswordChange(event.target.value)}
-                    required
-                />
-                <button className="bg-black text-white px-4 py-2">{mode}</button>
-                {authStatus === "checking" && <p>Checking session...</p>}
-                {message && <p>{message}</p>}
-            </form>
-        </main>
+                <form onSubmit={onSubmit} className="auth-form">
+                    <label>
+                        <span>Email address</span>
+                        <input
+                            type="email"
+                            placeholder="you@example.com"
+                            value={email}
+                            onChange={(event) => onEmailChange(event.target.value)}
+                            autoComplete="email"
+                            autoFocus
+                            required
+                        />
+                    </label>
+                    <label>
+                        <span>Password</span>
+                        <input
+                            type="password"
+                            placeholder={mode === "signup" ? "Create a password" : "Enter your password"}
+                            value={password}
+                            onChange={(event) => onPasswordChange(event.target.value)}
+                            autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                            required
+                        />
+                    </label>
+                    <button className="auth-submit" disabled={isChecking}>
+                        {isChecking ? "Checking your session…" : mode === "signup" ? "Create my account" : "Sign in"}
+                        {!isChecking && <AppIcon name="arrow-right" size={18} />}
+                    </button>
+                    {message && <p className="auth-message" role="status">{message}</p>}
+                </form>
+                <p className="auth-terms">By continuing, you agree to use JobHazel responsibly.</p>
+            </section>
+        </div>
     );
 }

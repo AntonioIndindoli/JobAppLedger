@@ -5,6 +5,7 @@ import { useState, type KeyboardEvent } from "react";
 import type { TaskAutomationPreferences } from "../lib/types";
 import type { AccountActionResult } from "./AccountView";
 import { AppIcon } from "./AppIcon";
+import { ThemeToggle } from "./ThemeToggle";
 
 type SettingsViewProps = {
     preferences: TaskAutomationPreferences;
@@ -157,6 +158,24 @@ export function SettingsView({
     return (
         <section className="account-page settings-page">
             <div className="settings-content">
+                <article className="account-settings-card settings-card">
+                    <div className="account-section-heading">
+                        <span><AppIcon name="moon" size={19} /></span>
+                        <div>
+                            <h2>Appearance</h2>
+                            <p>Choose how JobHazel looks on this device.</p>
+                        </div>
+                    </div>
+                    <div className="account-switch-list">
+                        <div className="automation-setting-row appearance-setting-row">
+                            <span className="automation-setting-copy">
+                                <strong>Dark mode</strong>
+                                <small>Use darker colors throughout your workspace.</small>
+                            </span>
+                            <ThemeToggle />
+                        </div>
+                    </div>
+                </article>
                 <article className="account-settings-card settings-card">
                     <div className="account-section-heading">
                         <span><AppIcon name="checklist" size={19} /></span>

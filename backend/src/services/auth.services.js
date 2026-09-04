@@ -8,6 +8,22 @@ const DIGEST = "sha512";
 const ITERATIONS = 120000;
 const REFRESH_TOKEN_BYTES = 48;
 const SAFE_USER_SELECT = { id: true, name: true, email: true, createdAt: true };
+export const ACCOUNT_RESUME_VERSION_SELECT = Object.freeze({
+  id: true,
+  name: true,
+  targetRole: true,
+  originalFilename: true,
+  mimeType: true,
+  sizeBytes: true,
+  checksum: true,
+  uploadStatus: true,
+  notes: true,
+  archivedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export const ACCOUNT_LIMIT = 1000;
+export const ACCOUNT_LIMIT_MESSAGE = "Account creation is unavailable because JobHazel has reached its 1,000-account limit.";
 
 function hashPassword(password, salt = crypto.randomBytes(SALT_BYTES).toString("hex")) {
   const hash = crypto.pbkdf2Sync(password, salt, ITERATIONS, KEYLEN, DIGEST).toString("hex");
@@ -50,8 +66,8 @@ function buildExpiryDate() {
   return expiresAt;
 }
 
-async function issueSession(user) {
-  const prisma = await getPrismaAsync();
+async function issueSession(user, prismaOverride) {
+  const prisma = prismaOverride ?? await getPrismaAsync();
   const refreshToken = crypto.randomBytes(REFRESH_TOKEN_BYTES).toString("base64url");
   const expiresAt = buildExpiryDate();
 
@@ -82,20 +98,35 @@ export function verifyAccessToken(token) {
   return parsed;
 }
 
-export async function signup({ name, email, password }) {
-  const prisma = await getPrismaAsync();
+export async function signup({ name, email, password }, prismaOverride) {
+  const prisma = prismaOverride ?? await getPrismaAsync();
+  const passwordHash = hashPassword(password);
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    return { status: 409, body: { message: "Email already in use." } };
-  }
+  const result = await prisma.$transaction(async (transaction) => {
+    // Serialize the count-and-create section so concurrent signups cannot exceed the cap.
+    await transaction.$queryRaw`SELECT pg_advisory_xact_lock(734901, 1)::text AS locked`;
 
-  const user = await prisma.user.create({
-    data: { name: name?.trim() || null, email, passwordHash: hashPassword(password) },
-    select: SAFE_USER_SELECT,
+    const existing = await transaction.user.findUnique({ where: { email } });
+    if (existing) {
+      return { status: 409, body: { message: "Email already in use." } };
+    }
+
+    const accountCount = await transaction.user.count();
+    if (accountCount >= ACCOUNT_LIMIT) {
+      return { status: 409, body: { message: ACCOUNT_LIMIT_MESSAGE } };
+    }
+
+    const user = await transaction.user.create({
+      data: { name: name?.trim() || null, email, passwordHash },
+      select: SAFE_USER_SELECT,
+    });
+
+    return { user };
   });
 
-  const session = await issueSession(user);
+  if (!result.user) return result;
+
+  const session = await issueSession(result.user, prisma);
   return { status: 201, body: session };
 }
 
@@ -231,7 +262,11 @@ export async function buildAccountExport(userId) {
       prisma.contact.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
       prisma.interview.findMany({ where: { userId }, orderBy: { scheduledAt: "asc" } }),
       prisma.task.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
-      prisma.resumeVersion.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
+      prisma.resumeVersion.findMany({
+        where: { userId },
+        select: ACCOUNT_RESUME_VERSION_SELECT,
+        orderBy: { createdAt: "asc" },
+      }),
       prisma.importDraft.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
       prisma.activityLog.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
     ]);

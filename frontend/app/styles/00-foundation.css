@@ -1,11 +1,43 @@
 /* Design tokens and document defaults. */
 
 :root {
+    color-scheme: light;
     --background: #f8fbff;
     --foreground: #111827;
     --green: #139132;
     --border: #dce5f2;
     --muted: #63708a;
+
+    --surface: #ffffff;
+    --surface-translucent: rgba(255, 255, 255, .96);
+    --surface-soft: #fbfdff;
+    --surface-muted: #f7f9fc;
+    --surface-slate: #f1f5f9;
+    --surface-blue: #eef6ff;
+    --surface-blue-strong: #eaf3ff;
+    --surface-sidebar: #f8fff8;
+    --text-heading: #14213d;
+    --text-primary: #111827;
+    --text-secondary: #26334d;
+    --text-muted: #53617b;
+    --text-soft: #66738b;
+    --text-faint: #94a3b8;
+    --accent: #0b6bff;
+    --accent-strong: #064fbe;
+    --accent-border: #b7d3ff;
+    --border-strong: #9fb2ca;
+    --danger: #dc2626;
+    --danger-surface: #fee2e2;
+    --danger-border: #fecaca;
+    --warning: #c2410c;
+    --warning-surface: #fff7ed;
+    --warning-border: #fed7aa;
+    --success: #15803d;
+    --success-surface: #f0fdf4;
+    --success-border: #bbf7d0;
+    --purple: #7c3aed;
+    --purple-surface: #f5f3ff;
+    --tooltip-background: #14213d;
 
     --application-status-saved: #0e7490;
     --application-status-saved-background: #ecfeff;
@@ -24,6 +56,59 @@
 
     --application-status-withdrawn: #64748b;
     --application-status-withdrawn-background: #f8fafc;
+}
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+    --background: #0b1016;
+    --foreground: #e7edf5;
+    --green: #4ade80;
+    --border: #26323e;
+    --muted: #94a3b8;
+
+    --surface: #111820;
+    --surface-translucent: rgba(17, 24, 32, .96);
+    --surface-soft: #151e28;
+    --surface-muted: #1a2531;
+    --surface-slate: #202c39;
+    --surface-blue: #162238;
+    --surface-blue-strong: #1b2b42;
+    --surface-sidebar: #0d1518;
+    --text-heading: #f3f7fb;
+    --text-primary: #e7edf5;
+    --text-secondary: #ccd6e2;
+    --text-muted: #9aa9bc;
+    --text-soft: #8493a8;
+    --text-faint: #66758a;
+    --accent: #60a5fa;
+    --accent-strong: #93c5fd;
+    --accent-border: #35577f;
+    --border-strong: #405267;
+    --danger: #fb7185;
+    --danger-surface: #3a1d27;
+    --danger-border: #723541;
+    --warning: #fb923c;
+    --warning-surface: #392719;
+    --warning-border: #754923;
+    --success: #4ade80;
+    --success-surface: #143524;
+    --success-border: #286240;
+    --purple: #c4b5fd;
+    --purple-surface: #292544;
+    --tooltip-background: #05080c;
+
+    --application-status-saved: #67e8f9;
+    --application-status-saved-background: #142d36;
+    --application-status-applied: #60a5fa;
+    --application-status-applied-background: #172b46;
+    --application-status-interviewing: #c4b5fd;
+    --application-status-interviewing-background: #292542;
+    --application-status-offer: #4ade80;
+    --application-status-offer-background: #143524;
+    --application-status-rejected: #fb7185;
+    --application-status-rejected-background: #3a1d27;
+    --application-status-withdrawn: #a8b4c5;
+    --application-status-withdrawn-background: #202b38;
 }
 
 @theme inline {

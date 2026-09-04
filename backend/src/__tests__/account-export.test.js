@@ -1,7 +1,27 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { createApplicationsCsv } from "../services/auth.services.js";
+import { ACCOUNT_RESUME_VERSION_SELECT, createApplicationsCsv } from "../services/auth.services.js";
+
+test("account export includes resume metadata but excludes private storage fields", () => {
+  assert.deepEqual(Object.keys(ACCOUNT_RESUME_VERSION_SELECT).sort(), [
+    "archivedAt",
+    "checksum",
+    "createdAt",
+    "id",
+    "mimeType",
+    "name",
+    "notes",
+    "originalFilename",
+    "sizeBytes",
+    "targetRole",
+    "updatedAt",
+    "uploadStatus",
+  ]);
+  assert.equal("storageKey" in ACCOUNT_RESUME_VERSION_SELECT, false);
+  assert.equal("extractedText" in ACCOUNT_RESUME_VERSION_SELECT, false);
+  assert.equal("fileUrl" in ACCOUNT_RESUME_VERSION_SELECT, false);
+});
 
 test("application CSV export escapes commas, quotes, and line breaks", () => {
   const csv = createApplicationsCsv([

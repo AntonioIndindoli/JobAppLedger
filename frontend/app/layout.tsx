@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
   title: "JobHazel",
-  description: "Track job applications, interviews, tasks, and imports.",
+  description: "Organize job applications, interviews, contacts, and follow-ups in one clear workspace.",
   icons: {
     icon: "/JobHazelIcon.png",
     shortcut: "/JobHazelIcon.png",
@@ -18,7 +18,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const storedTheme = localStorage.getItem("jobhazel-theme");
+                const theme = storedTheme === "light" || storedTheme === "dark"
+                  ? storedTheme
+                  : "light";
+                document.documentElement.dataset.theme = theme;
+              } catch {
+                document.documentElement.dataset.theme = "light";
+              }
+            `,
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

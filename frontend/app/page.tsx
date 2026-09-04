@@ -11,12 +11,12 @@ import { AnalyticsView } from "./components/AnalyticsView";
 import { AppIcon } from "./components/AppIcon";
 import { ApplicationsView } from "./components/ApplicationsView";
 import { ApplicationDrawer } from "./components/ApplicationDrawer";
-import { AuthPanel } from "./components/AuthPanel";
 import { DashboardShell } from "./components/DashboardShell";
 import { ContactsView } from "./components/ContactsView";
 import { ImportDrawer } from "./components/ImportDrawer";
 import { InterviewDrawer } from "./components/InterviewDrawer";
 import { InterviewsView } from "./components/InterviewsView";
+import { LandingPage } from "./components/LandingPage";
 import { SettingsView } from "./components/SettingsView";
 import { TaskDrawer } from "./components/TaskDrawer";
 import { TasksView } from "./components/TasksView";
@@ -128,6 +128,7 @@ export default function MainPage() {
     const [token, setToken] = useState("");
     const [authStatus, setAuthStatus] = useState<AuthStatus>("checking");
     const [message, setMessage] = useState("");
+    const [isAuthOpen, setIsAuthOpen] = useState(false);
     const [applications, setApplications] = useState<Application[]>([]);
     const [interviews, setInterviews] = useState<Interview[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -320,6 +321,7 @@ export default function MainPage() {
         setUserName(data.user.name ?? "");
         setMemberSince(data.user.createdAt ?? "");
         setAuthStatus("signedIn");
+        setIsAuthOpen(false);
         setMessage(`Welcome ${data.user.email}`);
         loadApplications(data.accessToken);
         loadInterviews(data.accessToken);
@@ -363,6 +365,7 @@ export default function MainPage() {
         setIsProfileMenuOpen(false);
         setCurrentView("dashboard");
         setAuthStatus("signedOut");
+        setIsAuthOpen(false);
         setMessage(nextMessage);
     }
 
@@ -1310,12 +1313,19 @@ export default function MainPage() {
 
     if (authStatus !== "signedIn" || !token)
         return (
-            <AuthPanel
+            <LandingPage
                 mode={mode}
                 email={email}
                 password={password}
                 authStatus={authStatus}
                 message={message}
+                isAuthOpen={isAuthOpen}
+                onAuthClose={() => setIsAuthOpen(false)}
+                onAuthOpen={(nextMode) => {
+                    setMode(nextMode);
+                    setMessage("");
+                    setIsAuthOpen(true);
+                }}
                 onModeChange={setMode}
                 onEmailChange={setEmail}
                 onPasswordChange={setPassword}

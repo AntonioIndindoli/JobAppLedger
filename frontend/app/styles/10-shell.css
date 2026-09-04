@@ -3,7 +3,7 @@
 .dashboard-shell {
     min-height: 100vh;
     display: flex;
-    background: linear-gradient(180deg, #00000013, #0000001e);
+    background: linear-gradient(180deg, #00000008, #00000012), var(--background);
 }
 
 .sidebar {
@@ -17,7 +17,7 @@
     min-height: 100vh;
     padding: 28px 0px 28px 0px;
     z-index: 50;
-    background: #f8fff8;
+    background: var(--surface-sidebar);
     border-right: 1px solid var(--border);
 }
 
@@ -76,21 +76,21 @@
     padding: 12px 20px;
     border: 0;
     background: transparent;
-    color: #14213d;
+    color: var(--text-heading);
     font-size: 19px;
     text-align: left;
     transition: background .15s ease, color .15s ease;
 }
 
 .nav-item.active {
-    background: #54eb6d1f;
-    color: #25ac37;
+    background: color-mix(in srgb, var(--green) 12%, transparent);
+    color: var(--green);
     font-weight: 700;
 }
 
 .nav-item:hover,
 .nav-item:focus-visible {
-    background: #e3ffe9;
+    background: color-mix(in srgb, var(--green) 14%, var(--surface-sidebar));
     outline: none;
 }
 
@@ -114,7 +114,7 @@
 }
 
 .sidebar-profile .profile-trigger.active {
-    color: #156e33;
+    color: var(--green);
 }
 
 .sidebar-profile-copy {
@@ -132,7 +132,7 @@
 }
 
 .sidebar-profile-copy small {
-    color: #6b7893;
+    color: var(--text-soft);
     font-size: 12px;
 }
 
@@ -185,7 +185,7 @@
     min-width: 0;
     margin: 0;
     overflow: hidden;
-    color: #14213d;
+    color: var(--text-heading);
     font-size: 22px;
     font-weight: 800;
     line-height: 1.2;
@@ -220,9 +220,9 @@
     width: 38px;
     height: 38px;
     border-radius: 10px;
-    color: #17264a;
-    background: #f3f8ff;
-    border: 1px solid #dce8f7;
+    color: var(--text-secondary);
+    background: var(--surface-blue);
+    border: 1px solid var(--border);
 }
 
 .bell b {
@@ -245,6 +245,6 @@
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: #dcffdf;
+    background: var(--success-surface);
     color: var(--green);
 }

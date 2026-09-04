@@ -14,7 +14,7 @@ import {
 } from "../../lib/constants";
 import { hasRetainedMilestone } from "../../lib/dashboard-metrics";
 import { AppIcon, MetricIcon } from "../AppIcon";
-import { PipelineSankey } from "./PipelineSankey";
+import { PipelineVisualization } from "./PipelineVisualization";
 import { isUpcomingInterview } from "../../lib/interview-utils";
 import { isTaskNeedingAttention } from "../../lib/task-utils";
 import type {
@@ -293,7 +293,7 @@ export function DashboardStats({
 
     return (
         <section className="pipeline-stats-container">
-            <PipelineSankey
+            <PipelineVisualization
                 applications={applications}
                 historyByApp={historyByApp}
             />

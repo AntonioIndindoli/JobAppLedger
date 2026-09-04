@@ -52,7 +52,7 @@
 
   .application-table-cell::before {
     content: attr(data-label) ": ";
-    color: #7b879b;
+    color: var(--text-soft);
     font-size: 11px;
     font-weight: 800;
     text-transform: uppercase;
@@ -133,7 +133,7 @@
   .application-detail-meta {
     padding-top: 18px;
     padding-left: 0;
-    border-top: 1px solid #edf2f8;
+    border-top: 1px solid var(--surface-slate);
     border-left: 0;
   }
 
@@ -201,8 +201,8 @@
 
   .interviews-reset-button {
     margin-left: 0;
-    border: 1px solid #dce8f7;
-    background: white;
+    border: 1px solid var(--border);
+    background: var(--surface);
   }
 }
 

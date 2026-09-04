@@ -14,7 +14,7 @@
     width: min(480px, 100%);
     height: 100%;
     overflow-y: auto;
-    background: #fff;
+    background: var(--surface);
     border-left: 1px solid var(--border);
     box-shadow: -18px 0 48px rgba(31, 60, 100, .18);
 }
@@ -32,7 +32,7 @@
     display: flex;
     gap: 14px;
     padding: 24px;
-    background: rgba(255, 255, 255, .96);
+    background: var(--surface-translucent);
     border-bottom: 1px solid var(--border);
 }
 
@@ -62,7 +62,7 @@
 
 .drawer-close:hover,
 .drawer-close:focus-visible {
-    background: #eef6ff;
+    background: var(--surface-blue);
     outline: none;
 }
 
@@ -74,7 +74,7 @@
 
 .form-section h3 {
     margin: 0 0 2px;
-    color: #14213d;
+    color: var(--text-heading);
     font-size: 13px;
     text-transform: uppercase;
     letter-spacing: .08em;
@@ -83,7 +83,7 @@
 .form-section label {
     display: grid;
     gap: 7px;
-    color: #34425d;
+    color: var(--text-secondary);
     font-size: 13px;
     font-weight: 700;
 }
@@ -95,8 +95,8 @@
     border: 1px solid var(--border);
     border-radius: 9px;
     padding: 11px 12px;
-    color: #111827;
-    background: #fbfdff;
+    color: var(--text-primary);
+    background: var(--surface-soft);
     font: inherit;
     font-weight: 400;
 }
@@ -109,17 +109,17 @@
 
 .field-error {
     margin-top: -6px;
-    color: #dc2626;
+    color: var(--danger);
     font-size: 12px;
 }
 
 .duplicate-warning {
     margin: 16px 24px 0;
     padding: 10px 12px;
-    border: 1px solid #fed7aa;
+    border: 1px solid var(--warning-border);
     border-radius: 9px;
-    background: #fff7ed;
-    color: #9a3412;
+    background: var(--warning-surface);
+    color: var(--warning);
     font-size: 13px;
 }
 
@@ -134,15 +134,15 @@
     gap: 12px;
     margin: 16px 24px 0;
     padding: 10px 12px;
-    border: 1px solid #bfdbfe;
+    border: 1px solid var(--accent-border);
     border-radius: 9px;
-    background: #eff6ff;
-    color: #1d4ed8;
+    background: var(--surface-blue);
+    color: var(--accent-strong);
     font-size: 13px;
 }
 
 .import-confidence strong {
-    color: #14213d;
+    color: var(--text-heading);
     font-size: 18px;
 }
 
@@ -153,14 +153,14 @@
 
 .parser-debug {
     margin: 12px 24px 0;
-    border: 1px solid #dbe4f0;
+    border: 1px solid var(--border);
     border-radius: 9px;
-    background: #fbfdff;
+    background: var(--surface-soft);
 }
 
 .parser-debug summary {
     padding: 10px 12px;
-    color: #14213d;
+    color: var(--text-heading);
     font-size: 13px;
     font-weight: 800;
     cursor: pointer;
@@ -171,7 +171,7 @@
     overflow: auto;
     margin: 0;
     padding: 0 12px 12px;
-    color: #25324a;
+    color: var(--text-secondary);
     font-size: 11px;
     line-height: 1.45;
     white-space: pre-wrap;
@@ -200,17 +200,17 @@
     gap: 10px;
     margin-top: auto;
     padding: 16px 24px;
-    background: rgba(255, 255, 255, .96);
+    background: var(--surface-translucent);
     border-top: 1px solid var(--border);
 }
 
 .danger {
     margin-right: auto;
-    border: 1px solid #fecaca;
+    border: 1px solid var(--danger-border);
     border-radius: 7px;
     padding: 10px 14px;
-    background: #fff1f2;
-    color: #dc2626;
+    background: var(--danger-surface);
+    color: var(--danger);
     font-weight: 700;
     display: inline-flex;
     align-items: center;
@@ -301,7 +301,7 @@
         transform: translateX(0);
         visibility: visible;
         pointer-events: auto;
-        background: #eaf3ff;
+        background: var(--surface-blue-strong);
     }
 
     .sidebar-backdrop {
@@ -331,17 +331,17 @@
         width: 42px;
         height: 42px;
         flex: 0 0 auto;
-        border: 1px solid #dce8f7;
+        border: 1px solid var(--border);
         border-radius: 10px;
-        background: #f3f8ff;
-        color: #17264a;
+        background: var(--surface-blue);
+        color: var(--text-secondary);
     }
 
     .mobile-nav-toggle:hover,
     .mobile-nav-toggle:focus-visible,
     .mobile-sidebar-close:hover,
     .mobile-sidebar-close:focus-visible {
-        background: #eaf3ff;
+        background: var(--surface-blue-strong);
         outline: 2px solid rgba(11, 107, 255, .3);
         outline-offset: 2px;
     }
@@ -422,7 +422,7 @@
     }
 
     .drawer-backdrop {
-        background: white;
+        background: var(--surface);
     }
 
     .application-drawer {

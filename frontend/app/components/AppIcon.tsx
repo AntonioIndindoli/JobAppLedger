@@ -249,6 +249,9 @@ export function AppIcon({
         case "minus":
             icon = <path d="M7 12h10" />;
             break;
+        case "moon":
+            icon = <path d="M20 15.4A8.3 8.3 0 0 1 8.6 4a8.3 8.3 0 1 0 11.4 11.4Z" />;
+            break;
         case "pipeline":
             icon = (
                 <>
@@ -301,6 +304,14 @@ export function AppIcon({
                     <circle cx="18" cy="18" r="2.5" />
                     <path d="m8.2 10.9 7.6-3.8" />
                     <path d="m8.2 13.1 7.6 3.8" />
+                </>
+            );
+            break;
+        case "sun":
+            icon = (
+                <>
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
                 </>
             );
             break;

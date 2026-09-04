@@ -1,0 +1,13 @@
+[
+  {
+    "AllowedOrigins": [
+      "https://jobhazel.com",
+      "https://www.jobhazel.com",
+      "http://localhost:3000"
+    ],
+    "AllowedMethods": ["GET", "PUT"],
+    "AllowedHeaders": ["Content-Type"],
+    "ExposeHeaders": ["ETag", "Content-Length", "Content-Type"],
+    "MaxAgeSeconds": 3600
+  }
+]
