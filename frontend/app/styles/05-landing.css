@@ -336,7 +336,7 @@ html[data-theme="dark"] .landing-page {
 .hero-growth-vines {
     stroke: #37864a;
     stroke-width: 3;
-    opacity: .05;
+    opacity: .1;
 }
 
 .hero-growth-trunk {
@@ -477,7 +477,7 @@ html[data-theme="dark"] .landing-page {
 }
 
 .hero-growth-leaf {
-    fill: #3d8d4c6c;
+    fill: #3d8d4c94;
     opacity: 0;
     animation: landing-background-leaf-appear .45s ease-out forwards;
 }
