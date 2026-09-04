@@ -158,68 +158,13 @@ export function LandingPage({
                     onPointerLeave={resetPreview}
                 >
                     <div className="landing-product">
-                        <div className="landing-product-sidebar">
-                            <div className="landing-product-logo">
-                                <Image src="/JobHazelIcon.png" alt="" width={25} height={25} />
-                                <span>JobHazel</span>
-                            </div>
-                            {[
-                                ["dashboard", "Dashboard"],
-                                ["applications", "Applications"],
-                                ["calendar", "Interviews"],
-                                ["checklist", "Tasks"],
-                                ["contacts", "Contacts"],
-                            ].map(([icon, label], index) => (
-                                <div className={`landing-product-nav ${index === 0 ? "active" : ""}`} key={label}>
-                                    <AppIcon name={icon as "dashboard"} size={13} />
-                                    <span>{label}</span>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="landing-product-main">
-                            <div className="landing-product-heading">
-                                <div>
-                                    <span>Good morning, Alex</span>
-                                    <strong>Here&apos;s your job search at a glance.</strong>
-                                </div>
-                                <div className="landing-product-avatar">A</div>
-                            </div>
-                            <div className="landing-product-stats">
-                                <div><span>Active pipeline</span><strong>18</strong><small>+3 this week</small></div>
-                                <div><span>Interviews</span><strong>4</strong><small>2 upcoming</small></div>
-                                <div><span>Response rate</span><strong>32%</strong><small>+5% this month</small></div>
-                            </div>
-                            <div className="landing-product-grid">
-                                <div className="landing-chart-card">
-                                    <div className="landing-card-label"><strong>Application activity</strong><span>Last 6 weeks</span></div>
-                                    <div className="landing-chart" aria-hidden="true">
-                                        {[38, 57, 46, 72, 62, 88, 76].map((height, index) => (
-                                            <span key={index} style={{ height: `${height}%` }} />
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="landing-next-card">
-                                    <div className="landing-card-label"><strong>Up next</strong><span>View all</span></div>
-                                    <div className="landing-next-item">
-                                        <span className="landing-date"><b>14</b>SEP</span>
-                                        <span><strong>Product interview</strong><small>Northstar Labs · 10:30 AM</small></span>
-                                    </div>
-                                    <div className="landing-next-item">
-                                        <span className="landing-date teal"><b>16</b>SEP</span>
-                                        <span><strong>Follow up</strong><small>Brightside · Tomorrow</small></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="landing-float-card landing-float-interview">
-                        <span className="landing-float-icon"><AppIcon name="calendar" size={18} /></span>
-                        <span><small>Next interview</small><strong>Tomorrow, 10:30 AM</strong></span>
-                    </div>
-                    <div className="landing-float-card landing-float-progress">
-                        <span className="landing-ring"><b>72%</b></span>
-                        <span><small>Weekly goal</small><strong>Great momentum!</strong></span>
+                        <iframe
+                            className="landing-product-frame"
+                            src="/dashboard-preview"
+                            title="JobHazel dashboard preview"
+                            tabIndex={-1}
+                            aria-hidden="true"
+                        />
                     </div>
                 </div>
             </section>
