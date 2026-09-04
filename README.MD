@@ -1,6 +1,6 @@
 # JobHazel
 
-A full-stack job application CRM with a Chrome extension for saving job postings from any website.
+A full-stack job application tracker with a Chrome extension for saving job postings from any website.
 
 JobHazel helps job seekers organize their search pipeline, save jobs from browser pages, track interviews, manage follow-up tasks, and analyze which job sources produce the best results.
 
@@ -11,6 +11,7 @@ The product is designed as a modern SaaS-style dashboard for candidates who appl
 ## Demo
 
 **Live App:** https://jobhazel.com/
+
 **Chrome Extension Demo:** Coming soon
 
 ---
