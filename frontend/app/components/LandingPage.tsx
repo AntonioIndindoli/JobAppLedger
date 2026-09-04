@@ -131,12 +131,10 @@ export function LandingPage({
                 <GrowingBranches />
                 <div className="landing-hero-copy landing-hero-entrance">
                     <h1>
-                        Less tracking.
-                        <br />
-                        More <span>moving forward.</span>
+                        Less tracking. More <span>growing.</span>
                     </h1>
                     <p>
-                        JobHazel brings applications, interviews, contacts, and follow-ups together—so you can focus on landing the right role.
+                        JobHazel brings applications, interviews, contacts, and follow-ups together so you can focus on landing the right role.
                     </p>
                     <div className="landing-hero-actions">
                         <button type="button" className="landing-button" onClick={() => onAuthOpen("signup")}>

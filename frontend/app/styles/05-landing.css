@@ -224,7 +224,7 @@ html[data-theme="dark"] .landing-page {
 .landing-hero h1 {
     margin: 0;
     color: var(--landing-ink);
-    font-size: clamp(52px, 5.2vw, 78px);
+    font-size: clamp(42px, 4.2vw, 68px);
     font-weight: 800;
     letter-spacing: -.065em;
     line-height: .98;
@@ -322,7 +322,7 @@ html[data-theme="dark"] .landing-page {
 }
 
 .landing-hero-growth-svg--left {
-    transform: translateX(calc(-50% - 700px)) translateY(+130px) scaleY(1) rotate(-10deg);
+    transform: translateX(calc(-50% - 700px)) translateY(+80px) scaleY(1) rotate(-10deg);
 }
 
 .landing-hero-growth-svg--center {
@@ -330,7 +330,7 @@ html[data-theme="dark"] .landing-page {
 }
 
 .landing-hero-growth-svg--right {
-    transform: translateX(calc(-50% + 700px)) translateY(+120px) scaleY(1) rotate(+30deg);
+    transform: translateX(calc(-50% + 700px)) translateY(+90px) scaleY(1) rotate(+30deg);
 }
 
 .hero-growth-vines {
