@@ -281,8 +281,7 @@ html[data-theme="dark"] .landing-page {
     position: relative;
     display: block;
     width: 100%;
-    aspect-ratio: 1.42 / 1;
-    min-height: 425px;
+    aspect-ratio: 1.6 / 1;
     overflow: hidden;
     border: 1px solid var(--landing-border);
     border-radius: 18px;
@@ -631,12 +630,12 @@ html[data-theme="dark"] .landing-page {
 
 .landing-product-frame {
     display: block;
-    width: 250%;
-    height: 250%;
+    width: 1920px;
+    height: 1400px;
     border: 0;
     background: var(--background);
     pointer-events: none;
-    transform: scale(.4);
+    transform: scale(var(--landing-dashboard-scale, .3333));
     transform-origin: top left;
 }
 
@@ -1283,7 +1282,6 @@ body.auth-modal-open {
 
     .landing-product {
         grid-template-columns: 72px 1fr;
-        min-height: 350px;
         transform: none;
     }
 

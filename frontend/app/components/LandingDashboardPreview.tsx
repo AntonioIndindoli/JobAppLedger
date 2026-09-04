@@ -94,14 +94,6 @@ function createPreviewData(): PreviewData {
             source: "Indeed",
             daysAgo: -17,
         },
-        {
-            id: "preview-withdrawn",
-            title: "Principal Product Designer",
-            companyName: "Mosaic",
-            status: "WITHDRAWN",
-            source: "Greenhouse",
-            daysAgo: -22,
-        },
     ] as const;
 
     const applications: Application[] = applicationDefinitions.map((definition) => ({
@@ -151,9 +143,6 @@ function createPreviewData(): PreviewData {
         "preview-rejected": statusHistory("preview-rejected", [
             ["APPLIED", "INTERVIEWING", -12],
             ["INTERVIEWING", "REJECTED", -6],
-        ]),
-        "preview-withdrawn": statusHistory("preview-withdrawn", [
-            ["APPLIED", "WITHDRAWN", -10],
         ]),
     };
 

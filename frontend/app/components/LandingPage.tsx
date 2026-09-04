@@ -59,6 +59,7 @@ export function LandingPage({
     onSubmit,
 }: LandingPageProps) {
     const pageRef = useRef<HTMLElement>(null);
+    const productRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const page = pageRef.current;
@@ -84,6 +85,26 @@ export function LandingPage({
         );
 
         revealItems.forEach((item) => observer.observe(item));
+        return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+        const product = productRef.current;
+        if (!product) return;
+
+        function syncDashboardScale() {
+            if (!product) return;
+            product.style.setProperty(
+                "--landing-dashboard-scale",
+                String(product.clientWidth / 1920),
+            );
+        }
+
+        syncDashboardScale();
+
+        if (!("ResizeObserver" in window)) return;
+        const observer = new ResizeObserver(syncDashboardScale);
+        observer.observe(product);
         return () => observer.disconnect();
     }, []);
 
@@ -157,7 +178,7 @@ export function LandingPage({
                     onPointerMove={movePreview}
                     onPointerLeave={resetPreview}
                 >
-                    <div className="landing-product">
+                    <div className="landing-product" ref={productRef}>
                         <iframe
                             className="landing-product-frame"
                             src="/dashboard-preview"
