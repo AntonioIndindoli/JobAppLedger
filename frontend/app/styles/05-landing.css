@@ -346,20 +346,20 @@ html[data-theme="dark"] .landing-page {
 
 .hero-growth-vines {
     stroke: #37864a;
-    stroke-width: 2.25;
+    stroke-width: 3;
     opacity: .17;
 }
 
 .hero-growth-trunk {
-    stroke-width: 3.2;
+    stroke-width: 4.4;
 }
 
 .hero-growth-branch {
-    stroke-width: 2;
+    stroke-width: 3.1;
 }
 
 .hero-growth-twig {
-    stroke-width: 1.6;
+    stroke-width: 2.35;
 }
 
 .hero-growth-path {
@@ -379,10 +379,16 @@ html[data-theme="dark"] .landing-page {
 
 .hero-growth-lower-left { animation-duration: 1.1s; animation-delay: .78s; }
 .hero-growth-lower-left-twig { animation-duration: .8s; animation-delay: 1.3s; }
+.hero-growth-lower-right { animation-duration: 1.08s; animation-delay: .82s; }
+.hero-growth-lower-right-twig { animation-duration: .78s; animation-delay: 1.34s; }
 .hero-growth-middle-right { animation-duration: 1.08s; animation-delay: 1.25s; }
 .hero-growth-middle-right-twig { animation-duration: .75s; animation-delay: 1.78s; }
+.hero-growth-middle-left { animation-duration: 1.06s; animation-delay: 1.28s; }
+.hero-growth-middle-left-twig { animation-duration: .74s; animation-delay: 1.8s; }
 .hero-growth-upper-left { animation-duration: 1.05s; animation-delay: 1.72s; }
 .hero-growth-upper-left-twig { animation-duration: .72s; animation-delay: 2.17s; }
+.hero-growth-upper-right { animation-duration: 1.04s; animation-delay: 1.75s; }
+.hero-growth-upper-right-twig { animation-duration: .7s; animation-delay: 2.2s; }
 .hero-growth-top-right { animation-duration: 1.05s; animation-delay: 2.15s; }
 .hero-growth-top-right-twig { animation-duration: .7s; animation-delay: 2.58s; }
 
@@ -396,28 +402,84 @@ html[data-theme="dark"] .landing-page {
     animation-delay: 1.92s;
 }
 
+.hero-leaf-trunk-lower {
+    animation-delay: 1.28s;
+}
+
+.hero-leaf-lower-left-junction {
+    animation-delay: 1.48s;
+}
+
 .hero-leaf-lower-left-twig {
     animation-delay: 2.14s;
+}
+
+.hero-leaf-lower-right {
+    animation-delay: 1.94s;
+}
+
+.hero-leaf-lower-right-twig {
+    animation-delay: 2.16s;
 }
 
 .hero-leaf-middle-right {
     animation-delay: 2.37s;
 }
 
+.hero-leaf-trunk-middle {
+    animation-delay: 1.72s;
+}
+
+.hero-leaf-middle-right-junction {
+    animation-delay: 1.98s;
+}
+
 .hero-leaf-middle-right-twig {
     animation-delay: 2.57s;
+}
+
+.hero-leaf-middle-left {
+    animation-delay: 2.4s;
+}
+
+.hero-leaf-middle-left-twig {
+    animation-delay: 2.6s;
 }
 
 .hero-leaf-upper-left {
     animation-delay: 2.81s;
 }
 
+.hero-leaf-trunk-upper {
+    animation-delay: 2.16s;
+}
+
+.hero-leaf-upper-left-junction {
+    animation-delay: 2.38s;
+}
+
 .hero-leaf-upper-left-twig {
     animation-delay: 2.93s;
 }
 
+.hero-leaf-upper-right {
+    animation-delay: 2.84s;
+}
+
+.hero-leaf-upper-right-twig {
+    animation-delay: 2.96s;
+}
+
 .hero-leaf-crown {
     animation-delay: 2.82s;
+}
+
+.hero-leaf-trunk-top {
+    animation-delay: 2.58s;
+}
+
+.hero-leaf-top-right-junction {
+    animation-delay: 2.78s;
 }
 
 .hero-leaf-top-right {
